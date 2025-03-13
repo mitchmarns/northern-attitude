@@ -1,69 +1,66 @@
-// server.js - Main Express application
+// server.js - Main application file
+
 const express = require('express');
-const path = require('path');
 const cookieParser = require('cookie-parser');
-const cors = require('cors');
-const { db } = require('./db');
-const userRoutes = require('./routes/user-routes');
+const path = require('path');
+const { characterOperations } = require('./db');
 
 // Create Express app
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-// Import route modules
-const authRoutes = require('./routes/auth');
-const apiRoutes = require('./routes/api');
-
-// Middleware
+// Middleware setup
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(cors({
-  origin: process.env.NODE_ENV === 'production' ? 'https://yourproductiondomain.com' : 'http://localhost:3000',
-  credentials: true
-}));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// API routes
-app.use('/api/auth', authRoutes);
-app.use('/api', apiRoutes);
-app.use('/api/users', userRoutes);
+// Import route handlers
+const authRoutes = require('./routes/auth-routes');
+// If you have other routes, import them here
+// const apiRoutes = require('./routes/api-routes');
+// const characterRoutes = require('./routes/character-routes');
 
-// Serve index.html for the root route
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'html', 'index.html'));
-});
+// Set up routes
+app.use('/api/auth', authRoutes);
+// If you have other routes, set them up here
+// app.use('/api', apiRoutes);
+// app.use('/api', characterRoutes);
+
+// Add new columns to Characters table if needed
+characterOperations.addCharacterColumns()
+  .then(() => console.log('Character table updated with new columns if needed'))
+  .catch(err => console.error('Error updating Character table:', err));
 
 // Handle 404 errors
 app.use((req, res) => {
-  res.status(404).sendFile(path.join(__dirname, 'public', 'html', '404.html'));
+  if (req.path.startsWith('/api')) {
+    // For API routes, return JSON error
+    return res.status(404).json({ message: 'API endpoint not found' });
+  }
+  
+  // For non-API routes, serve the 404 page
+  res.status(404).sendFile(path.join(__dirname, 'public/html/404.html'));
 });
 
-// Error handling middleware
+// Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+  console.error('Server error:', err);
+  
+  if (req.path.startsWith('/api')) {
+    // For API routes, return JSON error
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+  
+  // For non-API routes, send generic error message
+  res.status(500).send('Server error occurred. Please try again later.');
 });
 
-// Start the server
+// Start server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-});
-
-// Handle app shutdown
-process.on('SIGINT', () => {
-  console.log('Server shutting down...');
-  db.close((err) => {
-    if (err) {
-      console.error('Error closing database:', err.message);
-    } else {
-      console.log('Database connection closed');
-    }
-    process.exit(0);
-  });
 });
 
 module.exports = app;

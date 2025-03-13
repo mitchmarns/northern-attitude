@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Profile | Northern Attitude</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .profile-container {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: var(--spacing-md);
+        }
+        
+        @media screen and (max-width: 768px) {
+            .profile-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .profile-sidebar {
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            padding: var(--spacing-md);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .profile-content {
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            padding: var(--spacing-md);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .character-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--header);
+            margin: 0 auto var(--spacing-md) auto;
+        }
+        
+        .character-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .character-name {
+            text-align: center;
+            font-family: var(--accentfont);
+            font-size: 1.8rem;
+            color: var(--header);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .character-position {
+            text-align: center;
+            font-weight: var(--semibold);
+            color: var(--lighttext);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .character-team {
+            text-align: center;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .character-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            width: 100%;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .character-status.active {
+            background-color: rgba(40, 167, 69, 0.2);
+            color: #75b798;
+        }
+        
+        .character-status.inactive {
+            background-color: rgba(108, 117, 125, 0.2);
+            color: #c6c7c8;
+        }
+        
+        .stat-block {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .stat-block h4 {
+            font-family: var(--accentfont);
+            color: var(--header);
+            margin-bottom: var(--spacing-sm);
+            text-align: center;
+            font-size: 1.1rem;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-xs);
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .stat-value {
+            font-weight: var(--medium);
+            color: var(--lighttext);
+        }
+        
+        .profile-section {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .profile-section h3 {
+            font-family: var(--accentfont);
+            color: var(--header);
+            margin-bottom: var(--spacing-sm);
+            padding-bottom: var(--spacing-xs);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .character-bio {
+            line-height: 1.6;
+            color: var(--lighttext);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-md);
+        }
+        
+        .btn-secondary {
+            background-color: transparent;
+            border: 2px solid var(--header);
+            color: var(--header);
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(90, 128, 149, 0.1);
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .stats-highlight {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .highlight-stat {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: var(--spacing-md);
+            text-align: center;
+        }
+        
+        .highlight-value {
+            font-size: 2rem;
+            font-weight: var(--bold);
+            color: var(--header);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .highlight-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .games-list {
+            margin-top: var(--spacing-sm);
+        }
+        
+        .game-item {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-xs);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .game-teams {
+            font-weight: var(--medium);
+        }
+        
+        .game-date {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .game-stats {
+            font-size: 0.9rem;
+        }
+        
+        .delete-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: var(--spacing-lg);
+            border-radius: 4px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-title {
+            font-family: var(--accentfont);
+            color: var(--header);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .modal-message {
+            margin-bottom: var(--spacing-md);
+            line-height: 1.6;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">northern<span>attitude</span></div>
+            <nav>
+                <ul>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="#">Players</a></li>
+                    <li><a href="#">Teams</a></li>
+                    <li><a href="#">Games</a></li>
+                    <li><a href="#">Stats</a></li>
+                </ul>
+            </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="content-header">
+                <h2 id="page-title">Character Profile</h2>
+                <a href="my-characters.html" class="btn btn-secondary">Back to My Characters</a>
+            </div>
+            
+            <div id="character-profile-error" class="auth-error" style="display: none;"></div>
+            <div id="character-profile-success" class="auth-success" style="display: none;"></div>
+            
+            <div id="profile-container" class="profile-container">
+                <!-- Character profile will be loaded here via JavaScript -->
+                <div class="loading-message">Loading character profile...</div>
+            </div>
+            
+            <!-- Delete Confirmation Modal -->
+            <div id="delete-modal" class="delete-modal">
+                <div class="modal-content">
+                    <h3 class="modal-title">Delete Character?</h3>
+                    <p class="modal-message">Are you sure you want to delete this character? This action cannot be undone.</p>
+                    <div class="modal-buttons">
+                        <button id="cancel-delete" class="btn btn-secondary">Cancel</button>
+                        <button id="confirm-delete" class="btn btn-danger">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Northern Attitude Hockey Roleplay. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth-utils.js"></script>
+    <script src="../js/character-profile.js"></script>
+</body>
+</html>

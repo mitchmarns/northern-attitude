@@ -192,12 +192,13 @@ const userOperations = {
 // Character-related database operations
 const characterOperations = {
   // Create a new character
-  createCharacter: (userId, name, position, teamId, statsJson) => {
+  createCharacter: (userId, name, position, teamId, statsJson, bio = null, avatarUrl = null) => {
     return new Promise((resolve, reject) => {
-      const query = `INSERT INTO Characters (user_id, name, position, team_id, stats_json) 
-                    VALUES (?, ?, ?, ?, ?)`;
+      const query = `INSERT INTO Characters (
+        user_id, name, position, team_id, stats_json, bio, avatar_url, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`;
       
-      db.run(query, [userId, name, position, teamId, statsJson], function(err) {
+      db.run(query, [userId, name, position, teamId, statsJson, bio, avatarUrl], function(err) {
         if (err) {
           reject(err);
           return;
@@ -238,6 +239,257 @@ const characterOperations = {
           return;
         }
         resolve(this.changes);
+      });
+    });
+  },
+  
+  // Get a single character by ID
+  getCharacterById: (characterId, includeTeam = true) => {
+    return new Promise((resolve, reject) => {
+      let query = `SELECT c.* `;
+      
+      if (includeTeam) {
+        query += `, t.name as team_name `;
+      }
+      
+      query += `FROM Characters c `;
+      
+      if (includeTeam) {
+        query += `LEFT JOIN Teams t ON c.team_id = t.id `;
+      }
+      
+      query += `WHERE c.id = ?`;
+      
+      db.get(query, [characterId], (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(row);
+      });
+    });
+  },
+
+  // Check if a character belongs to a user
+  isCharacterOwner: (userId, characterId) => {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT id FROM Characters WHERE id = ? AND user_id = ?`;
+      
+      db.get(query, [characterId, userId], (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(!!row); // Returns true if character belongs to user, false otherwise
+      });
+    });
+  },
+
+  // Update character details
+  updateCharacter: (characterId, data) => {
+    return new Promise((resolve, reject) => {
+      // Build the SET part of the query dynamically based on provided data
+      const setColumns = [];
+      const values = [];
+      
+      if (data.name !== undefined) {
+        setColumns.push('name = ?');
+        values.push(data.name);
+      }
+      
+      if (data.position !== undefined) {
+        setColumns.push('position = ?');
+        values.push(data.position);
+      }
+      
+      if (data.team_id !== undefined) {
+        setColumns.push('team_id = ?');
+        values.push(data.team_id);
+      }
+      
+      if (data.stats_json !== undefined) {
+        setColumns.push('stats_json = ?');
+        values.push(data.stats_json);
+      }
+      
+      if (data.bio !== undefined) {
+        setColumns.push('bio = ?');
+        values.push(data.bio);
+      }
+      
+      if (data.avatar_url !== undefined) {
+        setColumns.push('avatar_url = ?');
+        values.push(data.avatar_url);
+      }
+      
+      // Always update the updated_at timestamp
+      setColumns.push('updated_at = CURRENT_TIMESTAMP');
+      
+      // Add characterId to values array for WHERE clause
+      values.push(characterId);
+      
+      const query = `UPDATE Characters SET ${setColumns.join(', ')} WHERE id = ?`;
+      
+      db.run(query, values, function(err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(this.changes);
+      });
+    });
+  },
+
+  // Delete a character
+  deleteCharacter: (characterId) => {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM Characters WHERE id = ?`;
+      
+      db.run(query, [characterId], function(err) {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(this.changes);
+      });
+    });
+  },
+
+  // Set a character as active (mark all other user's characters as inactive)
+  setActiveCharacter: (userId, characterId) => {
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        // Begin transaction
+        db.run('BEGIN TRANSACTION', (err) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          
+          // First, make sure all the user's characters are marked as inactive
+          db.run(
+            'UPDATE Characters SET is_active = 0 WHERE user_id = ?',
+            [userId],
+            (err) => {
+              if (err) {
+                db.run('ROLLBACK');
+                reject(err);
+                return;
+              }
+              
+              // Then, set the specified character as active
+              db.run(
+                'UPDATE Characters SET is_active = 1 WHERE id = ? AND user_id = ?',
+                [characterId, userId],
+                function(err) {
+                  if (err) {
+                    db.run('ROLLBACK');
+                    reject(err);
+                    return;
+                  }
+                  
+                  // Commit the transaction
+                  db.run('COMMIT', (err) => {
+                    if (err) {
+                      db.run('ROLLBACK');
+                      reject(err);
+                      return;
+                    }
+                    
+                    resolve(this.changes);
+                  });
+                }
+              );
+            }
+          );
+        });
+      });
+    });
+  },
+
+  // Get recent games for a character
+  getCharacterGames: (characterId, limit = 5) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT gs.*, g.*, 
+          ht.name as home_team_name, 
+          at.name as away_team_name,
+          c.team_id as character_team_id
+        FROM GameStatistics gs
+        JOIN Games g ON gs.game_id = g.id
+        JOIN Teams ht ON g.home_team_id = ht.id
+        JOIN Teams at ON g.away_team_id = at.id
+        JOIN Characters c ON gs.character_id = c.id
+        WHERE gs.character_id = ?
+        ORDER BY g.date DESC
+        LIMIT ?
+      `;
+      
+      db.all(query, [characterId, limit], (err, rows) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(rows);
+      });
+    });
+  },
+
+  // Add new columns to the Characters table for is_active and bio
+  // This should be called when initializing the database
+  addCharacterColumns: () => {
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        // Check if is_active column exists, add if it doesn't
+        db.all("PRAGMA table_info(Characters)", (err, rows) => {
+          if (err) {
+            reject(err);
+            return;
+          }
+          
+          // Check if columns exist, and add them if they don't
+          const columns = rows || [];
+          const hasIsActive = columns.some(col => col.name === 'is_active');
+          const hasBio = columns.some(col => col.name === 'bio');
+          const hasAvatarUrl = columns.some(col => col.name === 'avatar_url');
+          
+          const addColumns = [];
+          
+          if (!hasIsActive) {
+            addColumns.push("ALTER TABLE Characters ADD COLUMN is_active BOOLEAN DEFAULT 0");
+          }
+          
+          if (!hasBio) {
+            addColumns.push("ALTER TABLE Characters ADD COLUMN bio TEXT");
+          }
+          
+          if (!hasAvatarUrl) {
+            addColumns.push("ALTER TABLE Characters ADD COLUMN avatar_url VARCHAR(255)");
+          }
+          
+          // Execute all column additions
+          const executeQueries = (queries, index) => {
+            if (index >= queries.length) {
+              resolve();
+              return;
+            }
+            
+            db.run(queries[index], (err) => {
+              if (err) {
+                reject(err);
+                return;
+              }
+              
+              executeQueries(queries, index + 1);
+            });
+          };
+          
+          if (addColumns.length > 0) {
+            executeQueries(addColumns, 0);
+          } else {
+            resolve();
+          }
+        });
       });
     });
   }
