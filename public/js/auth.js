@@ -148,9 +148,21 @@ const authService = {
         return res.status(401).json({ message: 'Invalid email or password' });
       }
       
-      // Verify password
-      const passwordValid = await bcrypt.compare(password, user.password_hash);
-      
+      // Verify password - handle both bcrypt hashed passwords and sample plaintext passwords
+      let passwordValid = false;
+
+      // First try direct comparison (for sample data)
+      if (password === user.password_hash) {
+        passwordValid = true;
+      } else {
+        // Then try bcrypt comparison (for real hashed passwords)
+        try {
+          passwordValid = await bcrypt.compare(password, user.password_hash);
+        } catch (err) {
+          console.error('Password comparison error:', err);
+        }
+      }
+
       if (!passwordValid) {
         return res.status(401).json({ message: 'Invalid email or password' });
       }

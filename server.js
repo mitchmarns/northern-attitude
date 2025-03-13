@@ -1,99 +1,66 @@
-// server.js - Main server file
+// server.js - Main Express application
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
-const { authMiddleware, authService } = require('./public/js/auth');
-const { userOperations, characterOperations, teamOperations, gameOperations, messageOperations } = require('./db');
+const { db } = require('./db');
 
 // Create Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Import route modules
+const authRoutes = require('./routes/auth');
+const apiRoutes = require('./routes/api');
+
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors({
-  origin: 'http://localhost:3000', // Update with your frontend URL in production
+  origin: process.env.NODE_ENV === 'production' ? 'https://yourproductiondomain.com' : 'http://localhost:3000',
   credentials: true
 }));
 
-// Serve static files
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Authentication routes
-app.post('/api/auth/register', authService.register);
-app.post('/api/auth/login', authService.login);
-app.post('/api/auth/logout', authService.logout);
-app.get('/api/auth/current-user', authMiddleware.isAuthenticated, authService.getCurrentUser);
-app.post('/api/auth/password-reset-request', authService.requestPasswordReset);
-app.post('/api/auth/password-reset', authService.resetPassword);
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api', apiRoutes);
 
-// Protected API routes
-app.get('/api/my-characters', authMiddleware.isAuthenticated, async (req, res) => {
-  try {
-    const characters = await characterOperations.getUserCharacters(req.user.id);
-    res.json(characters);
-  } catch (error) {
-    console.error('Error getting characters:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+// Serve index.html for the root route
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'html', 'index.html'));
 });
 
-app.get('/api/upcoming-games', authMiddleware.isAuthenticated, async (req, res) => {
-  try {
-    const limit = req.query.limit ? parseInt(req.query.limit) : 5;
-    const games = await gameOperations.getUpcomingGames(limit);
-    res.json(games);
-  } catch (error) {
-    console.error('Error getting upcoming games:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+// Handle 404 errors
+app.use((req, res) => {
+  res.status(404).sendFile(path.join(__dirname, 'public', 'html', '404.html'));
 });
 
-app.get('/api/my-team', authMiddleware.isAuthenticated, async (req, res) => {
-  try {
-    // Get the user's primary character
-    const characters = await characterOperations.getUserCharacters(req.user.id);
-    
-    // If the user has no characters or the first character has no team, return null
-    if (!characters.length || !characters[0].team_id) {
-      return res.json(null);
-    }
-    
-    // Get the team details
-    const teamId = characters[0].team_id;
-    const team = await new Promise((resolve, reject) => {
-      db.get('SELECT * FROM Teams WHERE id = ?', [teamId], (err, row) => {
-        if (err) reject(err);
-        resolve(row);
-      });
-    });
-    
-    res.json(team);
-  } catch (error) {
-    console.error('Error getting team data:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
-app.get('/api/unread-messages', authMiddleware.isAuthenticated, async (req, res) => {
-  try {
-    const count = await messageOperations.getUnreadMessageCount(req.user.id);
-    res.json({ count });
-  } catch (error) {
-    console.error('Error getting unread messages:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Catch-all route to serve the SPA
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Start server
+// Start the server
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Handle app shutdown
+process.on('SIGINT', () => {
+  console.log('Server shutting down...');
+  db.close((err) => {
+    if (err) {
+      console.error('Error closing database:', err.message);
+    } else {
+      console.log('Database connection closed');
+    }
+    process.exit(0);
+  });
+});
+
+module.exports = app;
