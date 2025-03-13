@@ -1,39 +1,51 @@
 document.addEventListener('DOMContentLoaded', function() {
-  // Check if user is authenticated
-  function checkAuthStatus() {
-      const authInfo = JSON.parse(localStorage.getItem('authInfo') || sessionStorage.getItem('authInfo') || 'null');
+  // Check if user is authenticated, redirect to login if not
+  window.authUtils.checkAuth(true);
+  
+  // Set up logout functionality
+  window.authUtils.setupLogoutButton();
+  
+  // Add username display to the header if it doesn't exist
+  const headerContent = document.querySelector('.header-content');
+  if (headerContent) {
+    // Check if the username display already exists
+    let usernameDisplay = document.getElementById('username-display');
+    
+    if (!usernameDisplay) {
+      // Create a container for the username display and logout
+      const userContainer = document.createElement('div');
+      userContainer.className = 'user-container';
       
-      if (!authInfo || !authInfo.authenticated) {
-          // User is not logged in, redirect to login page
-          window.location.href = 'login.html';
-          return null;
-      }
+      // Add username display
+      usernameDisplay = document.createElement('span');
+      usernameDisplay.id = 'username-display';
+      usernameDisplay.className = 'username-display';
       
-      return authInfo;
+      // Add logout link
+      const logoutLink = document.createElement('a');
+      logoutLink.id = 'logout-link';
+      logoutLink.href = '#';
+      logoutLink.textContent = 'Log Out';
+      logoutLink.className = 'logout-link';
+      
+      // Append to the container
+      userContainer.appendChild(usernameDisplay);
+      userContainer.appendChild(document.createTextNode(' | '));
+      userContainer.appendChild(logoutLink);
+      
+      // Add to the header
+      headerContent.appendChild(userContainer);
+      
+      // Set up the logout button
+      window.authUtils.setupLogoutButton();
+    }
   }
   
-  // Verify authentication on page load
-  const authInfo = checkAuthStatus();
-  
-  // If authentication check passed, update the UI with user info
-  if (authInfo) {
-      // Update welcome message or username display if needed
-      // For example, if you have a username display element:
-      // document.getElementById('username-display').textContent = authInfo.username;
-      
-      // Set up logout functionality
-      const logoutLink = document.getElementById('logout-link');
-      if (logoutLink) {
-          logoutLink.addEventListener('click', function(e) {
-              e.preventDefault();
-              
-              // Clear authentication data
-              localStorage.removeItem('authInfo');
-              sessionStorage.removeItem('authInfo');
-              
-              // Redirect to login page
-              window.location.href = 'login.html';
-          });
-      }
+  // Update the UI with the current user's info
+  if (window.currentUser) {
+    const usernameDisplay = document.getElementById('username-display');
+    if (usernameDisplay) {
+      usernameDisplay.textContent = window.currentUser.username;
+    }
   }
 });

@@ -122,6 +122,18 @@ db.serialize(() => {
     )
   `);
 
+  db.run(`
+    CREATE TABLE IF NOT EXISTS PasswordResets (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  used BOOLEAN DEFAULT 0,
+  FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+  )
+  `);
+
   // Create indexes
   db.run(`CREATE INDEX IF NOT EXISTS idx_characters_user_id ON Characters(user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_characters_team_id ON Characters(team_id)`);
@@ -131,6 +143,8 @@ db.serialize(() => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_messages_read ON Messages(receiver_id, read)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_game_stats_game ON GameStatistics(game_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_game_stats_character ON GameStatistics(character_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_password_resets_token ON PasswordResets(token)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_password_resets_user ON PasswordResets(user_id)`);
 
   console.log('Database tables created successfully');
   

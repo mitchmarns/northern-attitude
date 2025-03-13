@@ -1,105 +1,99 @@
-// server.js - Express server for hockey roleplay application
+// server.js - Main server file
 const express = require('express');
 const path = require('path');
-const { db, userOperations, characterOperations, teamOperations, gameOperations, messageOperations } = require('./db');
+const cookieParser = require('cookie-parser');
+const cors = require('cors');
+const { authMiddleware, authService } = require('./public/js/auth');
+const { userOperations, characterOperations, teamOperations, gameOperations, messageOperations } = require('./db');
 
+// Create Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(cors({
+  origin: 'http://localhost:3000', // Update with your frontend URL in production
+  credentials: true
+}));
+
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Routes for API
-app.get('/api/my-characters', async (req, res) => {
+// Authentication routes
+app.post('/api/auth/register', authService.register);
+app.post('/api/auth/login', authService.login);
+app.post('/api/auth/logout', authService.logout);
+app.get('/api/auth/current-user', authMiddleware.isAuthenticated, authService.getCurrentUser);
+app.post('/api/auth/password-reset-request', authService.requestPasswordReset);
+app.post('/api/auth/password-reset', authService.resetPassword);
+
+// Protected API routes
+app.get('/api/my-characters', authMiddleware.isAuthenticated, async (req, res) => {
   try {
-    // For demo purposes, hardcoded user ID 1 (in a real app, this would come from authentication)
-    const userId = 1;
-    const characters = await characterOperations.getUserCharacters(userId);
+    const characters = await characterOperations.getUserCharacters(req.user.id);
     res.json(characters);
   } catch (error) {
-    console.error('Error fetching characters:', error);
-    res.status(500).json({ error: 'Failed to fetch characters' });
+    console.error('Error getting characters:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-app.get('/api/teams', async (req, res) => {
-  try {
-    const teams = await teamOperations.getAllTeams();
-    res.json(teams);
-  } catch (error) {
-    console.error('Error fetching teams:', error);
-    res.status(500).json({ error: 'Failed to fetch teams' });
-  }
-});
-
-app.get('/api/upcoming-games', async (req, res) => {
+app.get('/api/upcoming-games', authMiddleware.isAuthenticated, async (req, res) => {
   try {
     const limit = req.query.limit ? parseInt(req.query.limit) : 5;
     const games = await gameOperations.getUpcomingGames(limit);
     res.json(games);
   } catch (error) {
-    console.error('Error fetching upcoming games:', error);
-    res.status(500).json({ error: 'Failed to fetch upcoming games' });
+    console.error('Error getting upcoming games:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-app.get('/api/unread-messages', async (req, res) => {
+app.get('/api/my-team', authMiddleware.isAuthenticated, async (req, res) => {
   try {
-    // For demo purposes, hardcoded user ID 1 (in a real app, this would come from authentication)
-    const userId = 1;
-    const count = await messageOperations.getUnreadMessageCount(userId);
+    // Get the user's primary character
+    const characters = await characterOperations.getUserCharacters(req.user.id);
+    
+    // If the user has no characters or the first character has no team, return null
+    if (!characters.length || !characters[0].team_id) {
+      return res.json(null);
+    }
+    
+    // Get the team details
+    const teamId = characters[0].team_id;
+    const team = await new Promise((resolve, reject) => {
+      db.get('SELECT * FROM Teams WHERE id = ?', [teamId], (err, row) => {
+        if (err) reject(err);
+        resolve(row);
+      });
+    });
+    
+    res.json(team);
+  } catch (error) {
+    console.error('Error getting team data:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.get('/api/unread-messages', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const count = await messageOperations.getUnreadMessageCount(req.user.id);
     res.json({ count });
   } catch (error) {
-    console.error('Error fetching unread message count:', error);
-    res.status(500).json({ error: 'Failed to fetch unread message count' });
+    console.error('Error getting unread messages:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-// API to get user team
-app.get('/api/my-team', async (req, res) => {
-  try {
-    // For demo purposes, using hardcoded user ID 1
-    const userId = 1;
-    const characters = await characterOperations.getUserCharacters(userId);
-    
-    // Get the team of the first character (if any)
-    if (characters && characters.length > 0 && characters[0].team_id) {
-      // In a real app, you would have a separate function to get team details
-      // For simplicity, we're creating a mock response
-      res.json({
-        id: characters[0].team_id,
-        name: characters[0].team_name,
-        record: '8-4-2'
-      });
-    } else {
-      res.json(null);
-    }
-  } catch (error) {
-    console.error('Error fetching user team:', error);
-    res.status(500).json({ error: 'Failed to fetch user team' });
-  }
+// Catch-all route to serve the SPA
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Serve the main HTML file
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'html', 'dash.html'));
-});
-
-// Start the server
+// Start server
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
-// Handle graceful shutdown
-process.on('SIGINT', async () => {
-  console.log('Shutting down server...');
-  try {
-    await db.close();
-    process.exit(0);
-  } catch (error) {
-    console.error('Error during shutdown:', error);
-    process.exit(1);
-  }
+  console.log(`Server running on port ${PORT}`);
 });

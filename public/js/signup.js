@@ -1,115 +1,127 @@
 document.addEventListener('DOMContentLoaded', function() {
   const signupForm = document.getElementById('signup-form');
   
-  // Add error message div to the form (insert after subtitle)
+  // Add error and success message divs if they don't exist
   const authSubtitle = document.querySelector('.auth-subtitle');
-  const errorDiv = document.createElement('div');
-  errorDiv.className = 'auth-error';
-  errorDiv.id = 'auth-error';
-  authSubtitle.parentNode.insertBefore(errorDiv, authSubtitle.nextSibling);
   
-  // Add success message div
-  const successDiv = document.createElement('div');
-  successDiv.className = 'auth-success';
-  successDiv.id = 'auth-success';
-  authSubtitle.parentNode.insertBefore(successDiv, authSubtitle.nextSibling);
+  // Create error div if it doesn't exist
+  let errorDiv = document.getElementById('signup-form-error');
+  if (!errorDiv) {
+    errorDiv = document.createElement('div');
+    errorDiv.className = 'auth-error';
+    errorDiv.id = 'signup-form-error';
+    authSubtitle.parentNode.insertBefore(errorDiv, authSubtitle.nextSibling);
+  }
   
-  signupForm.addEventListener('submit', function(e) {
-      e.preventDefault();
+  // Create success div if it doesn't exist
+  let successDiv = document.getElementById('signup-form-success');
+  if (!successDiv) {
+    successDiv = document.createElement('div');
+    successDiv.className = 'auth-success';
+    successDiv.id = 'signup-form-success';
+    authSubtitle.parentNode.insertBefore(successDiv, authSubtitle.nextSibling);
+  }
+  
+  // Check if the user is already logged in
+  window.authUtils.checkAuth(false, true);
+  
+  // Handle signup form submission
+  signupForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Get form values
+    const username = document.getElementById('username').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+    const termsAccepted = document.getElementById('terms').checked;
+    
+    // Reset error messages
+    window.authUtils.clearFormMessages('signup-form');
+    
+    // Client-side validation
+    if (username.length < 3) {
+      window.authUtils.showFormError('signup-form', 'Username must be at least 3 characters long');
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      window.authUtils.showFormError('signup-form', 'Please enter a valid email address');
+      return;
+    }
+    
+    if (password.length < 8) {
+      window.authUtils.showFormError('signup-form', 'Password must be at least 8 characters long');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      window.authUtils.showFormError('signup-form', 'Passwords do not match');
+      return;
+    }
+    
+    if (!termsAccepted) {
+      window.authUtils.showFormError('signup-form', 'You must accept the Terms of Service and Privacy Policy');
+      return;
+    }
+    
+    try {
+      // Show loading state
+      const submitButton = signupForm.querySelector('button[type="submit"]');
+      const originalButtonText = submitButton.textContent;
+      submitButton.disabled = true;
+      submitButton.textContent = 'Creating account...';
       
-      // Get form values
-      const username = document.getElementById('username').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirm-password').value;
-      const termsAccepted = document.getElementById('terms').checked;
+      // Send registration request to server
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          username, 
+          email, 
+          password,
+          confirmPassword
+        })
+      });
       
-      // Reset error messages
-      errorDiv.style.display = 'none';
-      errorDiv.textContent = '';
-      successDiv.style.display = 'none';
+      // Parse response
+      const data = await response.json();
       
-      // Validate form
-      if (username.length < 3) {
-          showError('Username must be at least 3 characters long');
-          return;
-      }
+      // Reset button state
+      submitButton.disabled = false;
+      submitButton.textContent = originalButtonText;
       
-      if (!validateEmail(email)) {
-          showError('Please enter a valid email address');
-          return;
-      }
-      
-      if (password.length < 8) {
-          showError('Password must be at least 8 characters long');
-          return;
-      }
-      
-      if (password !== confirmPassword) {
-          showError('Passwords do not match');
-          return;
-      }
-      
-      if (!termsAccepted) {
-          showError('You must accept the Terms of Service and Privacy Policy');
-          return;
-      }
-      
-      // If we get here, validation passed
-
-      // In a real application, this is where you would send an AJAX request to your server
-      // For demonstration, we'll just simulate account creation with localStorage
-      
-      // Check if email already exists
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      if (users.some(user => user.email === email)) {
-          showError('An account with this email already exists');
-          return;
-      }
-      
-      // Store the new user
-      const newUser = {
-          id: Date.now().toString(),
-          username,
-          email,
-          password: hashPassword(password), // In a real app, use proper password hashing on the server
-          createdAt: new Date().toISOString()
-      };
-      
-      users.push(newUser);
-      localStorage.setItem('users', JSON.stringify(users));
-      
-      // Show success message
-      showSuccess('Account created successfully! Redirecting to login...');
-      
-      // Redirect to login after a delay
-      setTimeout(() => {
+      if (response.ok) {
+        // Registration successful
+        window.authUtils.showFormSuccess('signup-form', 'Account created successfully! Redirecting to login...');
+        
+        // Clear form
+        signupForm.reset();
+        
+        // Redirect to login page after a short delay
+        setTimeout(() => {
           window.location.href = 'login.html';
-      }, 2000);
+        }, 2000);
+      } else {
+        // Registration failed
+        window.authUtils.showFormError('signup-form', data.message || 'Registration failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      window.authUtils.showFormError('signup-form', 'An error occurred. Please try again later.');
+      
+      // Reset button state
+      const submitButton = signupForm.querySelector('button[type="submit"]');
+      submitButton.disabled = false;
+      submitButton.textContent = 'Create Account';
+    }
   });
   
-  // Helper functions
-  function showError(message) {
-      const errorDiv = document.getElementById('auth-error');
-      errorDiv.textContent = message;
-      errorDiv.style.display = 'block';
-  }
-  
-  function showSuccess(message) {
-      const successDiv = document.getElementById('auth-success');
-      successDiv.textContent = message;
-      successDiv.style.display = 'block';
-  }
-  
+  // Helper function for email validation
   function validateEmail(email) {
-      const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      return re.test(email);
-  }
-  
-  // Simple password hashing function - NOT for production use!
-  // In a real app, use bcrypt or similar on the server side
-  function hashPassword(password) {
-      // This is just for demo purposes
-      return btoa(password);
+    const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return re.test(email);
   }
 });
