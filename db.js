@@ -192,13 +192,13 @@ const userOperations = {
 // Character-related database operations
 const characterOperations = {
   // Create a new character
-  createCharacter: (userId, name, position, teamId, statsJson, bio = null, avatarUrl = null) => {
+  createCharacter: (userId, name, position, teamId, statsJson, bio = null, avatarUrl = null, isActive = false) => {
     return new Promise((resolve, reject) => {
       const query = `INSERT INTO Characters (
-        user_id, name, position, team_id, stats_json, bio, avatar_url, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`;
+        user_id, name, position, team_id, stats_json, bio, avatar_url, is_active, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`;
       
-      db.run(query, [userId, name, position, teamId, statsJson, bio, avatarUrl], function(err) {
+      db.run(query, [userId, name, position, teamId, statsJson, bio, avatarUrl, isActive ? 1 : 0], function(err) {
         if (err) {
           reject(err);
           return;
@@ -443,9 +443,10 @@ const characterOperations = {
         // Check if is_active column exists, add if it doesn't
         db.all("PRAGMA table_info(Characters)", (err, rows) => {
           if (err) {
-            reject(err);
-            return;
-          }
+            console.error('Error checking table info:', err);
+          reject(err);
+          return;
+        }
           
           // Check if columns exist, and add them if they don't
           const columns = rows || [];
@@ -466,6 +467,12 @@ const characterOperations = {
           if (!hasAvatarUrl) {
             addColumns.push("ALTER TABLE Characters ADD COLUMN avatar_url VARCHAR(255)");
           }
+
+          if (addColumns.length === 0) {
+            // No columns to add
+            resolve();
+            return;
+          }
           
           // Execute all column additions
           const executeQueries = (queries, index) => {
@@ -476,6 +483,7 @@ const characterOperations = {
             
             db.run(queries[index], (err) => {
               if (err) {
+                console.error(`Error adding column with query: ${queries[index]}`, err);
                 reject(err);
                 return;
               }
@@ -484,11 +492,7 @@ const characterOperations = {
             });
           };
           
-          if (addColumns.length > 0) {
-            executeQueries(addColumns, 0);
-          } else {
-            resolve();
-          }
+          executeQueries(addColumns, 0);
         });
       });
     });

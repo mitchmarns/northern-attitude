@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { characterOperations } = require('../../db');
+const { characterOperations } = require('../db');
 const { authMiddleware } = require('../public/js/auth');
 const multer = require('multer');
 const path = require('path');
@@ -85,7 +85,7 @@ router.get('/characters/:id', authMiddleware.isAuthenticated, async (req, res) =
 // Create a new character
 router.post('/characters', authMiddleware.isAuthenticated, async (req, res) => {
   try {
-    const { name, position, team_id, stats_json, bio, avatar_url } = req.body;
+    const { name, position, team_id, stats_json, bio, avatar_url, is_active } = req.body;
     
     // Validate required fields
     if (!name || !position || !stats_json) {
@@ -100,7 +100,7 @@ router.post('/characters', authMiddleware.isAuthenticated, async (req, res) => {
     
     // If this is the user's first character, set it as active
     const existingCharacters = await characterOperations.getUserCharacters(req.user.id);
-    const isActive = existingCharacters.length === 0;
+    const isActive = existingCharacters.length === 0 || is_active === true;
     
     // Create character
     const characterId = await characterOperations.createCharacter(
@@ -110,7 +110,8 @@ router.post('/characters', authMiddleware.isAuthenticated, async (req, res) => {
       team_id || null,
       stats_json,
       bio || null,
-      avatar_url || null
+      avatar_url || null,
+      isActive
     );
     
     // If this is the first character, set it as active

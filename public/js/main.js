@@ -13,7 +13,7 @@ function loadMyCharacters() {
   fetch('/api/my-characters')
       .then(response => {
           if (!response.ok) {
-              throw new Error('Failed to fetch characters data');
+              throw new Error(`Failed to fetch characters data: ${response.status}`);
           }
           return response.json();
       })
@@ -39,7 +39,7 @@ function loadMyCharacters() {
       })
       .catch(error => {
           console.error('Error loading characters:', error);
-          displayError('characters');
+          displayError('characters', 'Failed to load character data. Please try again later.');
       });
 }
 
@@ -166,7 +166,7 @@ function loadRecentActivity() {
 }
 
 // Function to display error messages
-function displayError(section) {
+function displayError(section, message = 'Please try again later') {
   let card;
   
   switch(section) {
@@ -191,7 +191,7 @@ function displayError(section) {
       if (paragraphs.length > 0) {
           paragraphs[0].innerHTML = `<span class="accent-text">Error loading data</span>`;
           if (paragraphs.length > 1) {
-              paragraphs[1].textContent = 'Please try again later';
+              paragraphs[1].textContent = message;
           }
       }
   }

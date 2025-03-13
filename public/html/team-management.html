@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Team | Northern Attitude</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .tabs-container {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .tabs-menu {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .tab-button {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: none;
+            border: none;
+            color: var(--lighttext);
+            font-family: var(--mainfont);
+            font-weight: var(--medium);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition-fast);
+        }
+        
+        .tab-button.active {
+            color: var(--header);
+            border-bottom: 3px solid var(--header);
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            padding: var(--spacing-md);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .roster-management {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .roster-table th, .roster-table td {
+            padding: var(--spacing-xs);
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .roster-table th {
+            color: var(--header);
+            font-weight: var(--semibold);
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        
+        .player-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+        
+        .btn-xs {
+            padding: 2px 8px;
+            font-size: 0.8rem;
+        }
+        
+        .invite-section {
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .staff-form {
+            margin-top: var(--spacing-md);
+        }
+        
+        .staff-list {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .staff-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .staff-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .staff-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: var(--spacing-sm);
+            overflow: hidden;
+        }
+        
+        .staff-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .staff-role {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-left: var(--spacing-sm);
+        }
+        
+        .pending-requests {
+            margin-top: var(--spacing-md);
+        }
+        
+        .request-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm);
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .request-user {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: var(--spacing-sm);
+            overflow: hidden;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .request-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+        
+        .confirm-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: var(--spacing-lg);
+            border-radius: 4px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-title {
+            font-family: var(--accentfont);
+            color: var(--header);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .modal-message {
+            margin-bottom: var(--spacing-md);
+            line-height: 1.6;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+        }
+        
+        .settings-form {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .danger-zone {
+            background-color: rgba(220, 53, 69, 0.1);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+            border-radius: 4px;
+            padding: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+        }
+        
+        .danger-zone h3 {
+            color: #dc3545;
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .danger-zone p {
+            margin-bottom: var(--spacing-md);
+            color: rgba(255, 255, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">northern<span>attitude</span></div>
+            <nav>
+                <ul>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
+                    <li><a href="#">Games</a></li>
+                    <li><a href="#">Stats</a></li>
+                </ul>
+            </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="content-header">
+                <h2>Manage Team: <span id="team-name">Loading...</span></h2>
+                <a href="#" id="back-to-team" class="btn btn-secondary">Back to Team</a>
+            </div>
+            
+            <div id="team-management-error" class="auth-error" style="display: none;"></div>
+            <div id="team-management-success" class="auth-success" style="display: none;"></div>
+            
+            <div class="tabs-container">
+                <div class="tabs-menu">
+                    <button class="tab-button active" data-tab="roster">Roster Management</button>
+                    <button class="tab-button" data-tab="staff">Staff Management</button>
+                    <button class="tab-button" data-tab="settings">Team Settings</button>
+                </div>
+                
+                <div id="roster" class="tab-content active">
+                    <div class="roster-management">
+                        <h3>Current Roster</h3>
+                        <div id="team-roster">
+                            <p>Loading roster...</p>
+                        </div>
+                        
+                        <div class="invite-section">
+                            <h3>Invite Player</h3>
+                            <form id="invite-player-form">
+                                <div class="form-row">
+                                    <div class="form-col">
+                                        <div class="form-group">
+                                            <label for="invite-username">Player Username</label>
+                                            <input type="text" id="invite-username" class="form-control" placeholder="Enter username">
+                                        </div>
+                                    </div>
+                                    <div class="form-col" style="display: flex; align-items: flex-end;">
+                                        <button type="submit" class="btn btn-primary">Send Invite</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
+                        <div class="pending-requests">
+                            <h3>Pending Join Requests</h3>
+                            <div id="join-requests">
+                                <p>Loading join requests...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="staff" class="tab-content">
+                    <h3>Team Staff</h3>
+                    <div id="staff-list" class="staff-list">
+                        <p>Loading staff...</p>
+                    </div>
+                    
+                    <div class="staff-form">
+                        <h3>Add Staff Member</h3>
+                        <form id="add-staff-form">
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="staff-username">Username</label>
+                                        <input type="text" id="staff-username" class="form-control" placeholder="Enter username">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="staff-role">Role</label>
+                                        <select id="staff-role" class="form-control">
+                                            <option value="Coach">Coach</option>
+                                            <option value="Assistant Coach">Assistant Coach</option>
+                                            <option value="General Manager">General Manager</option>
+                                            <option value="Scout">Scout</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-col" style="display: flex; align-items: flex-end;">
+                                    <button type="submit" class="btn btn-primary">Add Staff</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div id="settings" class="tab-content">
+                    <div class="settings-form">
+                        <h3>Team Settings</h3>
+                        <form id="team-settings-form">
+                            <div class="form-group">
+                                <label for="settings-team-name">Team Name</label>
+                                <input type="text" id="settings-team-name" class="form-control">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="settings-team-description">Team Description</label>
+                                <textarea id="settings-team-description" class="form-control" rows="4"></textarea>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="settings-primary-color">Primary Color</label>
+                                        <div class="color-input-group">
+                                            <div class="color-preview" id="settings-primary-color-preview"></div>
+                                            <input type="color" id="settings-primary-color" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="settings-secondary-color">Secondary Color</label>
+                                        <div class="color-input-group">
+                                            <div class="color-preview" id="settings-secondary-color-preview"></div>
+                                            <input type="color" id="settings-secondary-color" class="form-control">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="settings-team-logo">Team Logo</label>
+                                <div class="team-logo-container">
+                                    <div class="team-logo-preview">
+                                        <img id="settings-logo-preview" src="/api/placeholder/120/120" alt="Team logo">
+                                    </div>
+                                    <div class="logo-upload">
+                                        <button type="button" class="btn btn-secondary">Change Logo</button>
+                                        <input type="file" id="settings-logo-file" accept="image/*">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Save Settings</button>
+                        </form>
+                    </div>
+                    
+                    <div class="danger-zone">
+                        <h3>Danger Zone</h3>
+                        <p>These actions cannot be undone. Please be certain.</p>
+                        <button id="delete-team-btn" class="btn btn-danger">Delete Team</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Remove Player Confirmation Modal -->
+            <div id="remove-player-modal" class="confirm-modal">
+                <div class="modal-content">
+                    <h3 class="modal-title">Remove Player</h3>
+                    <p class="modal-message">Are you sure you want to remove this player from the team?</p>
+                    <div class="modal-buttons">
+                        <button id="cancel-remove-player" class="btn btn-secondary">Cancel</button>
+                        <button id="confirm-remove-player" class="btn btn-danger">Remove</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Remove Staff Confirmation Modal -->
+            <div id="remove-staff-modal" class="confirm-modal">
+                <div class="modal-content">
+                    <h3 class="modal-title">Remove Staff</h3>
+                    <p class="modal-message">Are you sure you want to remove this staff member?</p>
+                    <div class="modal-buttons">
+                        <button id="cancel-remove-staff" class="btn btn-secondary">Cancel</button>
+                        <button id="confirm-remove-staff" class="btn btn-danger">Remove</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Delete Team Confirmation Modal -->
+            <div id="delete-team-modal" class="confirm-modal">
+                <div class="modal-content">
+                    <h3 class="modal-title">Delete Team</h3>
+                    <p class="modal-message">Are you sure you want to permanently delete this team? This action cannot be undone.</p>
+                    <div class="form-group">
+                        <label for="delete-confirm">Type the team name to confirm:</label>
+                        <input type="text" id="delete-confirm" class="form-control">
+                    </div>
+                    <div class="modal-buttons">
+                        <button id="cancel-delete-team" class="btn btn-secondary">Cancel</button>
+                        <button id="confirm-delete-team" class="btn btn-danger" disabled>Delete Team</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Northern Attitude Hockey Roleplay. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth-utils.js"></script>
+    <script src="../js/team-management.js"></script>
+    <script>
+        // Tab switching functionality
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and contents
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                // Add active class to clicked button and corresponding content
+                button.classList.add('active');
+                const tabId = button.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Update color preview when color input changes in settings
+        document.getElementById('settings-primary-color').addEventListener('input', function() {
+            document.getElementById('settings-primary-color-preview').style.backgroundColor = this.value;
+        });
+        
+        document.getElementById('settings-secondary-color').addEventListener('input', function() {
+            document.getElementById('settings-secondary-color-preview').style.backgroundColor = this.value;
+        });
+        
+        // Enable delete button only when correct team name is entered
+        document.getElementById('delete-confirm').addEventListener('input', function() {
+            const teamName = document.getElementById('team-name').textContent;
+            document.getElementById('confirm-delete-team').disabled = this.value !== teamName;
+        });
+    </script>
+</body>
+</html>

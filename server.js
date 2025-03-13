@@ -15,18 +15,20 @@ app.use(cookieParser());
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
+// Also serve uploads directory for character avatars
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import route handlers
-const authRoutes = require('./routes/auth-routes');
-// If you have other routes, import them here
-// const apiRoutes = require('./routes/api-routes');
-// const characterRoutes = require('./routes/character-routes');
+const authRoutes = require('./routes/auth');  
+const apiRoutes = require('./routes/api');  
+const characterRoutes = require('./routes/character-routes');  
+const userRoutes = require('./routes/user-routes');  
 
 // Set up routes
 app.use('/api/auth', authRoutes);
-// If you have other routes, set them up here
-// app.use('/api', apiRoutes);
-// app.use('/api', characterRoutes);
+app.use('/api', apiRoutes);  
+app.use('/api', characterRoutes);  
+app.use('/api/users', userRoutes);  
 
 // Add new columns to Characters table if needed
 characterOperations.addCharacterColumns()
@@ -55,6 +57,24 @@ app.use((err, req, res, next) => {
   
   // For non-API routes, send generic error message
   res.status(500).send('Server error occurred. Please try again later.');
+});
+
+app.get('/api/placeholder/:width/:height', (req, res) => {
+  const width = parseInt(req.params.width) || 100;
+  const height = parseInt(req.params.height) || 100;
+  
+  // Generate SVG placeholder
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <rect width="100%" height="100%" fill="#5a8095" />
+      <text x="50%" y="50%" font-family="Arial" font-size="16" text-anchor="middle" fill="#ffffff" dominant-baseline="middle">
+        ${width}x${height}
+      </text>
+    </svg>
+  `;
+  
+  res.set('Content-Type', 'image/svg+xml');
+  res.send(svg);
 });
 
 // Start server

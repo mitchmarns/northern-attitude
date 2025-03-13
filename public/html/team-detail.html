@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Details | Northern Attitude</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .team-container {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: var(--spacing-md);
+        }
+        
+        @media screen and (max-width: 768px) {
+            .team-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .team-sidebar {
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            padding: var(--spacing-md);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .team-content {
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            padding: var(--spacing-md);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+        
+        .team-logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .team-logo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--header);
+            background-color: var(--darktext);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .team-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .team-record-display {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: var(--semibold);
+            margin-bottom: var(--spacing-md);
+            color: var(--lighttext);
+        }
+        
+        .team-actions {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .team-info-section {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .team-info-section h3 {
+            font-family: var(--accentfont);
+            color: var(--header);
+            margin-bottom: var(--spacing-sm);
+            padding-bottom: var(--spacing-xs);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .team-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .stat-item {
+            background-color: rgba(0, 0, 0, 0.2);
+            padding: var(--spacing-sm);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 5px;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: var(--semibold);
+            color: var(--lighttext);
+        }
+        
+        .staff-item {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--spacing-xs) 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .staff-role {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+        
+        .roster-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .roster-table th, .roster-table td {
+            padding: var(--spacing-xs);
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .roster-table th {
+            color: var(--header);
+            font-weight: var(--semibold);
+            background-color: rgba(0, 0, 0, 0.2);
+        }
+        
+        .roster-table .position-header {
+            background-color: rgba(0, 0, 0, 0.3);
+            font-weight: var(--semibold);
+            color: var(--lighttext);
+        }
+        
+        .player-name {
+            color: var(--lighttext);
+            text-decoration: none;
+            transition: var(--transition-fast);
+        }
+        
+        .player-name:hover {
+            color: var(--header);
+        }
+        
+        .leave-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            padding: var(--spacing-lg);
+            border-radius: 4px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-title {
+            font-family: var(--accentfont);
+            color: var(--header);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .modal-message {
+            margin-bottom: var(--spacing-md);
+            line-height: 1.6;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">northern<span>attitude</span></div>
+            <nav>
+                <ul>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
+                    <li><a href="#">Games</a></li>
+                    <li><a href="#">Stats</a></li>
+                </ul>
+            </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="content-header">
+                <h2 id="team-name">Team Details</h2>
+                <a href="teams.html" class="btn btn-secondary">Back to Teams</a>
+            </div>
+            
+            <div id="team-detail-error" class="auth-error" style="display: none;"></div>
+            <div id="team-detail-success" class="auth-success" style="display: none;"></div>
+            
+            <div class="team-container">
+                <div class="team-sidebar">
+                    <div class="team-logo-container">
+                        <div class="team-logo">
+                            <img id="team-logo" src="/api/placeholder/150/150" alt="Team logo">
+                        </div>
+                    </div>
+                    
+                    <div class="team-record-display">
+                        Record: <span id="team-record">0-0-0</span>
+                    </div>
+                    
+                    <div class="team-actions">
+                        <button id="join-team-btn" class="btn btn-primary">Join Team</button>
+                        <button id="leave-team-btn" class="btn btn-secondary" style="display: none;">Leave Team</button>
+                        <button id="manage-team-btn" class="btn btn-primary" style="display: none;">Manage Team</button>
+                    </div>
+                    
+                    <div class="team-info-section">
+                        <h3>Team Staff</h3>
+                        <div id="team-staff">
+                            <p>Loading staff information...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="team-info-section">
+                        <h3>Team Owner</h3>
+                        <p>Owner: <span id="team-owner">...</span></p>
+                    </div>
+                </div>
+                
+                <div class="team-content">
+                    <div class="team-info-section">
+                        <h3>About</h3>
+                        <p id="team-description">Loading team information...</p>
+                    </div>
+                    
+                    <div class="team-info-section">
+                        <h3>Team Statistics</h3>
+                        <div id="team-stats" class="team-stats">
+                            <!-- Team stats will be loaded here -->
+                        </div>
+                    </div>
+                    
+                    <div class="team-info-section">
+                        <h3>Team Roster</h3>
+                        <div id="team-roster">
+                            <p>Loading roster...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Leave Team Confirmation Modal -->
+            <div id="leave-modal" class="leave-modal">
+                <div class="modal-content">
+                    <h3 class="modal-title">Leave Team?</h3>
+                    <p class="modal-message">Are you sure you want to leave this team? Your characters will be removed from the team roster.</p>
+                    <div class="modal-buttons">
+                        <button id="cancel-leave" class="btn btn-secondary">Cancel</button>
+                        <button id="confirm-leave" class="btn btn-danger">Leave Team</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Northern Attitude Hockey Roleplay. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth-utils.js"></script>
+    <script src="../js/team-detail.js"></script>
+</body>
+</html>

@@ -317,6 +317,18 @@ async function createCharacter() {
       characterData.avatar_url = avatarUrl;
     }
     
+    // Check if this is the first character
+    const existingCharacters = await fetch('/api/my-characters', {
+      method: 'GET',
+      credentials: 'include'
+    }).then(res => {
+      if (!res.ok) throw new Error('Failed to check existing characters');
+      return res.json();
+    });
+    
+    // Set is_active if this is the first character
+    characterData.is_active = existingCharacters.length === 0;
+    
     // Create character
     const response = await fetch('/api/characters', {
       method: 'POST',
@@ -332,7 +344,8 @@ async function createCharacter() {
     submitButton.textContent = originalButtonText;
     
     if (!response.ok) {
-      throw new Error('Failed to create character');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create character');
     }
     
     const data = await response.json();
@@ -354,7 +367,7 @@ async function createCharacter() {
     submitButton.textContent = 'Create Character';
     
     // Show error message
-    window.authUtils.showFormError('character-form', 'Failed to create character. Please try again later.');
+    window.authUtils.showFormError('character-form', error.message || 'Failed to create character. Please try again later.');
   }
 }
 

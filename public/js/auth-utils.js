@@ -1,6 +1,6 @@
 // auth-utils.js - Client-side authentication utilities
 
-// Check if user is authenticated and redirect if necessary
+// Update the checkAuth function in auth-utils.js
 async function checkAuth(redirectToLogin = true, redirectToHome = false) {
   try {
     const response = await fetch('/api/auth/current-user', {
@@ -19,16 +19,27 @@ async function checkAuth(redirectToLogin = true, redirectToHome = false) {
       updateUserUI(user);
       
       // If we're on a public page but should redirect authenticated users
-      if (redirectToHome) {
-        window.location.href = '/dash.html';
+      if (redirectToHome && window.location.pathname.includes('/html/login.html') || 
+          window.location.pathname.includes('/html/signup.html') || 
+          window.location.pathname.includes('/html/forgot-password.html') ||
+          window.location.pathname.includes('/html/reset-password.html') ||
+          window.location.pathname === '/' ||
+          window.location.pathname === '/index.html') {
+        window.location.href = '/html/dash.html';
         return null;
       }
       
       return user;
     } else {
       // If we're on a protected page, redirect to login
-      if (redirectToLogin) {
-        window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+      if (redirectToLogin && (
+          window.location.pathname.includes('/html/dash.html') || 
+          window.location.pathname.includes('/html/profile.html') ||
+          window.location.pathname.includes('/html/my-characters.html') ||
+          window.location.pathname.includes('/html/character-profile.html') ||
+          window.location.pathname.includes('/html/character-form.html')
+      )) {
+        window.location.href = '/html/login.html?redirect=' + encodeURIComponent(window.location.pathname);
         return null;
       }
       
@@ -37,8 +48,8 @@ async function checkAuth(redirectToLogin = true, redirectToHome = false) {
   } catch (error) {
     console.error('Authentication check failed:', error);
     
-    if (redirectToLogin) {
-      window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+    if (redirectToLogin && !window.location.pathname.includes('/html/login.html')) {
+      window.location.href = '/html/login.html?redirect=' + encodeURIComponent(window.location.pathname);
     }
     
     return null;

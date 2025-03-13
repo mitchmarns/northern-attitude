@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Team | Northern Attitude</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .form-container {
+            background-color: var(--card-bg);
+            border-radius: 4px;
+            padding: var(--spacing-md);
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .form-section {
+            margin-bottom: var(--spacing-md);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .form-section-title {
+            font-family: var(--accentfont);
+            color: var(--header);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .form-row {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .team-logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .team-logo-preview {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--header);
+            margin-bottom: var(--spacing-sm);
+            background-color: var(--darktext);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .team-logo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .logo-upload {
+            position: relative;
+            margin-top: var(--spacing-xs);
+        }
+        
+        .logo-upload .btn {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo-upload input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        .color-preview {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-right: var(--spacing-sm);
+        }
+        
+        .color-input-group {
+            display: flex;
+            align-items: center;
+        }
+        
+        @media screen and (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">northern<span>attitude</span></div>
+            <nav>
+                <ul>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
+                    <li><a href="#">Games</a></li>
+                    <li><a href="#">Stats</a></li>
+                </ul>
+            </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="content-header">
+                <h2 id="form-title">Create New Team</h2>
+                <a href="teams.html" class="btn btn-secondary">Back to Teams</a>
+            </div>
+            
+            <div id="team-form-error" class="auth-error" style="display: none;"></div>
+            <div id="team-form-success" class="auth-success" style="display: none;"></div>
+            
+            <div class="form-container">
+                <form id="team-form">
+                    <!-- Team Basic Info Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Basic Information</h3>
+                        
+                        <div class="team-logo-container">
+                            <div class="team-logo-preview">
+                                <img id="logo-preview" src="/api/placeholder/120/120" alt="Team logo">
+                            </div>
+                            <div class="logo-upload">
+                                <button type="button" class="btn btn-secondary">Upload Logo</button>
+                                <input type="file" id="logo-file" accept="image/*">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="team-name">Team Name</label>
+                            <input type="text" id="team-name" class="form-control" required>
+                            <p class="form-text">Enter the full name of your hockey team</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Team Description Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Team Details</h3>
+                        
+                        <div class="form-group">
+                            <label for="team-description">Description</label>
+                            <textarea id="team-description" class="form-control" rows="4" placeholder="Describe your team's history, playing style, or other information..."></textarea>
+                            <p class="form-text">This will be displayed on your team's profile page</p>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="primary-color">Primary Color</label>
+                                    <div class="color-input-group">
+                                        <div class="color-preview" id="primary-color-preview"></div>
+                                        <input type="color" id="primary-color" class="form-control" value="#5a8095">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="secondary-color">Secondary Color</label>
+                                    <div class="color-input-group">
+                                        <div class="color-preview" id="secondary-color-preview"></div>
+                                        <input type="color" id="secondary-color" class="form-control" value="#3c474b">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="submit-btn">Create Team</button>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Northern Attitude Hockey Roleplay. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth-utils.js"></script>
+    <script src="../js/team-form.js"></script>
+    <script>
+        // Update color preview when color input changes
+        document.getElementById('primary-color').addEventListener('input', function() {
+            document.getElementById('primary-color-preview').style.backgroundColor = this.value;
+        });
+        
+        document.getElementById('secondary-color').addEventListener('input', function() {
+            document.getElementById('secondary-color-preview').style.backgroundColor = this.value;
+        });
+        
+        // Initialize color previews
+        document.getElementById('primary-color-preview').style.backgroundColor = document.getElementById('primary-color').value;
+        document.getElementById('secondary-color-preview').style.backgroundColor = document.getElementById('secondary-color').value;
+    </script>
+</body>
+</html>
