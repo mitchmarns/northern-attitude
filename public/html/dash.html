@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hockey Roleplay</title>
+    <title>Dashboard | Northern Attitude</title>
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
@@ -12,13 +12,18 @@
             <div class="logo">northern<span>attitude</span></div>
             <nav>
                 <ul>
-                    <li><a href="#">Dashboard</a></li>
-                    <li><a href="#">Players</a></li>
-                    <li><a href="#">Teams</a></li>
+                    <li><a href="#" class="active">Dashboard</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
                     <li><a href="#">Games</a></li>
                     <li><a href="#">Stats</a></li>
                 </ul>
             </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
         </div>
     </header>
     
@@ -29,28 +34,31 @@
                 <ul>
                     <li><a href="./profile.html">My Profile</a></li>
                     <li><a href="./my-characters.html">My Characters</a></li>
-                    <li><a href="#">Messages</a></li>
+                    <li><a href="#">Messages <span id="message-badge" class="badge"></span></a></li>
                     <li><a href="#">Settings</a></li>
                 </ul>
                 
                 <h3>Quick Links</h3>
                 <ul>
-                    <li><a href="#">League Standings</a></li>
+                    <li><a href="teams.html">Teams Directory</a></li>
                     <li><a href="#">Upcoming Games</a></li>
                     <li><a href="#">Player Directory</a></li>
-                    <li><a href="#">Team Management</a></li>
+                    <li><a id="manage-team-link" href="#" style="display: none;">Manage My Team</a></li>
                 </ul>
                 
                 <h3>Recent Activity</h3>
-                <ul>
-                    <li><a href="#">Loading recent activity...</a></li>
-                </ul>
+                <div id="recent-activity-list">
+                    <p>Loading recent activity...</p>
+                </div>
             </aside>
             
             <section class="content-area">
                 <div class="content-header">
                     <h2>Dashboard</h2>
-                    <a href="./character-form.html" class="btn btn-primary">New Character</a>
+                    <div class="action-buttons">
+                        <a href="character-form.html" class="btn btn-primary">New Character</a>
+                        <a href="team-form.html" class="btn btn-secondary" id="create-team-btn" style="display: none;">New Team</a>
+                    </div>
                 </div>
                 
                 <div class="post">
@@ -84,7 +92,7 @@
                         <h4>My Characters</h4>
                         <p>Loading character data...</p>
                         <p>Please wait...</p>
-                        <a href="./my-characters.html">Manage Characters →</a>
+                        <a href="my-characters.html">Manage Characters →</a>
                     </div>
                     
                     <div class="card">
@@ -98,7 +106,7 @@
                         <h4>Team Status</h4>
                         <p>Loading team data...</p>
                         <p>Please wait...</p>
-                        <a href="#">Team Details →</a>
+                        <a id="team-details-link" href="#">Team Details →</a>
                     </div>
                     
                     <div class="card">
@@ -113,6 +121,7 @@
 
     <!-- Add your JavaScript file -->
     <script src="../js/main.js"></script>
+    <script src="../js/auth-utils.js"></script>
     <script src="../js/dash.js"></script>
 </body>
 </html>

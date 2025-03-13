@@ -23,12 +23,28 @@ const authRoutes = require('./routes/auth');
 const apiRoutes = require('./routes/api');  
 const characterRoutes = require('./routes/character-routes');  
 const userRoutes = require('./routes/user-routes');  
+const teamRoutes = require('./routes/team-routes');  
 
 // Set up routes
 app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);  
 app.use('/api', characterRoutes);  
 app.use('/api/users', userRoutes);  
+app.use('/api', teamRoutes);  
+
+const uploadsDir = path.join(__dirname, 'public/uploads');
+const avatarsDir = path.join(uploadsDir, 'avatars');
+const logosDir = path.join(uploadsDir, 'logos');
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(avatarsDir)) {
+  fs.mkdirSync(avatarsDir, { recursive: true });
+}
+if (!fs.existsSync(logosDir)) {
+  fs.mkdirSync(logosDir, { recursive: true });
+}
 
 // Add new columns to Characters table if needed
 characterOperations.addCharacterColumns()
