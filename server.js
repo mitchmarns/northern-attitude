@@ -4,6 +4,7 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const { db } = require('./db');
+const userRoutes = require('./routes/user-routes');
 
 // Create Express app
 const app = express();
@@ -15,12 +16,13 @@ const apiRoutes = require('./routes/api');
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' ? 'https://yourproductiondomain.com' : 'http://localhost:3000',
   credentials: true
 }));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
@@ -28,6 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
+app.use('/api/users', userRoutes);
 
 // Serve index.html for the root route
 app.get('/', (req, res) => {

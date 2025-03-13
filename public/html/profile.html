@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile | Northern Attitude</title>
+    <link rel="stylesheet" href="../css/styles.css">
+    <style>
+        .profile-form {
+            background: var(--card-bg);
+            border-radius: 4px;
+            padding: var(--spacing-lg);
+            box-shadow: 0 4px 12px var(--shadow);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .avatar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .avatar-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--header);
+            margin-bottom: var(--spacing-md);
+            position: relative;
+            background-color: var(--darktext);
+        }
+        
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .avatar-upload {
+            position: relative;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .avatar-upload .btn {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .avatar-upload input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .bio-section {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .tab-container {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .tab-menu {
+            display: flex;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .tab-button {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: none;
+            border: none;
+            color: var(--lighttext);
+            font-family: var(--mainfont);
+            font-weight: var(--medium);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: var(--transition-fast);
+        }
+        
+        .tab-button.active {
+            color: var(--header);
+            border-bottom: 3px solid var(--header);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .private-info-notice {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid var(--header);
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">northern<span>attitude</span></div>
+            <nav>
+                <ul>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="#">Players</a></li>
+                    <li><a href="#">Teams</a></li>
+                    <li><a href="#">Games</a></li>
+                    <li><a href="#">Stats</a></li>
+                </ul>
+            </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="content-header">
+                <h2>My Profile</h2>
+            </div>
+            
+            <div class="tab-container">
+                <div class="tab-menu">
+                    <button class="tab-button active" data-tab="profile-info">Profile Information</button>
+                    <button class="tab-button" data-tab="account-settings">Account Settings</button>
+                    <button class="tab-button" data-tab="privacy-settings">Privacy Settings</button>
+                </div>
+                
+                <div id="profile-info" class="tab-content active">
+                    <div id="profile-form-error" class="auth-error"></div>
+                    <div id="profile-form-success" class="auth-success"></div>
+                    
+                    <div class="profile-form">
+                        <form id="profile-form">
+                            <div class="avatar-container">
+                                <div class="avatar-preview">
+                                    <img id="avatar-image" src="/api/placeholder/150/150" alt="Profile avatar">
+                                </div>
+                                <div class="avatar-upload">
+                                    <button type="button" class="btn btn-secondary">Change Avatar</button>
+                                    <input type="file" id="avatar-file" accept="image/*">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="display-name">Display Name</label>
+                                        <input type="text" id="display-name" class="form-control" placeholder="Your display name">
+                                        <p class="form-text">This is how your name appears to other users</p>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="location">Location</label>
+                                        <input type="text" id="location" class="form-control" placeholder="City, Country">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bio-section">
+                                <div class="form-group">
+                                    <label for="bio">About Me</label>
+                                    <textarea id="bio" class="form-control" rows="4" placeholder="Tell us about yourself..."></textarea>
+                                    <p class="form-text">A brief description that will appear on your public profile</p>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="favorite-team">Favorite Team</label>
+                                        <select id="favorite-team" class="form-control">
+                                            <option value="">Select a team</option>
+                                            <!-- Will be populated dynamically -->
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="favorite-position">Preferred Position</label>
+                                        <select id="favorite-position" class="form-control">
+                                            <option value="">Select a position</option>
+                                            <option value="C">Center (C)</option>
+                                            <option value="LW">Left Wing (LW)</option>
+                                            <option value="RW">Right Wing (RW)</option>
+                                            <option value="D">Defense (D)</option>
+                                            <option value="G">Goalie (G)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Experience Level</label>
+                                <div class="form-check">
+                                    <input type="radio" id="beginner" name="experience" value="beginner">
+                                    <label for="beginner">Beginner</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" id="intermediate" name="experience" value="intermediate">
+                                    <label for="intermediate">Intermediate</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" id="advanced" name="experience" value="advanced">
+                                    <label for="advanced">Advanced</label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Save Profile</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div id="account-settings" class="tab-content">
+                    <div id="account-form-error" class="auth-error"></div>
+                    <div id="account-form-success" class="auth-success"></div>
+                    
+                    <div class="profile-form">
+                        <div class="private-info-notice">
+                            <p>This information is private and will only be used for account purposes.</p>
+                        </div>
+                        
+                        <form id="account-form">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" id="username" class="form-control" disabled>
+                                <p class="form-text">Username cannot be changed</p>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" class="form-control">
+                            </div>
+                            
+                            <hr style="margin: var(--spacing-md) 0; border-color: rgba(255, 255, 255, 0.1);">
+                            
+                            <h4 style="margin-bottom: var(--spacing-md); color: var(--header);">Change Password</h4>
+                            
+                            <div class="form-group">
+                                <label for="current-password">Current Password</label>
+                                <input type="password" id="current-password" class="form-control">
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="new-password">New Password</label>
+                                        <input type="password" id="new-password" class="form-control">
+                                        <p class="form-text">At least 8 characters</p>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="confirm-new-password">Confirm New Password</label>
+                                        <input type="password" id="confirm-new-password" class="form-control">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Update Account</button>
+                        </form>
+                    </div>
+                </div>
+                
+                <div id="privacy-settings" class="tab-content">
+                    <div id="privacy-form-error" class="auth-error"></div>
+                    <div id="privacy-form-success" class="auth-success"></div>
+                    
+                    <div class="profile-form">
+                        <form id="privacy-form">
+                            <div class="form-group">
+                                <label>Profile Visibility</label>
+                                <div class="form-check">
+                                    <input type="radio" id="visibility-public" name="visibility" value="public">
+                                    <label for="visibility-public">Public - Anyone can view your profile</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" id="visibility-members" name="visibility" value="members">
+                                    <label for="visibility-members">Members Only - Only registered users can view your profile</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="radio" id="visibility-team" name="visibility" value="team">
+                                    <label for="visibility-team">Team Only - Only your team members can view your profile</label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Communication Preferences</label>
+                                <div class="form-check">
+                                    <input type="checkbox" id="receive-messages" name="preferences" value="messages">
+                                    <label for="receive-messages">Allow direct messages from other members</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" id="show-online-status" name="preferences" value="online-status">
+                                    <label for="show-online-status">Show my online status</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" id="email-notifications" name="preferences" value="email-notifications">
+                                    <label for="email-notifications">Receive email notifications</label>
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">Save Privacy Settings</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Northern Attitude Hockey Roleplay. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth-utils.js"></script>
+    <script src="../js/profile.js"></script>
+</body>
+</html>
