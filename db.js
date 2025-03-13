@@ -1116,6 +1116,69 @@ const teamOperations = {
   }
 };
 
+// Game-related database operations
+const gameOperations = {
+  // Get upcoming games
+  getUpcomingGames: (limit = 5) => {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT g.*, ht.name as home_team_name, at.name as away_team_name 
+                    FROM Games g
+                    JOIN Teams ht ON g.home_team_id = ht.id
+                    JOIN Teams at ON g.away_team_id = at.id
+                    WHERE g.date > CURRENT_TIMESTAMP AND g.status = 'scheduled'
+                    ORDER BY g.date ASC
+                    LIMIT ?`;
+      
+      db.all(query, [limit], (err, rows) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(rows);
+      });
+    });
+  },
+
+  // Get game by ID
+  getGameById: (gameId) => {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT g.*, ht.name as home_team_name, at.name as away_team_name 
+                    FROM Games g
+                    JOIN Teams ht ON g.home_team_id = ht.id
+                    JOIN Teams at ON g.away_team_id = at.id
+                    WHERE g.id = ?`;
+      
+      db.get(query, [gameId], (err, row) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(row);
+      });
+    });
+  },
+
+  // Get game statistics
+  getGameStats: (gameId) => {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT gs.*, c.name as character_name, c.position, u.username as player_name
+                    FROM GameStatistics gs
+                    JOIN Characters c ON gs.character_id = c.id
+                    JOIN Users u ON c.user_id = u.id
+                    WHERE gs.game_id = ?
+                    ORDER BY gs.goals DESC, gs.assists DESC`;
+      
+      db.all(query, [gameId], (err, rows) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        resolve(rows);
+      });
+    });
+  }
+};
+
 // Message-related database operations
 const messageOperations = {
   // Send a new message
