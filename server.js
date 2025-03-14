@@ -1,9 +1,20 @@
-// Updated server.js - Removed file upload dependencies
+// Updated server.js with proper database initialization checks
 
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-const { characterOperations } = require('./config/db');
+const fs = require('fs');
+
+// First check if database exists
+const dbPath = 'hockey_roleplay.db';
+if (!fs.existsSync(dbPath)) {
+  console.error('Database file not found! Please run the database-init.js script first.');
+  console.error('Command: node database-init.js');
+  process.exit(1);
+}
+
+// Import database operations after confirming database exists
+const { characterOperations, tableExists } = require('./config/db');
 
 // Create Express app
 const app = express();
@@ -15,6 +26,33 @@ app.use(cookieParser());
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Middleware to check if the database is properly initialized
+app.use(async (req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    try {
+      // Check for essential tables
+      const usersExist = await tableExists('Users');
+      const charactersExist = await tableExists('Characters');
+      const teamsExist = await tableExists('Teams');
+      const messagesExist = await tableExists('Messages');
+      
+      if (!usersExist || !charactersExist || !teamsExist || !messagesExist) {
+        console.error('Database tables missing. Please run database-init.js first');
+        return res.status(500).json({ 
+          message: 'Database not properly initialized. Server admin needs to run initialization.' 
+        });
+      }
+      
+      next();
+    } catch (err) {
+      console.error('Database check error:', err);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  } else {
+    next();
+  }
+});
 
 // Import route handlers
 const authRoutes = require('./routes/auth');  
@@ -30,10 +68,24 @@ app.use('/api', characterRoutes);
 app.use('/api/users', userRoutes);  
 app.use('/api', teamRoutes);  
 
-// Add new columns to Characters table if needed
-characterOperations.addCharacterColumns()
-  .then(() => console.log('Character table updated with new columns if needed'))
-  .catch(err => console.error('Error updating Character table:', err));
+// Generate placeholder images
+app.get('/api/placeholder/:width/:height', (req, res) => {
+  const width = parseInt(req.params.width) || 100;
+  const height = parseInt(req.params.height) || 100;
+  
+  // Generate SVG placeholder
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <rect width="100%" height="100%" fill="#5a8095" />
+      <text x="50%" y="50%" font-family="Arial" font-size="16" text-anchor="middle" fill="#ffffff" dominant-baseline="middle">
+        ${width}x${height}
+      </text>
+    </svg>
+  `;
+  
+  res.set('Content-Type', 'image/svg+xml');
+  res.send(svg);
+});
 
 // Handle 404 errors
 app.use((req, res) => {
@@ -57,25 +109,6 @@ app.use((err, req, res, next) => {
   
   // For non-API routes, send generic error message
   res.status(500).send('Server error occurred. Please try again later.');
-});
-
-// Generate placeholder images
-app.get('/api/placeholder/:width/:height', (req, res) => {
-  const width = parseInt(req.params.width) || 100;
-  const height = parseInt(req.params.height) || 100;
-  
-  // Generate SVG placeholder
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-      <rect width="100%" height="100%" fill="#5a8095" />
-      <text x="50%" y="50%" font-family="Arial" font-size="16" text-anchor="middle" fill="#ffffff" dominant-baseline="middle">
-        ${width}x${height}
-      </text>
-    </svg>
-  `;
-  
-  res.set('Content-Type', 'image/svg+xml');
-  res.send(svg);
 });
 
 // Start server

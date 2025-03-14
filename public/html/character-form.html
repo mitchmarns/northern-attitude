@@ -64,27 +64,6 @@
             object-fit: cover;
         }
         
-        .avatar-upload {
-            position: relative;
-            margin-top: var(--spacing-xs);
-        }
-        
-        .avatar-upload .btn {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .avatar-upload input[type="file"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 2;
-        }
-        
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -207,8 +186,8 @@
             <nav>
                 <ul>
                     <li><a href="dash.html">Dashboard</a></li>
-                    <li><a href="#">Players</a></li>
-                    <li><a href="#">Teams</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
                     <li><a href="#">Games</a></li>
                     <li><a href="#">Stats</a></li>
                 </ul>
@@ -237,14 +216,17 @@
                     <div class="form-section">
                         <h3 class="form-section-title">Basic Information</h3>
                         
+                        <div class="form-group">
+                            <label for="avatar-url">Character Avatar URL</label>
+                            <input type="url" id="avatar-url" class="form-control" placeholder="https://example.com/your-image.jpg">
+                            <p class="form-text">Enter a URL to an image for your character's avatar</p>
+                        </div>
+                        
                         <div class="character-avatar-container">
                             <div class="character-avatar-preview">
-                                <img id="avatar-preview" src="/api/placeholder/120/120" alt="Character avatar">
+                                <img id="avatar-image" src="/api/placeholder/120/120" alt="Character avatar">
                             </div>
-                            <div class="avatar-upload">
-                                <button type="button" class="btn btn-secondary">Upload Avatar</button>
-                                <input type="file" id="avatar-file" accept="image/*">
-                            </div>
+                            <button type="button" class="btn btn-secondary" id="preview-avatar-btn">Preview Avatar</button>
                         </div>
                         
                         <div class="form-row">
@@ -270,39 +252,50 @@
                     
                     <!-- Position Selection Section -->
                     <div class="form-section">
-                        <h3 class="form-section-title">Basic Information</h3>
+                        <h3 class="form-section-title">Position Selection</h3>
                         
-                        <div class="form-group">
-                            <label for="avatar-url">Character Avatar URL</label>
-                            <input type="url" id="avatar-url" class="form-control" placeholder="https://example.com/your-image.jpg">
-                            <p class="form-text">Enter a URL to an image for your character's avatar</p>
-                        </div>
-                        
-                        <div class="character-avatar-container">
-                            <div class="character-avatar-preview">
-                                <img id="avatar-preview" src="/api/placeholder/120/120" alt="Character avatar">
-                            </div>
-                            <button type="button" class="btn btn-secondary" id="preview-avatar-btn">Preview Avatar</button>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="character-name">Character Name</label>
-                                    <input type="text" id="character-name" class="form-control" required>
-                                    <p class="form-text">Full name of your hockey player</p>
+                        <div class="position-select-container">
+                            <label>Select Player Position</label>
+                            <div class="position-options">
+                                <div class="position-option" data-position="C">
+                                    <div class="position-option-code">C</div>
+                                    <div class="position-option-name">Center</div>
+                                </div>
+                                <div class="position-option" data-position="LW">
+                                    <div class="position-option-code">LW</div>
+                                    <div class="position-option-name">Left Wing</div>
+                                </div>
+                                <div class="position-option" data-position="RW">
+                                    <div class="position-option-code">RW</div>
+                                    <div class="position-option-name">Right Wing</div>
+                                </div>
+                                <div class="position-option" data-position="D">
+                                    <div class="position-option-code">D</div>
+                                    <div class="position-option-name">Defense</div>
+                                </div>
+                                <div class="position-option" data-position="G">
+                                    <div class="position-option-code">G</div>
+                                    <div class="position-option-name">Goalie</div>
                                 </div>
                             </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="team-id">Team</label>
-                                    <select id="team-id" class="form-control">
-                                        <option value="">Not on a team</option>
-                                        <!-- Teams will be loaded dynamically -->
-                                    </select>
-                                    <p class="form-text">Select the team your character plays for</p>
-                                </div>
-                            </div>
+                            <input type="hidden" id="position" name="position" required>
+                        </div>
+                        
+                        <!-- Position descriptions will show based on selection -->
+                        <div id="position-C-description" class="position-description">
+                            <p>Centers are responsible for taking faceoffs, playmaking, and providing support in both offensive and defensive zones.</p>
+                        </div>
+                        <div id="position-LW-description" class="position-description">
+                            <p>Left Wings play on the left side of the ice, focusing on scoring goals and forechecking in the offensive zone.</p>
+                        </div>
+                        <div id="position-RW-description" class="position-description">
+                            <p>Right Wings play on the right side of the ice, focusing on scoring goals and applying pressure in the offensive zone.</p>
+                        </div>
+                        <div id="position-D-description" class="position-description">
+                            <p>Defensemen protect their own net, block shots, deliver checks, and start offensive plays from the back.</p>
+                        </div>
+                        <div id="position-G-description" class="position-description">
+                            <p>Goalies are the last line of defense, using their skills to stop pucks from entering the net.</p>
                         </div>
                     </div>
                     
@@ -369,5 +362,261 @@
 
     <script src="../js/auth-utils.js"></script>
     <script src="../js/character-form.js"></script>
-</body>
-</html>
+    <script>
+        // Add position selection event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            const positionOptions = document.querySelectorAll('.position-option');
+            const positionInput = document.getElementById('position');
+            const dynamicStatsContainer = document.getElementById('dynamic-stats-container');
+            
+            // Setup position selection
+            positionOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Remove selected class from all options
+                    positionOptions.forEach(opt => opt.classList.remove('selected'));
+                    
+                    // Add selected class to clicked option
+                    this.classList.add('selected');
+                    
+                    // Set position value in hidden input
+                    const position = this.getAttribute('data-position');
+                    positionInput.value = position;
+                    
+                    // Hide all position descriptions
+                    document.querySelectorAll('.position-description').forEach(desc => {
+                        desc.style.display = 'none';
+                    });
+                    
+                    // Show selected position description
+                    const descriptionElement = document.getElementById(`position-${position}-description`);
+                    if (descriptionElement) {
+                        descriptionElement.style.display = 'block';
+                    }
+                    
+                    // Update dynamic stats based on position
+                    updateDynamicStats(position);
+                });
+            });
+            
+            // Function to update dynamic stats based on position
+            function updateDynamicStats(position) {
+                // Clear previous dynamic stats
+                dynamicStatsContainer.innerHTML = '';
+                
+                // Create position-specific stats
+                let statsHTML = '<div class="stats-grid">';
+                
+                switch(position) {
+                    case 'C':
+                        statsHTML += `
+                            <div class="stat-input-group">
+                                <label for="stat-faceoff-pct">Faceoff %</label>
+                                <input type="number" id="stat-faceoff-pct" class="stat-input" value="50.0" min="0" max="100" step="0.1">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat-shooting-pct">Shooting %</label>
+                                <input type="number" id="stat-shooting-pct" class="stat-input" value="10.0" min="0" max="100" step="0.1">
+                            </div>
+                        `;
+                        break;
+                        
+                    case 'LW':
+                    case 'RW':
+                        statsHTML += `
+                            <div class="stat-input-group">
+                                <label for="stat-shooting-pct">Shooting %</label>
+                                <input type="number" id="stat-shooting-pct" class="stat-input" value="10.0" min="0" max="100" step="0.1">
+                            </div>
+                        `;
+                        break;
+                        
+                    case 'D':
+                        statsHTML += `
+                            <div class="stat-input-group">
+                                <label for="stat-blocks">Blocked Shots</label>
+                                <input type="number" id="stat-blocks" class="stat-input" value="0" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat-hits">Hits</label>
+                                <input type="number" id="stat-hits" class="stat-input" value="0" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat-ice-time">Avg. Ice Time (min)</label>
+                                <input type="number" id="stat-ice-time" class="stat-input" value="20.0" min="0" step="0.1">
+                            </div>
+                        `;
+                        break;
+                        
+                    case 'G':
+                        statsHTML += `
+                            <div class="stat-input-group">
+                                <label for="stat-wins">Wins</label>
+                                <input type="number" id="stat-wins" class="stat-input" value="0" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat-losses">Losses</label>
+                                <input type="number" id="stat-losses" class="stat-input" value="0" min="0">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat-gaa">GAA</label>
+                                <input type="number" id="stat-gaa" class="stat-input" value="2.50" min="0" step="0.01">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat-save-pct">Save %</label>
+                                <input type="text" id="stat-save-pct" class="stat-input" value=".900">
+                            </div>
+                            <div class="stat-input-group">
+                                <label for="stat-shutouts">Shutouts</label>
+                                <input type="number" id="stat-shutouts" class="stat-input" value="0" min="0">
+                            </div>
+                        `;
+                        break;
+                }
+                
+                statsHTML += '</div>';
+                dynamicStatsContainer.innerHTML = statsHTML;
+            }
+            
+            // Set up avatar preview
+            const avatarUrlInput = document.getElementById('avatar-url');
+            const previewButton = document.getElementById('preview-avatar-btn');
+            const avatarImage = document.getElementById('avatar-image');
+            
+            previewButton.addEventListener('click', function() {
+                const imageUrl = avatarUrlInput.value.trim();
+                
+                if (imageUrl) {
+                    // Update the preview image
+                    avatarImage.src = imageUrl;
+                    
+                    // Handle load errors by reverting to placeholder
+                    avatarImage.onerror = function() {
+                        avatarImage.src = '/api/placeholder/120/120';
+                        window.authUtils.showFormError('character-form', 'Invalid image URL or image could not be loaded');
+                    };
+                } else {
+                    // If no URL, show placeholder
+                    avatarImage.src = '/api/placeholder/120/120';
+                }
+            });
+            
+            // Function to validate the form
+            window.validateForm = function() {
+                // Reset error messages
+                window.authUtils.clearFormMessages('character-form');
+                
+                // Validate required fields
+                const characterName = document.getElementById('character-name').value.trim();
+                const position = document.getElementById('position').value;
+                
+                if (!characterName) {
+                    window.authUtils.showFormError('character-form', 'Character name is required');
+                    return false;
+                }
+                
+                if (!position) {
+                    window.authUtils.showFormError('character-form', 'Please select a position');
+                    return false;
+                }
+                
+                return true;
+            };
+            
+            // Function to get form data
+            window.getCharacterFormData = function() {
+                // Get basic info
+                const name = document.getElementById('character-name').value.trim();
+                const teamId = document.getElementById('team-id').value || null;
+                const position = document.getElementById('position').value;
+                const bio = document.getElementById('character-bio').value.trim();
+                
+                // Gather all stats
+                const stats = {
+                    games: parseInt(document.getElementById('stat-games').value) || 0,
+                    goals: parseInt(document.getElementById('stat-goals').value) || 0,
+                    assists: parseInt(document.getElementById('stat-assists').value) || 0,
+                    plus_minus: parseInt(document.getElementById('stat-plus-minus').value) || 0,
+                    penalties: parseInt(document.getElementById('stat-penalties').value) || 0,
+                    shots: parseInt(document.getElementById('stat-shots').value) || 0
+                };
+                
+                // Add position-specific stats
+                if (position === 'C') {
+                    stats.faceoff_pct = parseFloat(document.getElementById('stat-faceoff-pct')?.value) || 50.0;
+                    stats.shooting_pct = parseFloat(document.getElementById('stat-shooting-pct')?.value) || 10.0;
+                } else if (position === 'LW' || position === 'RW') {
+                    stats.shooting_pct = parseFloat(document.getElementById('stat-shooting-pct')?.value) || 10.0;
+                } else if (position === 'D') {
+                    stats.blocks = parseInt(document.getElementById('stat-blocks')?.value) || 0;
+                    stats.hits = parseInt(document.getElementById('stat-hits')?.value) || 0;
+                    // Convert minutes to seconds for storage
+                    const iceTimeMinutes = parseFloat(document.getElementById('stat-ice-time')?.value) || 20.0;
+                    stats.ice_time = Math.round(iceTimeMinutes * 60);
+                } else if (position === 'G') {
+                    stats.wins = parseInt(document.getElementById('stat-wins')?.value) || 0;
+                    stats.losses = parseInt(document.getElementById('stat-losses')?.value) || 0;
+                    stats.gaa = parseFloat(document.getElementById('stat-gaa')?.value) || 2.50;
+                    stats.save_pct = document.getElementById('stat-save-pct')?.value || '.900';
+                    stats.shutouts = parseInt(document.getElementById('stat-shutouts')?.value) || 0;
+                }
+                
+                // Return compiled data
+                return {
+                    name,
+                    position,
+                    team_id: teamId,
+                    bio,
+                    stats_json: JSON.stringify(stats)
+                };
+            };
+            
+            // Load teams for the dropdown
+            async function loadTeams() {
+                try {
+                    const response = await fetch('/api/teams', {
+                        method: 'GET',
+                        credentials: 'include'
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch teams');
+                    }
+                    
+                    const teams = await response.json();
+                    const teamSelect = document.getElementById('team-id');
+                    
+                    // Clear existing options except the first one
+                    while (teamSelect.options.length > 1) {
+                        teamSelect.remove(1);
+                    }
+                    
+                    // Add team options
+                    teams.forEach(team => {
+                        const option = document.createElement('option');
+                        option.value = team.id;
+                        option.textContent = team.name;
+                        teamSelect.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error loading teams:', error);
+                }
+            }
+            
+            // Check URL for edit mode
+            const urlParams = new URLSearchParams(window.location.search);
+            const characterId = urlParams.get('id');
+            
+            if (characterId) {
+                // We're in edit mode
+                document.getElementById('form-title').textContent = 'Edit Character';
+                document.getElementById('submit-btn').textContent = 'Update Character';
+                
+                // Load character data
+                loadCharacterData(characterId);
+            } else {
+                // We're in create mode
+                // Just load teams
+                loadTeams();
+            }
+        });
+    </script>
