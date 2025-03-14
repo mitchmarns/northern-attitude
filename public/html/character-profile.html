@@ -5,265 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Character Profile | Northern Attitude</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <style>
-        .profile-container {
-            display: grid;
-            grid-template-columns: 1fr 3fr;
-            gap: var(--spacing-md);
-        }
-        
-        @media screen and (max-width: 768px) {
-            .profile-container {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        .profile-sidebar {
-            background-color: var(--card-bg);
-            border-radius: 4px;
-            padding: var(--spacing-md);
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-        
-        .profile-content {
-            background-color: var(--card-bg);
-            border-radius: 4px;
-            padding: var(--spacing-md);
-            box-shadow: 0 4px 12px var(--shadow);
-        }
-        
-        .character-avatar {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 3px solid var(--header);
-            margin: 0 auto var(--spacing-md) auto;
-        }
-        
-        .character-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .character-name {
-            text-align: center;
-            font-family: var(--accentfont);
-            font-size: 1.8rem;
-            color: var(--header);
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .character-position {
-            text-align: center;
-            font-weight: var(--semibold);
-            color: var(--lighttext);
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .character-team {
-            text-align: center;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .character-status {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            text-align: center;
-            width: 100%;
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .character-status.active {
-            background-color: rgba(40, 167, 69, 0.2);
-            color: #75b798;
-        }
-        
-        .character-status.inactive {
-            background-color: rgba(108, 117, 125, 0.2);
-            color: #c6c7c8;
-        }
-        
-        .stat-block {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-            padding: var(--spacing-sm);
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .stat-block h4 {
-            font-family: var(--accentfont);
-            color: var(--header);
-            margin-bottom: var(--spacing-sm);
-            text-align: center;
-            font-size: 1.1rem;
-        }
-        
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: var(--spacing-xs);
-        }
-        
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .stat-label {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .stat-value {
-            font-weight: var(--medium);
-            color: var(--lighttext);
-        }
-        
-        .profile-section {
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .profile-section h3 {
-            font-family: var(--accentfont);
-            color: var(--header);
-            margin-bottom: var(--spacing-sm);
-            padding-bottom: var(--spacing-xs);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .character-bio {
-            line-height: 1.6;
-            color: var(--lighttext);
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .action-buttons {
-            display: flex;
-            gap: var(--spacing-sm);
-            margin-top: var(--spacing-md);
-        }
-        
-        .btn-secondary {
-            background-color: transparent;
-            border: 2px solid var(--header);
-            color: var(--header);
-        }
-        
-        .btn-secondary:hover {
-            background-color: rgba(90, 128, 149, 0.1);
-        }
-        
-        .btn-danger {
-            background-color: #e74c3c;
-            color: white;
-        }
-        
-        .btn-danger:hover {
-            background-color: #c0392b;
-        }
-        
-        .stats-highlight {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .highlight-stat {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-            padding: var(--spacing-md);
-            text-align: center;
-        }
-        
-        .highlight-value {
-            font-size: 2rem;
-            font-weight: var(--bold);
-            color: var(--header);
-            margin-bottom: var(--spacing-xs);
-        }
-        
-        .highlight-label {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .games-list {
-            margin-top: var(--spacing-sm);
-        }
-        
-        .game-item {
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-            padding: var(--spacing-sm);
-            margin-bottom: var(--spacing-xs);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .game-teams {
-            font-weight: var(--medium);
-        }
-        
-        .game-date {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .game-stats {
-            font-size: 0.9rem;
-        }
-        
-        .delete-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .modal-content {
-            background-color: var(--card-bg);
-            padding: var(--spacing-lg);
-            border-radius: 4px;
-            max-width: 500px;
-            width: 90%;
-        }
-        
-        .modal-title {
-            font-family: var(--accentfont);
-            color: var(--header);
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .modal-message {
-            margin-bottom: var(--spacing-md);
-            line-height: 1.6;
-        }
-        
-        .modal-buttons {
-            display: flex;
-            justify-content: flex-end;
-            gap: var(--spacing-sm);
-        }
-    </style>
+    <link rel="stylesheet" href="../css/enhanced-styles.css">
 </head>
 <body>
     <header>
@@ -272,8 +14,8 @@
             <nav>
                 <ul>
                     <li><a href="dash.html">Dashboard</a></li>
-                    <li><a href="#">Players</a></li>
-                    <li><a href="#">Teams</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
                     <li><a href="#">Games</a></li>
                     <li><a href="#">Stats</a></li>
                 </ul>
@@ -285,6 +27,14 @@
             </div>
         </div>
     </header>
+
+    <!-- Enhanced Character Name Banner -->
+    <div class="name-banner">
+        <div class="background" style="background-color: var(--bg);">
+            <div class="name" id="banner-character-name">Character Name</div>
+            <div class="jersey-number" id="jersey-number">00</div>
+        </div>
+    </div>
     
     <main>
         <div class="container">
@@ -296,9 +46,103 @@
             <div id="character-profile-error" class="auth-error" style="display: none;"></div>
             <div id="character-profile-success" class="auth-success" style="display: none;"></div>
             
-            <div id="profile-container" class="profile-container">
-                <!-- Character profile will be loaded here via JavaScript -->
-                <div class="loading-message">Loading character profile...</div>
+            <!-- Tab Navigation -->
+            <div id="tab-container">
+                <div class="tabs">
+                    <button class="tab active" onclick="openTab('profile')">Profile</button>
+                    <button class="tab" onclick="openTab('stats')">Statistics</button>
+                    <button class="tab" onclick="openTab('games')">Games</button>
+                    <button class="tab" onclick="openTab('bio')">Biography</button>
+                </div>
+            </div>
+
+            <!-- Profile Tab Content -->
+            <div id="profile" class="tab-content active">
+                <div class="content-wrapper">
+                    <!-- Profile Sidebar -->
+                    <div class="profile-sidebar">
+                        <div class="character-avatar">
+                            <img id="character-avatar" src="/api/placeholder/150/150" alt="Character avatar">
+                        </div>
+                        <h2 class="character-name" id="sidebar-character-name">Character Name</h2>
+                        <div class="character-position" id="character-position">Position</div>
+                        <div class="character-team" id="character-team">Team Name</div>
+                        <div class="character-status" id="character-status">Status</div>
+                        
+                        <!-- Player Statistics Block -->
+                        <div class="stat-block">
+                            <h4>Player Statistics</h4>
+                            <div class="stat-grid" id="main-stats">
+                                <!-- Stats will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Position-specific Stats Block -->
+                        <div class="stat-block" id="position-stats-block">
+                            <h4 id="position-stats-title">Position Stats</h4>
+                            <div class="stat-grid" id="position-stats">
+                                <!-- Position-specific stats will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            <a href="#" id="edit-character-link" class="btn btn-primary">Edit Character</a>
+                            <button id="delete-character-btn" class="btn btn-danger">Delete</button>
+                            <button id="set-active-btn" class="btn btn-secondary" style="display: none;">Set Active</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Character Info Content -->
+                    <div class="character-info">
+                        <div class="info-section">
+                            <h2 id="about-heading">About Character</h2>
+                            <div class="character-bio" id="character-bio">
+                                <!-- Bio will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <hr class="section-divider">
+                        
+                        <!-- Career Highlights Section -->
+                        <div class="info-section">
+                            <h2>Career Highlights</h2>
+                            <div class="stats-highlight" id="career-highlights">
+                                <!-- Career highlights will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Statistics Tab Content -->
+            <div id="stats" class="tab-content">
+                <h2>Season Statistics</h2>
+                <table class="roster-table" id="stats-table">
+                    <thead>
+                        <tr id="stats-header-row">
+                            <!-- Stats table headers will be populated by JavaScript -->
+                        </tr>
+                    </thead>
+                    <tbody id="stats-body">
+                        <!-- Stats rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Games Tab Content -->
+            <div id="games" class="tab-content">
+                <h2>Recent Games</h2>
+                <div class="games-list" id="recent-games">
+                    <!-- Recent games will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Biography Tab Content -->
+            <div id="bio" class="tab-content">
+                <div class="biocon" id="full-bio">
+                    <!-- Full biography will be populated by JavaScript if available -->
+                </div>
             </div>
             
             <!-- Delete Confirmation Modal -->
@@ -323,5 +167,28 @@
 
     <script src="../js/auth-utils.js"></script>
     <script src="../js/character-profile.js"></script>
+    
+    <!-- Tab Switching JavaScript -->
+    <script>
+        function openTab(tabName) {
+            // Hide all tab content
+            var tabContents = document.getElementsByClassName('tab-content');
+            for (var i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            // Remove active class from all tabs
+            var tabs = document.getElementsByClassName('tab');
+            for (var i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            // Show the specific tab content
+            document.getElementById(tabName).classList.add('active');
+            
+            // Add active class to the button that opened the tab
+            event.currentTarget.classList.add('active');
+        }
+    </script>
 </body>
 </html>

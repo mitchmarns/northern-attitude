@@ -38,27 +38,6 @@
             object-fit: cover;
         }
         
-        .avatar-upload {
-            position: relative;
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .avatar-upload .btn {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .avatar-upload input[type="file"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-            z-index: 2;
-        }
-        
         .form-row {
             display: flex;
             gap: var(--spacing-md);
@@ -124,8 +103,8 @@
             <nav>
                 <ul>
                     <li><a href="dash.html">Dashboard</a></li>
-                    <li><a href="#">Players</a></li>
-                    <li><a href="#">Teams</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
                     <li><a href="#">Games</a></li>
                     <li><a href="#">Stats</a></li>
                 </ul>
@@ -161,10 +140,12 @@
                                 <div class="avatar-preview">
                                     <img id="avatar-image" src="/api/placeholder/150/150" alt="Profile avatar">
                                 </div>
-                                <div class="avatar-upload">
-                                    <button type="button" class="btn btn-secondary">Change Avatar</button>
-                                    <input type="file" id="avatar-file" accept="image/*">
+                                <div class="form-group">
+                                    <label for="avatar-url">Profile Avatar URL</label>
+                                    <input type="url" id="avatar-url" class="form-control" placeholder="https://example.com/your-avatar.jpg">
+                                    <p class="form-text">Enter a URL to an image for your profile avatar</p>
                                 </div>
+                                <button type="button" class="btn btn-secondary" id="preview-avatar-btn">Preview Avatar</button>
                             </div>
                             
                             <div class="form-row">
@@ -188,31 +169,6 @@
                                     <label for="bio">About Me</label>
                                     <textarea id="bio" class="form-control" rows="4" placeholder="Tell us about yourself..."></textarea>
                                     <p class="form-text">A brief description that will appear on your public profile</p>
-                                </div>
-                            </div>
-                            
-                            <div class="form-row">
-                                <div class="form-col">
-                                    <div class="form-group">
-                                        <label for="favorite-team">Favorite Team</label>
-                                        <select id="favorite-team" class="form-control">
-                                            <option value="">Select a team</option>
-                                            <!-- Will be populated dynamically -->
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="form-col">
-                                    <div class="form-group">
-                                        <label for="favorite-position">Preferred Position</label>
-                                        <select id="favorite-position" class="form-control">
-                                            <option value="">Select a position</option>
-                                            <option value="C">Center (C)</option>
-                                            <option value="LW">Left Wing (LW)</option>
-                                            <option value="RW">Right Wing (RW)</option>
-                                            <option value="D">Defense (D)</option>
-                                            <option value="G">Goalie (G)</option>
-                                        </select>
-                                    </div>
                                 </div>
                             </div>
                             
@@ -295,16 +251,28 @@
                     <div class="profile-form">
                         <form id="privacy-form">
                             <div class="form-group">
-                                <label for="avatar-url">Profile Avatar URL</label>
-                                <input type="url" id="avatar-url" class="form-control" placeholder="https://example.com/your-avatar.jpg">
-                                <p class="form-text">Enter a URL to an image for your profile avatar</p>
+                                <label for="profile-visibility">Profile Visibility</label>
+                                <select id="profile-visibility" class="form-control">
+                                    <option value="public">Public - Everyone can see your profile</option>
+                                    <option value="members">Members Only - Only registered users can see your profile</option>
+                                    <option value="team">Team Only - Only your team members can see your profile</option>
+                                </select>
                             </div>
                             
-                            <div class="avatar-container">
-                                <div class="avatar-preview">
-                                    <img id="avatar-image" src="/api/placeholder/150/150" alt="Profile avatar">
+                            <div class="form-group">
+                                <label>Notification Preferences</label>
+                                <div class="form-check">
+                                    <input type="checkbox" id="email-notifications" name="notifications" value="email">
+                                    <label for="email-notifications">Email Notifications</label>
                                 </div>
-                                <button type="button" class="btn btn-secondary" id="preview-avatar-btn">Preview Avatar</button>
+                                <div class="form-check">
+                                    <input type="checkbox" id="message-notifications" name="notifications" value="messages">
+                                    <label for="message-notifications">Message Notifications</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" id="game-notifications" name="notifications" value="games">
+                                    <label for="game-notifications">Game Notifications</label>
+                                </div>
                             </div>
                             
                             <button type="submit" class="btn btn-primary">Save Privacy Settings</button>
