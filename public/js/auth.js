@@ -1,7 +1,7 @@
 // auth.js - Server-side authentication handling
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
-const { db } = require('../../db');
+const { db } = require('../../config/db');
 
 // Store active sessions in memory (in production, use Redis or another session store)
 const activeSessions = new Map();

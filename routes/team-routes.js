@@ -5,8 +5,8 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { db } = require('../db');
-const { teamOperations, characterOperations } = require('../db');
+const { db } = require('../config/db');
+const { teamOperations, characterOperations } = require('../config/db');
 const { authMiddleware } = require('../public/js/auth');
 
 // Set up file storage for team logos

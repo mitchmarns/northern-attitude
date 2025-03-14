@@ -5,7 +5,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const bcrypt = require('bcrypt');
-const { db } = require('../db');
+const { db } = require('../config/db');
 const { authMiddleware } = require('../public/js/auth');
 
 // Set up multer for file uploads

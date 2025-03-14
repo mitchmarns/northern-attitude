@@ -3,7 +3,8 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-const { characterOperations } = require('./db');
+const fs = require('fs');
+const { characterOperations } = require('./config/db');
 
 // Create Express app
 const app = express();

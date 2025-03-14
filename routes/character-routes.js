@@ -2,7 +2,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { characterOperations } = require('../db');
+const { characterOperations } = require('../config/db');
 const { authMiddleware } = require('../public/js/auth');
 const multer = require('multer');
 const path = require('path');

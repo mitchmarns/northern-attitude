@@ -7,7 +7,7 @@ const {
   teamOperations, 
   gameOperations,
   messageOperations
-} = require('../db');
+} = require('../config/db');
 
 // Character routes
 router.get('/my-characters', authMiddleware.isAuthenticated, async (req, res) => {
