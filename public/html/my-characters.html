@@ -5,148 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Characters | Northern Attitude</title>
     <link rel="stylesheet" href="../css/styles.css">
-    <style>
-        .character-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: var(--spacing-md);
-            margin-bottom: var(--spacing-lg);
-        }
-        
-        .character-card {
-            background-color: var(--card-bg);
-            border-radius: 4px;
-            padding: var(--spacing-md);
-            box-shadow: 0 4px 12px var(--shadow);
-            transition: var(--transition-fast);
-            position: relative;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .character-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px var(--shadow);
-        }
-        
-        .character-card.active {
-            border-left: 4px solid var(--header);
-        }
-        
-        .active-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background-color: var(--header);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .character-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .character-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 2px solid var(--header);
-            margin-right: var(--spacing-md);
-        }
-        
-        .character-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .character-info h3 {
-            margin-bottom: 5px;
-            font-family: var(--accentfont);
-            color: var(--header);
-        }
-        
-        .character-info .position {
-            font-weight: var(--semibold);
-            color: var(--lighttext);
-            margin-bottom: 5px;
-        }
-        
-        .character-info .team {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .character-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--spacing-xs);
-            margin-bottom: var(--spacing-md);
-            font-size: 0.9rem;
-        }
-        
-        .stat {
-            padding: var(--spacing-xs);
-            text-align: center;
-            background-color: rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-        }
-        
-        .stat-name {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.8rem;
-            margin-bottom: 2px;
-        }
-        
-        .stat-value {
-            font-weight: var(--medium);
-            color: var(--lighttext);
-        }
-        
-        .character-actions {
-            margin-top: auto;
-            display: flex;
-            justify-content: space-between;
-            padding-top: var(--spacing-sm);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .character-actions a {
-            color: var(--header);
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: var(--transition-fast);
-        }
-        
-        .character-actions a:hover {
-            color: var(--header-hover);
-        }
-        
-        .no-characters {
-            text-align: center;
-            padding: var(--spacing-lg);
-            background-color: var(--card-bg);
-            border-radius: 4px;
-        }
-        
-        .no-characters h3 {
-            color: var(--header);
-            margin-bottom: var(--spacing-md);
-        }
-        
-        .empty-illustration {
-            max-width: 200px;
-            margin: 0 auto var(--spacing-md) auto;
-            opacity: 0.6;
-        }
-    </style>
+    <link rel="stylesheet" href="../css/enhanced-styles.css">
+    <link rel="stylesheet" href="../css/character-card-styles.css">
+    <link rel="stylesheet" href="https://use.typekit.net/eat5uwv.css">
 </head>
 <body>
     <header>
@@ -154,9 +15,9 @@
             <div class="logo">northern<span>attitude</span></div>
             <nav>
                 <ul>
-                    <li><a href="./dash.html">Dashboard</a></li>
-                    <li><a href="#">Players</a></li>
-                    <li><a href="./teams.html">Teams</a></li>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="my-characters.html" class="active">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
                     <li><a href="#">Games</a></li>
                     <li><a href="#">Stats</a></li>
                 </ul>
@@ -179,9 +40,149 @@
             <div id="character-list-error" class="auth-error" style="display: none;"></div>
             <div id="character-list-success" class="auth-success" style="display: none;"></div>
             
+            <!-- Character Container -->
             <div id="character-container">
-                <!-- Characters will be loaded here via JavaScript -->
-                <div class="loading-message">Loading your characters...</div>
+                <!-- Character List -->
+                <div class="character-list">
+                    <!-- Active Character Card Example -->
+                    <div class="character-card active">
+                        <div class="active-badge">Active</div>
+                        <div class="character-header">
+                            <div class="character-avatar">
+                                <img src="/api/placeholder/70/70" alt="Mark Stevens">
+                            </div>
+                            <div class="character-info">
+                                <h3>Mark Stevens</h3>
+                                <div class="position">Center</div>
+                                <div class="team">Toronto Maple Leafs</div>
+                            </div>
+                        </div>
+                        
+                        <div class="character-stats">
+                            <div class="stat">
+                                <div class="stat-name">GOALS</div>
+                                <div class="stat-value">12</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-name">ASSISTS</div>
+                                <div class="stat-value">18</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-name">GAMES</div>
+                                <div class="stat-value">14</div>
+                            </div>
+                        </div>
+                        
+                        <div class="character-actions">
+                            <a href="character-profile.html?id=1">View Profile</a>
+                            <a href="character-form.html?id=1">Edit</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Second Character Card Example -->
+                    <div class="character-card">
+                        <div class="character-header">
+                            <div class="character-avatar">
+                                <img src="/api/placeholder/70/70" alt="Alex Johnson">
+                            </div>
+                            <div class="character-info">
+                                <h3>Alex Johnson</h3>
+                                <div class="position">Defense</div>
+                                <div class="team">Toronto Maple Leafs</div>
+                            </div>
+                        </div>
+                        
+                        <div class="character-stats">
+                            <div class="stat">
+                                <div class="stat-name">GOALS</div>
+                                <div class="stat-value">5</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-name">ASSISTS</div>
+                                <div class="stat-value">15</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-name">GAMES</div>
+                                <div class="stat-value">14</div>
+                            </div>
+                        </div>
+                        
+                        <div class="character-actions">
+                            <a href="character-profile.html?id=2">View Profile</a>
+                            <a href="#" class="set-active-link" data-character-id="2">Set Active</a>
+                            <a href="character-form.html?id=2">Edit</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Third Character Card Example -->
+                    <div class="character-card">
+                        <div class="character-header">
+                            <div class="character-avatar">
+                                <img src="/api/placeholder/70/70" alt="Samantha Clarke">
+                            </div>
+                            <div class="character-info">
+                                <h3>Samantha Clarke</h3>
+                                <div class="position">Goalie</div>
+                                <div class="team">Boston Bruins</div>
+                            </div>
+                        </div>
+                        
+                        <div class="character-stats">
+                            <div class="stat">
+                                <div class="stat-name">WINS</div>
+                                <div class="stat-value">8</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-name">SAVES</div>
+                                <div class="stat-value">243</div>
+                            </div>
+                            <div class="stat">
+                                <div class="stat-name">GAMES</div>
+                                <div class="stat-value">10</div>
+                            </div>
+                        </div>
+                        
+                        <div class="character-actions">
+                            <a href="character-profile.html?id=3">View Profile</a>
+                            <a href="#" class="set-active-link" data-character-id="3">Set Active</a>
+                            <a href="character-form.html?id=3">Edit</a>
+                        </div>
+                    </div>
+                    
+                    <!-- Fourth Character Card Example (Coach) -->
+                    <div class="character-card">
+                        <div class="character-header">
+                            <div class="character-avatar">
+                                <img src="/api/placeholder/70/70" alt="Robert Thompson">
+                            </div>
+                            <div class="character-info">
+                                <h3>Robert Thompson</h3>
+                                <div class="position">Head Coach</div>
+                                <div class="team">Montreal Canadiens</div>
+                            </div>
+                        </div>
+                        
+                        <div class="character-stats">
+                            <div class="stat" style="grid-column: 1 / span 3;">
+                                <div class="stat-name">ROLE</div>
+                                <div class="stat-value">Head Coach</div>
+                            </div>
+                        </div>
+                        
+                        <div class="character-actions">
+                            <a href="character-profile.html?id=4">View Profile</a>
+                            <a href="#" class="set-active-link" data-character-id="4">Set Active</a>
+                            <a href="character-form.html?id=4">Edit</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty State (will be shown when no characters exist) -->
+                <div class="no-characters" style="display: none;">
+                    <h3>You haven't created any characters yet</h3>
+                    <p>Create your first hockey player character to join teams, play games, and participate in the league.</p>
+                    <button id="empty-create-btn" class="btn btn-primary">Create Your First Character</button>
+                </div>
             </div>
         </div>
     </main>
@@ -194,5 +195,52 @@
 
     <script src="../js/auth-utils.js"></script>
     <script src="../js/my-characters.js"></script>
+    <script>
+        // Demo script to show "Set Active" functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle set active links
+            document.querySelectorAll('.set-active-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Show success message (for demo)
+                    const successMsg = document.getElementById('character-list-success');
+                    successMsg.textContent = 'Character set as active successfully!';
+                    successMsg.style.display = 'block';
+                    
+                    // In a real app, this would make an API call to update the active character
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 3000);
+                });
+            });
+            
+            // Demo empty state toggle (for testing purposes)
+            const toggleEmptyState = () => {
+                const characterList = document.querySelector('.character-list');
+                const emptyState = document.querySelector('.no-characters');
+                
+                if (characterList.style.display === 'none') {
+                    characterList.style.display = 'grid';
+                    emptyState.style.display = 'none';
+                } else {
+                    characterList.style.display = 'none';
+                    emptyState.style.display = 'block';
+                }
+            };
+            
+            // Uncomment to test empty state
+            // toggleEmptyState();
+            
+            // Handle create character button clicks
+            document.getElementById('create-character-btn').addEventListener('click', function() {
+                window.location.href = 'character-form.html';
+            });
+            
+            document.getElementById('empty-create-btn')?.addEventListener('click', function() {
+                window.location.href = 'character-form.html';
+            });
+        });
+    </script>
 </body>
 </html>
