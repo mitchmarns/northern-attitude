@@ -1,31 +1,6 @@
-// Update to team-form.js to handle image URLs instead of file uploads
+// team-form.js - Updated to handle logo URLs only
 
-// Function to set up logo preview
-function setupLogoPreview() {
-  const logoUrlInput = document.getElementById('logo-url');
-  const previewButton = document.getElementById('preview-logo-btn');
-  const logoPreview = document.getElementById('logo-preview');
-  
-  previewButton.addEventListener('click', function() {
-    const imageUrl = logoUrlInput.value.trim();
-    
-    if (imageUrl) {
-      // Update the preview image
-      logoPreview.src = imageUrl;
-      
-      // Handle load errors by reverting to placeholder
-      logoPreview.onerror = function() {
-        logoPreview.src = '/api/placeholder/120/120';
-        window.authUtils.showFormError('team-form', 'Invalid image URL or image could not be loaded');
-      };
-    } else {
-      // If no URL, show placeholder
-      logoPreview.src = '/api/placeholder/120/120';
-    }
-  });
-}
-
-// Create a new team with image URL
+// Function to create a new team
 async function createTeam() {
   try {
     // Validate form
@@ -40,6 +15,22 @@ async function createTeam() {
     const secondaryColor = document.getElementById('secondary-color').value;
     const logoUrl = document.getElementById('logo-url').value.trim();
     
+    // Validate logo URL if provided
+    if (logoUrl) {
+      // Optional: Additional URL validation if needed
+      const urlPattern = new RegExp('^(https?:\\/\\/)?'+ // protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+        '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
+      
+      if (!urlPattern.test(logoUrl)) {
+        window.authUtils.showFormError('team-form', 'Please enter a valid image URL');
+        return;
+      }
+    }
+    
     // Show loading state
     const submitButton = document.getElementById('submit-btn');
     const originalButtonText = submitButton.textContent;
@@ -49,11 +40,11 @@ async function createTeam() {
     // Clear previous messages
     window.authUtils.clearFormMessages('team-form');
     
-    // Create team data
+    // Prepare team data
     const teamData = {
       name: teamName,
-      description: teamDescription,
-      logo_url: logoUrl,
+      description: teamDescription || null,
+      logo_url: logoUrl || null,
       primary_color: primaryColor,
       secondary_color: secondaryColor
     };
@@ -73,7 +64,8 @@ async function createTeam() {
     submitButton.textContent = originalButtonText;
     
     if (!response.ok) {
-      throw new Error('Failed to create team');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to create team');
     }
     
     const data = await response.json();
@@ -94,11 +86,11 @@ async function createTeam() {
     submitButton.textContent = 'Create Team';
     
     // Show error message
-    window.authUtils.showFormError('team-form', 'Failed to create team. Please try again later.');
+    window.authUtils.showFormError('team-form', error.message || 'Failed to create team. Please try again later.');
   }
 }
 
-// Function to load team data for editing - modified for image URLs
+// Function to load team data for editing
 async function loadTeamData(teamId) {
   try {
     const response = await fetch(`/api/teams/${teamId}`, {
@@ -112,35 +104,37 @@ async function loadTeamData(teamId) {
     
     const team = await response.json();
     
-    // Populate form with team data
+    // Update form title and submit button
+    document.getElementById('form-title').textContent = 'Edit Team';
+    document.getElementById('submit-btn').textContent = 'Update Team';
+    
+    // Populate form fields
     document.getElementById('team-name').value = team.name;
     document.getElementById('team-description').value = team.description || '';
     
-    // Set logo URL if available
+    // Set logo URL
     if (team.logo_url) {
       document.getElementById('logo-url').value = team.logo_url;
       document.getElementById('logo-preview').src = team.logo_url;
     }
     
-    // Load team colors
+    // Set colors
     if (team.primary_color) {
       document.getElementById('primary-color').value = team.primary_color;
+      document.getElementById('primary-color-preview').style.backgroundColor = team.primary_color;
     }
     
     if (team.secondary_color) {
       document.getElementById('secondary-color').value = team.secondary_color;
+      document.getElementById('secondary-color-preview').style.backgroundColor = team.secondary_color;
     }
   } catch (error) {
     console.error('Error loading team data:', error);
-    
-    // Show error message
-    const errorMessage = document.getElementById('team-form-error');
-    errorMessage.textContent = 'Failed to load team data. Please try again later.';
-    errorMessage.style.display = 'block';
+    window.authUtils.showFormError('team-form', 'Failed to load team data. Please try again later.');
   }
 }
 
-// Update team function - modified for image URLs
+// Function to update an existing team
 async function updateTeam(teamId) {
   try {
     // Validate form
@@ -155,6 +149,21 @@ async function updateTeam(teamId) {
     const secondaryColor = document.getElementById('secondary-color').value;
     const logoUrl = document.getElementById('logo-url').value.trim();
     
+    // Validate logo URL if provided
+    if (logoUrl) {
+      const urlPattern = new RegExp('^(https?:\\/\\/)?'+ 
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ 
+        '((\\d{1,3}\\.){3}\\d{1,3}))'+ 
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ 
+        '(\\?[;&a-z\\d%_.~+=-]*)?'+ 
+        '(\\#[-a-z\\d_]*)?$','i');
+      
+      if (!urlPattern.test(logoUrl)) {
+        window.authUtils.showFormError('team-form', 'Please enter a valid image URL');
+        return;
+      }
+    }
+    
     // Show loading state
     const submitButton = document.getElementById('submit-btn');
     const originalButtonText = submitButton.textContent;
@@ -164,15 +173,15 @@ async function updateTeam(teamId) {
     // Clear previous messages
     window.authUtils.clearFormMessages('team-form');
     
-    // Create team data
+    // Prepare team update data
     const teamData = {
       name: teamName,
-      description: teamDescription,
+      description: teamDescription || null,
       primary_color: primaryColor,
       secondary_color: secondaryColor
     };
     
-    // Add logo URL if available
+    // Add logo URL if provided
     if (logoUrl) {
       teamData.logo_url = logoUrl;
     }
@@ -192,7 +201,8 @@ async function updateTeam(teamId) {
     submitButton.textContent = originalButtonText;
     
     if (!response.ok) {
-      throw new Error('Failed to update team');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update team');
     }
     
     // Show success message
@@ -211,6 +221,46 @@ async function updateTeam(teamId) {
     submitButton.textContent = 'Update Team';
     
     // Show error message
-    window.authUtils.showFormError('team-form', 'Failed to update team. Please try again later.');
+    window.authUtils.showFormError('team-form', error.message || 'Failed to update team. Please try again later.');
   }
 }
+
+// Validation function
+function validateForm() {
+  // Reset error messages
+  window.authUtils.clearFormMessages('team-form');
+  
+  // Validate team name
+  const teamName = document.getElementById('team-name').value.trim();
+  if (!teamName) {
+    window.authUtils.showFormError('team-form', 'Team name is required');
+    return false;
+  }
+  return true;
+}
+
+// Set up form submission handling
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if user is authenticated
+  window.authUtils.checkAuth(true);
+  
+  // Set up form submission
+  const teamForm = document.getElementById('team-form');
+  if (teamForm) {
+    teamForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Check if we're editing an existing team
+      const urlParams = new URLSearchParams(window.location.search);
+      const teamId = urlParams.get('id');
+      
+      if (teamId) {
+        // Update existing team
+        updateTeam(teamId);
+      } else {
+        // Create new team
+        createTeam();
+      }
+    });
+  }
+});

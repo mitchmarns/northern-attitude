@@ -17,19 +17,24 @@ const authMiddleware = {
   isAuthenticated: (req, res, next) => {
     // Get session token from cookies
     const sessionToken = req.cookies.sessionToken;
+
+    console.log('Session token received:', sessionToken);
     
     if (!sessionToken) {
+      console.log('No session token found'); // Add logging
       return res.status(401).json({ message: 'Authentication required' });
     }
     
     // Check if session exists and is valid
     const session = activeSessions.get(sessionToken);
     if (!session) {
+      console.log('Session not found in active sessions'); // Add logging
       return res.status(401).json({ message: 'Invalid or expired session' });
     }
     
     // Check if session has expired
     if (Date.now() > session.expiresAt) {
+      console.log('Session expired'); // Add logging
       activeSessions.delete(sessionToken);
       return res.status(401).json({ message: 'Session expired' });
     }

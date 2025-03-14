@@ -1108,3 +1108,11 @@ const teamOperations = {
     });
   }
 };
+
+module.exports = {
+  db,
+  characterOperations,
+  userOperations,
+  teamOperations,
+  // ... other operations
+};
