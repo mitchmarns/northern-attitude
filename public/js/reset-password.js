@@ -3,29 +3,26 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Get token from URL query string
   const token = window.authUtils.getQueryParam('token');
+  const resetTokenInput = document.getElementById('reset-token');
+  const submitButton = resetPasswordForm.querySelector('button[type="submit"]');
   
   // If no token, show error and disable form
   if (!token) {
     window.authUtils.showFormError('reset-password-form', 'Invalid or missing reset token. Please request a new password reset link.');
-    resetPasswordForm.querySelector('button[type="submit"]').disabled = true;
+    submitButton.disabled = true;
     
-    // Disable all inputs
-    const inputs = resetPasswordForm.querySelectorAll('input');
-    inputs.forEach(input => {
-      input.disabled = true;
-    });
-    
+    // Disable all inputs - using a more efficient approach with a single query
+    resetPasswordForm.querySelectorAll('input').forEach(input => input.disabled = true);
     return;
   }
   
   // Set token in hidden field
-  document.getElementById('reset-token').value = token;
+  resetTokenInput.value = token;
   
   resetPasswordForm.addEventListener('submit', async function(e) {
     e.preventDefault();
     
-    // Get form values
-    const token = document.getElementById('reset-token').value;
+    // Get form values - cache DOM elements to avoid repetitive lookups
     const newPassword = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirm-password').value;
     
@@ -45,7 +42,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     try {
       // Show loading state
-      const submitButton = resetPasswordForm.querySelector('button[type="submit"]');
       const originalButtonText = submitButton.textContent;
       submitButton.disabled = true;
       submitButton.textContent = 'Resetting...';
@@ -56,11 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
-          token,
-          newPassword,
-          confirmPassword
-        })
+        body: JSON.stringify({ token, newPassword, confirmPassword })
       });
       
       // Parse response
@@ -74,13 +66,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Password reset successful
         window.authUtils.showFormSuccess('reset-password-form', 'Password reset successful! Redirecting to login...');
         
-        // Disable form
-        resetPasswordForm.querySelectorAll('input').forEach(input => {
+        // Disable form - get all inputs once and reuse the collection
+        const formInputs = resetPasswordForm.querySelectorAll('input');
+        formInputs.forEach(input => {
           input.disabled = true;
         });
         submitButton.disabled = true;
         
-        // Redirect to login after a delay
+        // Redirect to login after a delay - use setTimeout directly
         setTimeout(() => {
           window.location.href = 'login.html';
         }, 3000);
@@ -93,7 +86,6 @@ document.addEventListener('DOMContentLoaded', function() {
       window.authUtils.showFormError('reset-password-form', 'An error occurred. Please try again later.');
       
       // Reset button state
-      const submitButton = resetPasswordForm.querySelector('button[type="submit"]');
       submitButton.disabled = false;
       submitButton.textContent = 'Reset Password';
     }

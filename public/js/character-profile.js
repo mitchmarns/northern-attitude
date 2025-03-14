@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Function to load character profile data
 async function loadCharacterProfile(characterId) {
   try {
+    // Fetch character data
     const response = await fetch(`/api/characters/${characterId}`, {
       method: 'GET',
       credentials: 'include'
@@ -51,65 +52,56 @@ async function loadCharacterProfile(characterId) {
     
     const character = await response.json();
     
-    // Update page title with character name
-    document.title = `${character.name} | Northern Attitude`;
-    document.getElementById('page-title').textContent = character.name;
+    // Cache elements we'll use repeatedly
+    const elements = {
+      title: document.getElementById('page-title'),
+      bannerName: document.getElementById('banner-character-name'),
+      jerseyNumber: document.getElementById('jersey-number'),
+      avatar: document.getElementById('character-avatar'),
+      sidebarName: document.getElementById('sidebar-character-name'),
+      position: document.getElementById('character-position'),
+      team: document.getElementById('character-team'),
+      status: document.getElementById('character-status'),
+      mainStats: document.getElementById('main-stats'),
+      positionStatsTitle: document.getElementById('position-stats-title'),
+      positionStats: document.getElementById('position-stats'),
+      aboutHeading: document.getElementById('about-heading'),
+      characterBio: document.getElementById('character-bio'),
+      careerHighlights: document.getElementById('career-highlights'),
+      positionStatsBlock: document.getElementById('position-stats-block'),
+      deleteBtn: document.getElementById('delete-character-btn'),
+      confirmDelete: document.getElementById('confirm-delete'),
+      setActiveBtn: document.getElementById('set-active-btn'),
+      editCharacterLink: document.getElementById('edit-character-link')
+    };
     
-    // Update name banner
-    document.getElementById('banner-character-name').textContent = character.name;
+    // Parse stats from JSON once
+    const stats = JSON.parse(character.stats_json);
+
+    // Update page title and header
+    document.title = `${character.name} | Northern Attitude`;
+    elements.title.textContent = character.name;
+    elements.bannerName.textContent = character.name;
     
     // Add jersey number if available (mock data for now)
-    const jerseyNumber = getJerseyNumberFromStats(character) || 
+    const jerseyNumber = stats.jersey_number || 
                          Math.floor(Math.random() * 98) + 1; // Random number between 1-99
-    document.getElementById('jersey-number').textContent = jerseyNumber;
+    elements.jerseyNumber.textContent = jerseyNumber;
     
-    // Parse stats from JSON
-    const stats = JSON.parse(character.stats_json);
+    // Update all page data concurrently for better performance
+    const updatePromises = [
+      updateProfileSidebar(elements, character, stats),
+      updateProfileContent(elements, character, stats),
+      updateStatsTab(character, stats),
+      updateBioTab(character),
+      loadRecentGames(characterId)
+    ];
     
-    // Update profile sidebar
-    updateProfileSidebar(character, stats);
+    // Wait for all updates to complete
+    await Promise.all(updatePromises);
     
-    // Update profile content
-    updateProfileContent(character, stats);
-    
-    // Update stats tab
-    updateStatsTab(character, stats);
-    
-    // Update games tab
-    loadRecentGames(characterId);
-    
-    // Update bio tab
-    updateBioTab(character);
-    
-    // Set up delete button functionality
-    setTimeout(() => {
-      const deleteBtn = document.getElementById('delete-character-btn');
-      if (deleteBtn) {
-        deleteBtn.addEventListener('click', function() {
-          showDeleteModal(character.id, character.name);
-        });
-      }
-      
-      // Set up confirm delete functionality
-      document.getElementById('confirm-delete').addEventListener('click', function() {
-        deleteCharacter(character.id);
-      });
-      
-      // Set "Set Active" button if not active
-      const setActiveBtn = document.getElementById('set-active-btn');
-      if (setActiveBtn && !character.is_active) {
-        setActiveBtn.style.display = 'inline-block';
-        setActiveBtn.addEventListener('click', function() {
-          setActiveCharacter(character.id);
-        });
-      }
-      
-      // Set edit character link
-      const editCharacterLink = document.getElementById('edit-character-link');
-      if (editCharacterLink) {
-        editCharacterLink.href = `character-form.html?id=${character.id}`;
-      }
-    }, 0);
+    // Set up button functionality
+    setupButtons(elements, character);
     
   } catch (error) {
     console.error('Error loading character profile:', error);
@@ -120,6 +112,35 @@ async function loadCharacterProfile(characterId) {
     errorMessage.style.display = 'block';
   }
 }
+
+function setupButtons(elements, character) {
+  if (elements.deleteBtn) {
+    elements.deleteBtn.addEventListener('click', () => {
+      showDeleteModal(character.id, character.name);
+    });
+  }
+  
+  // Set up confirm delete functionality
+  if (elements.confirmDelete) {
+    elements.confirmDelete.addEventListener('click', () => {
+      deleteCharacter(character.id);
+    });
+  }
+  
+  // Set "Set Active" button if not active
+  if (elements.setActiveBtn && !character.is_active) {
+    elements.setActiveBtn.style.display = 'inline-block';
+    elements.setActiveBtn.addEventListener('click', () => {
+      setActiveCharacter(character.id);
+    });
+  }
+  
+  // Set edit character link
+  if (elements.editCharacterLink) {
+    elements.editCharacterLink.href = `character-form.html?id=${character.id}`;
+  }
+}
+
 
 // Extract jersey number from stats if possible
 function getJerseyNumberFromStats(character) {
@@ -132,157 +153,51 @@ function getJerseyNumberFromStats(character) {
 }
 
 // Function to update profile sidebar
-function updateProfileSidebar(character, stats) {
-  // Update avatar
-  const avatarElement = document.getElementById('character-avatar');
-  if (avatarElement) {
-    avatarElement.src = character.avatar_url || '/api/placeholder/150/150';
-    avatarElement.alt = character.name;
+function updateProfileSidebar(elements, character, stats) {
+  // Update avatar with error handling
+  if (elements.avatar) {
+    elements.avatar.src = character.avatar_url || '/api/placeholder/150/150';
+    elements.avatar.alt = character.name;
+    
+    // Add error handler for avatar
+    elements.avatar.onerror = () => {
+      elements.avatar.src = '/api/placeholder/150/150';
+    };
   }
   
   // Update character info
-  document.getElementById('sidebar-character-name').textContent = character.name;
-  document.getElementById('character-position').textContent = getFullPosition(character.position);
-  document.getElementById('character-team').textContent = character.team_name || 'No Team';
+  elements.sidebarName.textContent = character.name;
+  elements.position.textContent = getFullPosition(character.position);
+  elements.team.textContent = character.team_name || 'No Team';
   
-  // Update status
-  const statusElement = document.getElementById('character-status');
-  statusElement.textContent = character.is_active ? 'Active Character' : 'Inactive';
-  statusElement.className = character.is_active ? 'character-status active' : 'character-status inactive';
+  // Update status with class change
+  elements.status.textContent = character.is_active ? 'Active Character' : 'Inactive';
+  elements.status.className = character.is_active ? 'character-status active' : 'character-status inactive';
   
   // Update main stats
-  const mainStatsElement = document.getElementById('main-stats');
-  mainStatsElement.innerHTML = '';
-  
-  // Add common stats for players
-  if (character.character_type === 'player') {
-    const commonStats = [
-      { label: 'Goals', value: stats.goals || 0 },
-      { label: 'Assists', value: stats.assists || 0 },
-      { label: 'Games', value: stats.games || 0 },
-      { label: 'Points', value: (stats.goals || 0) + (stats.assists || 0) },
-      { label: '+/-', value: stats.plus_minus || 0 },
-      { label: 'PIM', value: stats.penalties || 0 }
-    ];
-    
-    commonStats.forEach(stat => {
-      const statItem = document.createElement('div');
-      statItem.className = 'stat-item';
-      statItem.innerHTML = `
-        <span class="stat-label">${stat.label}</span>
-        <span class="stat-value">${stat.value}</span>
-      `;
-      mainStatsElement.appendChild(statItem);
-    });
-    
-    // Add position-specific stats
-    const positionStatsTitle = document.getElementById('position-stats-title');
-    const positionStatsContainer = document.getElementById('position-stats');
-    
-    switch(character.position) {
-      case 'C':
-        positionStatsTitle.textContent = 'Center Stats';
-        positionStatsContainer.innerHTML = `
-          <div class="stat-item">
-            <span class="stat-label">Faceoff %</span>
-            <span class="stat-value">${stats.faceoff_pct || '0.0'}%</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Shooting %</span>
-            <span class="stat-value">${stats.shooting_pct || '0.0'}%</span>
-          </div>
-        `;
-        break;
-      case 'LW':
-      case 'RW':
-        positionStatsTitle.textContent = 'Wing Stats';
-        positionStatsContainer.innerHTML = `
-          <div class="stat-item">
-            <span class="stat-label">Shooting %</span>
-            <span class="stat-value">${stats.shooting_pct || '0.0'}%</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Shots</span>
-            <span class="stat-value">${stats.shots || 0}</span>
-          </div>
-        `;
-        break;
-      case 'D':
-        positionStatsTitle.textContent = 'Defense Stats';
-        positionStatsContainer.innerHTML = `
-          <div class="stat-item">
-            <span class="stat-label">Blocks</span>
-            <span class="stat-value">${stats.blocks || 0}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Hits</span>
-            <span class="stat-value">${stats.hits || 0}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">TOI/Game</span>
-            <span class="stat-value">${formatIceTime(stats.ice_time)}</span>
-          </div>
-        `;
-        break;
-      case 'G':
-        positionStatsTitle.textContent = 'Goalie Stats';
-        positionStatsContainer.innerHTML = `
-          <div class="stat-item">
-            <span class="stat-label">Wins</span>
-            <span class="stat-value">${stats.wins || 0}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Losses</span>
-            <span class="stat-value">${stats.losses || 0}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">GAA</span>
-            <span class="stat-value">${stats.gaa || '0.00'}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">SV%</span>
-            <span class="stat-value">${stats.save_pct || '.000'}</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-label">Shutouts</span>
-            <span class="stat-value">${stats.shutouts || 0}</span>
-          </div>
-        `;
-        break;
-    }
-  } else {
-    // For non-player types, hide stats blocks
-    document.getElementById('position-stats-block').style.display = 'none';
-    
-    // Add role instead of stats for non-players
-    mainStatsElement.innerHTML = `
-      <div class="stat-item" style="grid-column: 1 / span 2;">
-        <span class="stat-label">Role</span>
-        <span class="stat-value">${character.role || 'Unspecified'}</span>
-      </div>
-    `;
-  }
+  updateCharacterStats(elements, character, stats);
 }
 
+
 // Function to update profile content
-function updateProfileContent(character, stats) {
+function updateProfileContent(elements, character, stats) {
   // Update about heading
-  document.getElementById('about-heading').textContent = `About ${character.name}`;
+  elements.aboutHeading.textContent = `About ${character.name}`;
   
-  // Update bio
-  const bioElement = document.getElementById('character-bio');
+  // Update bio with proper error handling
   if (character.bio) {
-    bioElement.innerHTML = `<p>${character.bio.replace(/\n/g, '</p><p>')}</p>`;
+    elements.characterBio.innerHTML = `<p>${character.bio.replace(/\n/g, '</p><p>')}</p>`;
   } else {
-    bioElement.innerHTML = `<p><em>No biography provided for ${character.name} yet.</em></p>`;
+    elements.characterBio.innerHTML = `<p><em>No biography provided for ${character.name} yet.</em></p>`;
   }
   
-  // Update career highlights
-  const highlightsContainer = document.getElementById('career-highlights');
-  
-  // For player type
+  // Update career highlights more efficiently
+  updateCareerHighlights(elements, character, stats);
+}
+
+function updateCareerHighlights(elements, character, stats) {
   if (character.character_type === 'player') {
-    highlightsContainer.innerHTML = `
+    elements.careerHighlights.innerHTML = `
       <div class="highlight-stat">
         <div class="highlight-value">${stats.goals || 0}</div>
         <div class="highlight-label">Goals</div>
@@ -302,12 +217,60 @@ function updateProfileContent(character, stats) {
     `;
   } else {
     // For non-player types
-    highlightsContainer.innerHTML = `
+    elements.careerHighlights.innerHTML = `
       <div class="highlight-stat">
         <div class="highlight-value">${character.role || 'N/A'}</div>
         <div class="highlight-label">Role</div>
       </div>
     `;
+  }
+}
+
+function updateCharacterStats(elements, character, stats) {
+  // Clear existing stats
+  elements.mainStats.innerHTML = '';
+  
+  // Define stats structure based on character type
+  if (character.character_type === 'player') {
+    // Add common stats for players
+    const commonStats = [
+      { label: 'Goals', value: stats.goals || 0 },
+      { label: 'Assists', value: stats.assists || 0 },
+      { label: 'Games', value: stats.games || 0 },
+      { label: 'Points', value: (stats.goals || 0) + (stats.assists || 0) },
+      { label: '+/-', value: stats.plus_minus || 0 },
+      { label: 'PIM', value: stats.penalties || 0 }
+    ];
+    
+    // Build stats HTML using document fragment for better performance
+    const fragment = document.createDocumentFragment();
+    
+    commonStats.forEach(stat => {
+      const statItem = document.createElement('div');
+      statItem.className = 'stat-item';
+      statItem.innerHTML = `
+        <span class="stat-label">${stat.label}</span>
+        <span class="stat-value">${stat.value}</span>
+      `;
+      fragment.appendChild(statItem);
+    });
+    
+    elements.mainStats.appendChild(fragment);
+    
+    // Add position-specific stats
+    updatePositionSpecificStats(elements, character.position, stats);
+  } else {
+    // For non-player types, show role instead of stats
+    elements.positionStatsBlock.style.display = 'none';
+    
+    const roleItem = document.createElement('div');
+    roleItem.className = 'stat-item';
+    roleItem.style.gridColumn = '1 / span 2';
+    roleItem.innerHTML = `
+      <span class="stat-label">Role</span>
+      <span class="stat-value">${character.role || 'Unspecified'}</span>
+    `;
+    elements.mainStats.appendChild(roleItem);
   }
 }
 
@@ -440,6 +403,92 @@ function updateStatsTab(character, stats) {
       </div>
     `;
   }
+}
+
+// Get position title efficiently
+function getPositionTitle(position) {
+  const titles = {
+    'C': 'Center Stats',
+    'LW': 'Wing Stats',
+    'RW': 'Wing Stats',
+    'D': 'Defense Stats',
+    'G': 'Goalie Stats'
+  };
+  
+  return titles[position] || 'Position Stats';
+}
+
+function updatePositionSpecificStats(elements, position, stats) {
+  elements.positionStatsTitle.textContent = getPositionTitle(position);
+  
+  // Create position stats content
+  let statsHTML = '';
+  
+  switch(position) {
+    case 'C':
+      statsHTML = `
+        <div class="stat-item">
+          <span class="stat-label">Faceoff %</span>
+          <span class="stat-value">${stats.faceoff_pct || '0.0'}%</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Shooting %</span>
+          <span class="stat-value">${stats.shooting_pct || '0.0'}%</span>
+        </div>
+      `;
+      break;
+    case 'LW':
+    case 'RW':
+      statsHTML = `
+        <div class="stat-item">
+          <span class="stat-label">Shooting %</span>
+          <span class="stat-value">${stats.shooting_pct || '0.0'}%</span>
+        </div>
+      `;
+      break;
+    case 'D':
+      statsHTML = `
+        <div class="stat-item">
+          <span class="stat-label">Blocks</span>
+          <span class="stat-value">${stats.blocks || 0}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Hits</span>
+          <span class="stat-value">${stats.hits || 0}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">TOI/Game</span>
+          <span class="stat-value">${formatIceTime(stats.ice_time)}</span>
+        </div>
+      `;
+      break;
+    case 'G':
+      statsHTML = `
+        <div class="stat-item">
+          <span class="stat-label">Wins</span>
+          <span class="stat-value">${stats.wins || 0}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Losses</span>
+          <span class="stat-value">${stats.losses || 0}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">GAA</span>
+          <span class="stat-value">${stats.gaa || '0.00'}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">SV%</span>
+          <span class="stat-value">${stats.save_pct || '.000'}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">Shutouts</span>
+          <span class="stat-value">${stats.shutouts || 0}</span>
+        </div>
+      `;
+      break;
+  }
+  
+  elements.positionStats.innerHTML = statsHTML;
 }
 
 // Function to update bio tab
