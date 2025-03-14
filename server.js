@@ -6,15 +6,29 @@ const path = require('path');
 const fs = require('fs');
 
 // First check if database exists
-const dbPath = 'hockey_roleplay.db';
+let dbPath = path.resolve(__dirname, 'hockey_roleplay.db');
 if (!fs.existsSync(dbPath)) {
-  console.error('Database file not found! Please run the database-init.js script first.');
-  console.error('Command: node database-init.js');
-  process.exit(1);
+  // Try parent directory
+  dbPath = path.resolve(__dirname, '..', 'hockey_roleplay.db');
+  console.log('Trying parent directory:', dbPath, fs.existsSync(dbPath));
 }
 
 // Import database operations after confirming database exists
-const { characterOperations, tableExists } = require('./config/db');
+const { characterOperations, db } = require('./config/db');
+
+function tableExists(tableName) {
+  return new Promise((resolve, reject) => {
+    const query = `SELECT name FROM sqlite_master WHERE type='table' AND name=?`;
+    
+    db.get(query, [tableName], (err, row) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve(!!row);
+    });
+  });
+}
 
 // Create Express app
 const app = express();
