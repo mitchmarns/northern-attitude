@@ -3,7 +3,6 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-const path = require('path');
 const dbPath = path.resolve(__dirname, 'hockey_roleplay.db');
 
 // Check if database file exists
