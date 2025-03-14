@@ -88,40 +88,8 @@
                         </div>
                     </div>
 
-                    <!-- Character Basic Info Section -->
                     <div class="form-section">
                         <h3 class="form-section-title">Basic Information</h3>
-
-                        <div class="form-row">
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="character-name">Character Name</label>
-                                    <input
-                                        type="text"
-                                        id="character-name"
-                                        class="form-control"
-                                        required
-                                        placeholder="Enter character name"
-                                    />
-                                    <p class="form-text">Full name of your hockey character</p>
-                                </div>
-                            </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="team-id">Team</label>
-                                    <select id="team-id" class="form-control">
-                                        <option value="">Not on a team</option>
-                                        <option value="1">Toronto Maple Leafs</option>
-                                        <option value="2">Montreal Canadiens</option>
-                                        <option value="3">Boston Bruins</option>
-                                        <option value="4">Vancouver Canucks</option>
-                                    </select>
-                                    <p class="form-text">
-                                        Select the team your character belongs to
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
 
                         <div class="form-group">
                             <label for="avatar-url">Character Avatar URL</label>
@@ -151,6 +119,63 @@
                             >
                                 Preview Avatar
                             </button>
+                        </div>
+
+                        <!-- New Header Image Section -->
+                        <div class="form-group header-image-container">
+                            <label for="header-image-url">Header Image URL</label>
+                            <input
+                                type="url"
+                                id="header-image-url"
+                                class="form-control"
+                                placeholder="https://example.com/header-image.jpg"
+                            />
+                            <p class="form-text">
+                                Optional: Enter a URL for a header/banner image
+                            </p>
+                        </div>
+
+                        <div class="header-image-container">
+                            <img
+                                id="header-image-preview"
+                                src="/api/placeholder/800/300"
+                                alt="Header image preview"
+                                class="header-image-preview"
+                            />
+                            <button
+                                type="button"
+                                class="btn btn-secondary"
+                                id="preview-header-btn"
+                            >
+                                Preview Header Image
+                            </button>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="character-name">Character Name</label>
+                                    <input
+                                        type="text"
+                                        id="character-name"
+                                        class="form-control"
+                                        required
+                                    />
+                                    <p class="form-text">Full name of your hockey character</p>
+                                </div>
+                            </div>
+                            <div class="form-col">
+                                <div class="form-group">
+                                    <label for="team-id">Team</label>
+                                    <select id="team-id" class="form-control">
+                                        <option value="">Not on a team</option>
+                                        <!-- Teams will be loaded dynamically -->
+                                    </select>
+                                    <p class="form-text">
+                                        Select the team your character plays for
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -206,6 +231,19 @@
                     <div id="player-stats-section" class="form-section" style="display: none;">
                         <h3 class="form-section-title">Player Statistics</h3>
 
+                        <!-- New Jersey Number Input -->
+                        <div class="form-group">
+                            <label for="jersey-number">Jersey Number</label>
+                            <input
+                                type="number"
+                                id="jersey-number"
+                                class="form-control jersey-number-input"
+                                min="0"
+                                max="99"
+                                placeholder="Enter jersey number"
+                            />
+                            <p class="form-text">Optional: Player's jersey number (0-99)</p>
+                        </div>
                         <!-- Common stats for all positions -->
                         <div class="stats-grid">
                             <div class="stat-input-group">
@@ -292,174 +330,28 @@
     <script src="../js/auth-utils.js"></script>
     <script src="../js/character-form.js"></script>
     <script>
-        // Add this script for initial setup of interactive elements
+        // Setup header image preview
         document.addEventListener('DOMContentLoaded', function() {
-            // Character type selection
-            const typeOptions = document.querySelectorAll('.character-type-option');
-            typeOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    // Remove selected class from all options
-                    typeOptions.forEach(opt => opt.classList.remove('selected'));
-                    
-                    // Add selected class to clicked option
-                    this.classList.add('selected');
-                    
-                    // Show demo feedback in description
-                    const type = this.getAttribute('data-type');
-                    const typeDescriptions = {
-                        'player': 'Players are the athletes who compete on the ice, representing their teams in hockey matches.',
-                        'coach': 'Coaches guide and train players, developing strategies and leading teams to success.',
-                        'staff': 'Team staff members provide crucial support behind the scenes, ensuring smooth team operations.',
-                        'executive': 'League executives and administrators manage the broader aspects of hockey operations.',
-                        'fan': 'Passionate supporters who are deeply involved in the hockey community and team culture.',
-                        'media': 'Media professionals who cover, analyze, and report on hockey events and stories.'
-                    };
-                    
-                    document.getElementById('character-type-description').textContent = 
-                        typeDescriptions[type] || 'Select a character type to see more details.';
-                    
-                    // Show/hide sections based on type
-                    if (type === 'player') {
-                        document.getElementById('player-position-section').style.display = 'block';
-                        document.getElementById('player-stats-section').style.display = 'block';
-                        document.getElementById('role-selection').style.display = 'none';
-                    } else {
-                        document.getElementById('player-position-section').style.display = 'none';
-                        document.getElementById('player-stats-section').style.display = 'none';
-                        document.getElementById('role-selection').style.display = 'block';
-                        
-                        // Show demo roles
-                        const roles = {
-                            'coach': ['Head Coach', 'Assistant Coach', 'Goalie Coach', 'Skill Development Coach'],
-                            'staff': ['Team Manager', 'Equipment Manager', 'Athletic Therapist', 'Team Doctor'],
-                            'executive': ['League Commissioner', 'General Manager', 'Director of Hockey Operations'],
-                            'fan': ['Season Ticket Holder', 'Team Superfan', 'Hockey Blogger', 'Fan Club President'],
-                            'media': ['Sports Journalist', 'Broadcaster', 'Hockey Analyst', 'Commentator']
-                        };
-                        
-                        const rolesHTML = (roles[type] || []).map((role, idx) => `
-                            <div class="role-option">
-                                <input type="radio" id="role-${idx}" name="character-role" value="${role}" ${idx === 0 ? 'checked' : ''}>
-                                <label for="role-${idx}">${role}</label>
-                            </div>
-                        `).join('');
-                        
-                        document.getElementById('role-options').innerHTML = rolesHTML;
-                    }
-                });
-            });
+            const headerUrlInput = document.getElementById('header-image-url');
+            const previewHeaderBtn = document.getElementById('preview-header-btn');
+            const headerImagePreview = document.getElementById('header-image-preview');
             
-            // Position selection
-            const positionOptions = document.querySelectorAll('.position-option');
-            positionOptions.forEach(option => {
-                option.addEventListener('click', function() {
-                    // Remove selected class from all options
-                    positionOptions.forEach(opt => opt.classList.remove('selected'));
-                    
-                    // Add selected class to clicked option
-                    this.classList.add('selected');
-                    
-                    // Show demo stats based on position
-                    const position = this.getAttribute('data-position');
-                    let dynamicStatsHTML = '<div class="stats-grid">';
-                    
-                    switch(position) {
-                        case 'C':
-                            dynamicStatsHTML += `
-                                <div class="stat-input-group">
-                                    <label for="stat-faceoff-pct">Faceoff %</label>
-                                    <input type="number" id="stat-faceoff-pct" class="stat-input" value="50.0" min="0" max="100" step="0.1">
-                                </div>
-                                <div class="stat-input-group">
-                                    <label for="stat-shooting-pct">Shooting %</label>
-                                    <input type="number" id="stat-shooting-pct" class="stat-input" value="10.0" min="0" max="100" step="0.1">
-                                </div>
-                            `;
-                            break;
-                        case 'LW':
-                        case 'RW':
-                            dynamicStatsHTML += `
-                                <div class="stat-input-group">
-                                    <label for="stat-shooting-pct">Shooting %</label>
-                                    <input type="number" id="stat-shooting-pct" class="stat-input" value="10.0" min="0" max="100" step="0.1">
-                                </div>
-                            `;
-                            break;
-                        case 'D':
-                            dynamicStatsHTML += `
-                                <div class="stat-input-group">
-                                    <label for="stat-blocks">Blocked Shots</label>
-                                    <input type="number" id="stat-blocks" class="stat-input" value="0" min="0">
-                                </div>
-                                <div class="stat-input-group">
-                                    <label for="stat-hits">Hits</label>
-                                    <input type="number" id="stat-hits" class="stat-input" value="0" min="0">
-                                </div>
-                                <div class="stat-input-group">
-                                    <label for="stat-ice-time">Avg. Ice Time (min)</label>
-                                    <input type="number" id="stat-ice-time" class="stat-input" value="20.0" min="0" step="0.1">
-                                </div>
-                            `;
-                            break;
-                        case 'G':
-                            dynamicStatsHTML += `
-                                <div class="stat-input-group">
-                                    <label for="stat-wins">Wins</label>
-                                    <input type="number" id="stat-wins" class="stat-input" value="0" min="0">
-                                </div>
-                                <div class="stat-input-group">
-                                    <label for="stat-losses">Losses</label>
-                                    <input type="number" id="stat-losses" class="stat-input" value="0" min="0">
-                                </div>
-                                <div class="stat-input-group">
-                                    <label for="stat-gaa">Goals Against Average</label>
-                                    <input type="number" id="stat-gaa" class="stat-input" value="2.50" min="0" step="0.01">
-                                </div>
-                                <div class="stat-input-group">
-                                    <label for="stat-save-pct">Save Percentage</label>
-                                    <input type="text" id="stat-save-pct" class="stat-input" value=".900">
-                                </div>
-                                <div class="stat-input-group">
-                                    <label for="stat-shutouts">Shutouts</label>
-                                    <input type="number" id="stat-shutouts" class="stat-input" value="0" min="0">
-                                </div>
-                            `;
-                            break;
-                    }
-                    
-                    dynamicStatsHTML += '</div>';
-                    document.getElementById('dynamic-stats-container').innerHTML = dynamicStatsHTML;
-                });
-            });
-            
-            // Avatar preview
-            const previewButton = document.getElementById('preview-avatar-btn');
-            previewButton.addEventListener('click', function() {
-                const imageUrl = document.getElementById('avatar-url').value.trim();
-                const avatarImage = document.getElementById('avatar-image');
+            previewHeaderBtn.addEventListener('click', function() {
+                const imageUrl = headerUrlInput.value.trim();
                 
                 if (imageUrl) {
-                    avatarImage.src = imageUrl;
+                    // Update the preview image
+                    headerImagePreview.src = imageUrl;
                     
-                    // Handle error
-                    avatarImage.onerror = function() {
-                        avatarImage.src = '/api/placeholder/120/120';
-                        // Show error message in demo
-                        const errorDiv = document.getElementById('character-form-error');
-                        errorDiv.textContent = 'Invalid image URL or image could not be loaded.';
-                        errorDiv.style.display = 'block';
-                    };
-                    
-                    // Handle success
-                    avatarImage.onload = function() {
-                        // Hide error if showing
-                        document.getElementById('character-form-error').style.display = 'none';
+                    // Handle load errors by reverting to placeholder
+                    headerImagePreview.onerror = function() {
+                        headerImagePreview.src = '/api/placeholder/800/300';
+                        window.authUtils.showFormError('character-form', 'Invalid header image URL or image could not be loaded');
                     };
                 } else {
-                    // Show error for empty URL
-                    const errorDiv = document.getElementById('character-form-error');
-                    errorDiv.textContent = 'Please enter an image URL.';
-                    errorDiv.style.display = 'block';
+                    // If no URL, show placeholder
+                    headerImagePreview.src = '/api/placeholder/800/300';
+                    window.authUtils.showFormError('character-form', 'Please enter a header image URL');
                 }
             });
         });

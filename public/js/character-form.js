@@ -71,6 +71,87 @@ const CHARACTER_TYPES = {
   }
 };
 
+// Setup avatar preview functionality
+function setupAvatarPreview() {
+  const avatarUrlInput = document.getElementById('avatar-url');
+  const previewButton = document.getElementById('preview-avatar-btn');
+  const avatarImage = document.getElementById('avatar-image');
+  
+  previewButton.addEventListener('click', function() {
+    const imageUrl = avatarUrlInput.value.trim();
+    
+    if (imageUrl) {
+      // Update the preview image
+      avatarImage.src = imageUrl;
+      
+      // Handle load errors by reverting to placeholder
+      avatarImage.onerror = function() {
+        avatarImage.src = '/api/placeholder/120/120';
+        window.authUtils.showFormError('character-form', 'Invalid image URL or image could not be loaded');
+      };
+    } else {
+      // If no URL, show placeholder
+      avatarImage.src = '/api/placeholder/120/120';
+      window.authUtils.showFormError('character-form', 'Please enter an image URL');
+    }
+  });
+
+  // Header image preview
+  const headerUrlInput = document.getElementById('header-image-url');
+  const previewHeaderBtn = document.getElementById('preview-header-btn');
+  const headerImagePreview = document.getElementById('header-image-preview');
+  
+  previewHeaderBtn.addEventListener('click', function() {
+    const imageUrl = headerUrlInput.value.trim();
+    
+    if (imageUrl) {
+      // Update the preview image
+      headerImagePreview.src = imageUrl;
+      
+      // Handle load errors by reverting to placeholder
+      headerImagePreview.onerror = function() {
+        headerImagePreview.src = '/api/placeholder/800/300';
+        window.authUtils.showFormError('character-form', 'Invalid header image URL or image could not be loaded');
+      };
+    } else {
+      // If no URL, show placeholder
+      headerImagePreview.src = '/api/placeholder/800/300';
+      window.authUtils.showFormError('character-form', 'Please enter a header image URL');
+    }
+  });
+}
+
+// Create a function to trigger all the necessary setup for a character type
+function setupCharacterType(type, existingCharacter = null) {
+  // Find the corresponding type option
+  const typeOption = document.querySelector(`.character-type-option[data-type="${type}"]`);
+  
+  if (!typeOption) {
+    console.error(`No type option found for ${type}`);
+    return;
+  }
+  
+  // Simulate click to trigger all setup
+  typeOption.click();
+  
+  // If it's a player type and we have an existing character, set up position
+  if (type === 'player' && existingCharacter) {
+    // Find and click the position option
+    const positionOption = document.querySelector(`.position-option[data-position="${existingCharacter.position}"]`);
+    if (positionOption) {
+      positionOption.click();
+    }
+  }
+  
+  // If it's a non-player type and we have a role
+  if (type !== 'player' && existingCharacter && existingCharacter.role) {
+    const roleInput = document.querySelector(`input[name="character-role"][value="${existingCharacter.role}"]`);
+    if (roleInput) {
+      roleInput.checked = true;
+    }
+  }
+}
+
 // Function to create a new character
 async function createCharacter() {
   try {
@@ -85,6 +166,7 @@ async function createCharacter() {
     const teamId = document.getElementById('team-id').value || null;
     const bio = document.getElementById('character-bio').value.trim();
     const avatarUrl = document.getElementById('avatar-url').value.trim();
+    const headerImageUrl = document.getElementById('header-image-url').value.trim();
 
     // Prepare character data
     const characterData = {
@@ -92,7 +174,8 @@ async function createCharacter() {
       character_type: characterType,
       team_id: teamId,
       bio: bio || null,
-      avatar_url: avatarUrl || null
+      avatar_url: avatarUrl || null,
+      header_image_url: headerImageUrl || null
     };
 
     // Add type-specific data
@@ -178,6 +261,7 @@ async function updateCharacter(characterId) {
     const teamId = document.getElementById('team-id').value || null;
     const bio = document.getElementById('character-bio').value.trim();
     const avatarUrl = document.getElementById('avatar-url').value.trim();
+    const headerImageUrl = document.getElementById('header-image-url').value.trim();
 
     // Prepare character update data
     const characterData = {
@@ -185,7 +269,8 @@ async function updateCharacter(characterId) {
       character_type: characterType,
       team_id: teamId,
       bio: bio || null,
-      avatar_url: avatarUrl || null
+      avatar_url: avatarUrl || null,
+      header_image_url: headerImageUrl || null
     };
 
     // Add type-specific data
@@ -299,6 +384,7 @@ function validateForm() {
 function getPlayerStats(position) {
   // Gather common stats
   const stats = {
+    jersey_number: parseInt(document.getElementById('jersey-number').value) || null,
     games: parseInt(document.getElementById('stat-games').value) || 0,
     goals: parseInt(document.getElementById('stat-goals').value) || 0,
     assists: parseInt(document.getElementById('stat-assists').value) || 0,
@@ -393,6 +479,10 @@ async function loadCharacterData(characterId) {
     document.getElementById('form-title').textContent = 'Edit Character';
     document.getElementById('submit-btn').textContent = 'Update Character';
 
+    // Set basic character type setup
+    const characterType = character.character_type || 'player';
+    setupCharacterType(characterType, character);
+
     // Fill basic info
     document.getElementById('character-name').value = character.name;
     document.getElementById('team-id').value = character.team_id || '';
@@ -401,69 +491,147 @@ async function loadCharacterData(characterId) {
     // Set avatar URL if available
     if (character.avatar_url) {
       document.getElementById('avatar-url').value = character.avatar_url;
-      document.getElementById('avatar-image').src = character.avatar_url;
+      document.getElementById('avatar-image').src = character.avatar_url || '/api/placeholder/120/120';
     }
 
-    // Determine character type and populate accordingly
-    const characterType = character.character_type || 'player';
-    const typeOption = document.querySelector(`.character-type-option[data-type="${characterType}"]`);
+    // Set header image URL if available
+    if (character.header_image_url) {
+      document.getElementById('header-image-url').value = character.header_image_url;
+      document.getElementById('header-image-preview').src = character.header_image_url || '/api/placeholder/800/300';
+    }
 
-    if (typeOption) {
-      // Trigger click to set up type-specific sections
-      typeOption.click();
-      
-      // For player type
-      if (characterType === 'player') {
-        // Set position
-        const positionOption = document.querySelector(`.position-option[data-position="${character.position}"]`);
-        if (positionOption) {
-          positionOption.click();
-        }
-        
-        // Parse stats
+    // For player types, set stats
+    if (characterType === 'player') {
+      // Use a timeout to ensure dynamic elements are created
+      setTimeout(() => {
         const stats = JSON.parse(character.stats_json);
         
-        // Set common stats
+        // Jersey number (check if it exists in stats)
+        if (stats.jersey_number) {
+          document.getElementById('jersey-number').value = stats.jersey_number;
+        }
+        
+        // Common stats for all players
         document.getElementById('stat-games').value = stats.games || 0;
         document.getElementById('stat-goals').value = stats.goals || 0;
         document.getElementById('stat-assists').value = stats.assists || 0;
         document.getElementById('stat-plus-minus').value = stats.plus_minus || 0;
         document.getElementById('stat-penalties').value = stats.penalties || 0;
         document.getElementById('stat-shots').value = stats.shots || 0;
-        
-        // Set position-specific stats
-        setTimeout(() => {
-          const position = character.position;
-          
-          if (position === 'C') {
+
+        // Position-specific stats
+        switch(character.position) {
+          case 'C':
             document.getElementById('stat-faceoff-pct').value = stats.faceoff_pct || 50.0;
             document.getElementById('stat-shooting-pct').value = stats.shooting_pct || 10.0;
-          } else if (position === 'LW' || position === 'RW') {
+            break;
+          case 'LW':
+          case 'RW':
             document.getElementById('stat-shooting-pct').value = stats.shooting_pct || 10.0;
-          } else if (position === 'D') {
+            break;
+          case 'D':
             document.getElementById('stat-blocks').value = stats.blocks || 0;
             document.getElementById('stat-hits').value = stats.hits || 0;
             document.getElementById('stat-ice-time').value = stats.ice_time ? (stats.ice_time / 60).toFixed(1) : 20.0;
-          } else if (position === 'G') {
+            break;
+          case 'G':
             document.getElementById('stat-wins').value = stats.wins || 0;
             document.getElementById('stat-losses').value = stats.losses || 0;
             document.getElementById('stat-gaa').value = stats.gaa || 2.50;
             document.getElementById('stat-save-pct').value = stats.save_pct || '.900';
             document.getElementById('stat-shutouts').value = stats.shutouts || 0;
-          }
-        }, 100);
-      } else {
-        // For non-player types, set the role
-        if (character.role) {
-          const roleInputs = document.querySelectorAll('input[name="character-role"]');
-          roleInputs.forEach(input => {
-            if (input.value === character.role) {
-              input.checked = true;
-            }
-          });
+            break;
         }
-      }
+      }, 200);  // Small delay to ensure dynamic elements are ready
     }
+
+  } catch (error) {
+    console.error('Error loading character data:', error);
+    window.authUtils.showFormError('character-form', 'Failed to load character data. Please try again later.');
+  }
+}async function loadCharacterData(characterId) {
+  try {
+    const response = await fetch(`/api/characters/${characterId}`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch character data');
+    }
+
+    const character = await response.json();
+
+    // Set form title and submit button text
+    document.getElementById('form-title').textContent = 'Edit Character';
+    document.getElementById('submit-btn').textContent = 'Update Character';
+
+    // Set basic character type setup
+    const characterType = character.character_type || 'player';
+    setupCharacterType(characterType, character);
+
+    // Fill basic info
+    document.getElementById('character-name').value = character.name;
+    document.getElementById('team-id').value = character.team_id || '';
+    document.getElementById('character-bio').value = character.bio || '';
+
+    // Set avatar URL if available
+    if (character.avatar_url) {
+      document.getElementById('avatar-url').value = character.avatar_url;
+      document.getElementById('avatar-image').src = character.avatar_url || '/api/placeholder/120/120';
+    }
+
+    // Set header image URL if available
+    if (character.header_image_url) {
+      document.getElementById('header-image-url').value = character.header_image_url;
+      document.getElementById('header-image-preview').src = character.header_image_url || '/api/placeholder/800/300';
+    }
+
+    // For player types, set stats
+    if (characterType === 'player') {
+      // Use a timeout to ensure dynamic elements are created
+      setTimeout(() => {
+        const stats = JSON.parse(character.stats_json);
+        
+        // Jersey number (check if it exists in stats)
+        if (stats.jersey_number) {
+          document.getElementById('jersey-number').value = stats.jersey_number;
+        }
+        
+        // Common stats for all players
+        document.getElementById('stat-games').value = stats.games || 0;
+        document.getElementById('stat-goals').value = stats.goals || 0;
+        document.getElementById('stat-assists').value = stats.assists || 0;
+        document.getElementById('stat-plus-minus').value = stats.plus_minus || 0;
+        document.getElementById('stat-penalties').value = stats.penalties || 0;
+        document.getElementById('stat-shots').value = stats.shots || 0;
+
+        // Position-specific stats
+        switch(character.position) {
+          case 'C':
+            document.getElementById('stat-faceoff-pct').value = stats.faceoff_pct || 50.0;
+            document.getElementById('stat-shooting-pct').value = stats.shooting_pct || 10.0;
+            break;
+          case 'LW':
+          case 'RW':
+            document.getElementById('stat-shooting-pct').value = stats.shooting_pct || 10.0;
+            break;
+          case 'D':
+            document.getElementById('stat-blocks').value = stats.blocks || 0;
+            document.getElementById('stat-hits').value = stats.hits || 0;
+            document.getElementById('stat-ice-time').value = stats.ice_time ? (stats.ice_time / 60).toFixed(1) : 20.0;
+            break;
+          case 'G':
+            document.getElementById('stat-wins').value = stats.wins || 0;
+            document.getElementById('stat-losses').value = stats.losses || 0;
+            document.getElementById('stat-gaa').value = stats.gaa || 2.50;
+            document.getElementById('stat-save-pct').value = stats.save_pct || '.900';
+            document.getElementById('stat-shutouts').value = stats.shutouts || 0;
+            break;
+        }
+      }, 200);  // Small delay to ensure dynamic elements are ready
+    }
+
   } catch (error) {
     console.error('Error loading character data:', error);
     window.authUtils.showFormError('character-form', 'Failed to load character data. Please try again later.');
@@ -662,28 +830,174 @@ function updateDynamicStats(position) {
   dynamicStatsContainer.innerHTML = statsHTML;
 }
 
-// Setup avatar preview functionality
-function setupAvatarPreview() {
-  const avatarUrlInput = document.getElementById('avatar-url');
-  const previewButton = document.getElementById('preview-avatar-btn');
-  const avatarImage = document.getElementById('avatar-image');
-  
-  previewButton.addEventListener('click', function() {
-    const imageUrl = avatarUrlInput.value.trim();
-    
-    if (imageUrl) {
-      // Update the preview image
-      avatarImage.src = imageUrl;
-      
-      // Handle load errors by reverting to placeholder
-      avatarImage.onerror = function() {
-        avatarImage.src = '/api/placeholder/120/120';
-        window.authUtils.showFormError('character-form', 'Invalid image URL or image could not be loaded');
-      };
-    } else {
-      // If no URL, show placeholder
-      avatarImage.src = '/api/placeholder/120/120';
-      window.authUtils.showFormError('character-form', 'Please enter an image URL');
-    }
+// Add this script for initial setup of interactive elements
+document.addEventListener('DOMContentLoaded', function() {
+  // Character type selection
+  const typeOptions = document.querySelectorAll('.character-type-option');
+  typeOptions.forEach(option => {
+      option.addEventListener('click', function() {
+          // Remove selected class from all options
+          typeOptions.forEach(opt => opt.classList.remove('selected'));
+          
+          // Add selected class to clicked option
+          this.classList.add('selected');
+          
+          // Show demo feedback in description
+          const type = this.getAttribute('data-type');
+          const typeDescriptions = {
+              'player': 'Players are the athletes who compete on the ice, representing their teams in hockey matches.',
+              'coach': 'Coaches guide and train players, developing strategies and leading teams to success.',
+              'staff': 'Team staff members provide crucial support behind the scenes, ensuring smooth team operations.',
+              'executive': 'League executives and administrators manage the broader aspects of hockey operations.',
+              'fan': 'Passionate supporters who are deeply involved in the hockey community and team culture.',
+              'media': 'Media professionals who cover, analyze, and report on hockey events and stories.'
+          };
+          
+          document.getElementById('character-type-description').textContent = 
+              typeDescriptions[type] || 'Select a character type to see more details.';
+          
+          // Show/hide sections based on type
+          if (type === 'player') {
+              document.getElementById('player-position-section').style.display = 'block';
+              document.getElementById('player-stats-section').style.display = 'block';
+              document.getElementById('role-selection').style.display = 'none';
+          } else {
+              document.getElementById('player-position-section').style.display = 'none';
+              document.getElementById('player-stats-section').style.display = 'none';
+              document.getElementById('role-selection').style.display = 'block';
+              
+              // Show demo roles
+              const roles = {
+                  'coach': ['Head Coach', 'Assistant Coach', 'Goalie Coach', 'Skill Development Coach'],
+                  'staff': ['Team Manager', 'Equipment Manager', 'Athletic Therapist', 'Team Doctor'],
+                  'executive': ['League Commissioner', 'General Manager', 'Director of Hockey Operations'],
+                  'fan': ['Season Ticket Holder', 'Team Superfan', 'Hockey Blogger', 'Fan Club President'],
+                  'media': ['Sports Journalist', 'Broadcaster', 'Hockey Analyst', 'Commentator']
+              };
+              
+              const rolesHTML = (roles[type] || []).map((role, idx) => `
+                  <div class="role-option">
+                      <input type="radio" id="role-${idx}" name="character-role" value="${role}" ${idx === 0 ? 'checked' : ''}>
+                      <label for="role-${idx}">${role}</label>
+                  </div>
+              `).join('');
+              
+              document.getElementById('role-options').innerHTML = rolesHTML;
+          }
+      });
   });
-}
+  
+  // Position selection
+  const positionOptions = document.querySelectorAll('.position-option');
+  positionOptions.forEach(option => {
+      option.addEventListener('click', function() {
+          // Remove selected class from all options
+          positionOptions.forEach(opt => opt.classList.remove('selected'));
+          
+          // Add selected class to clicked option
+          this.classList.add('selected');
+          
+          // Show demo stats based on position
+          const position = this.getAttribute('data-position');
+          let dynamicStatsHTML = '<div class="stats-grid">';
+          
+          switch(position) {
+              case 'C':
+                  dynamicStatsHTML += `
+                      <div class="stat-input-group">
+                          <label for="stat-faceoff-pct">Faceoff %</label>
+                          <input type="number" id="stat-faceoff-pct" class="stat-input" value="50.0" min="0" max="100" step="0.1">
+                      </div>
+                      <div class="stat-input-group">
+                          <label for="stat-shooting-pct">Shooting %</label>
+                          <input type="number" id="stat-shooting-pct" class="stat-input" value="10.0" min="0" max="100" step="0.1">
+                      </div>
+                  `;
+                  break;
+              case 'LW':
+              case 'RW':
+                  dynamicStatsHTML += `
+                      <div class="stat-input-group">
+                          <label for="stat-shooting-pct">Shooting %</label>
+                          <input type="number" id="stat-shooting-pct" class="stat-input" value="10.0" min="0" max="100" step="0.1">
+                      </div>
+                  `;
+                  break;
+              case 'D':
+                  dynamicStatsHTML += `
+                      <div class="stat-input-group">
+                          <label for="stat-blocks">Blocked Shots</label>
+                          <input type="number" id="stat-blocks" class="stat-input" value="0" min="0">
+                      </div>
+                      <div class="stat-input-group">
+                          <label for="stat-hits">Hits</label>
+                          <input type="number" id="stat-hits" class="stat-input" value="0" min="0">
+                      </div>
+                      <div class="stat-input-group">
+                          <label for="stat-ice-time">Avg. Ice Time (min)</label>
+                          <input type="number" id="stat-ice-time" class="stat-input" value="20.0" min="0" step="0.1">
+                      </div>
+                  `;
+                  break;
+              case 'G':
+                  dynamicStatsHTML += `
+                      <div class="stat-input-group">
+                          <label for="stat-wins">Wins</label>
+                          <input type="number" id="stat-wins" class="stat-input" value="0" min="0">
+                      </div>
+                      <div class="stat-input-group">
+                          <label for="stat-losses">Losses</label>
+                          <input type="number" id="stat-losses" class="stat-input" value="0" min="0">
+                      </div>
+                      <div class="stat-input-group">
+                          <label for="stat-gaa">Goals Against Average</label>
+                          <input type="number" id="stat-gaa" class="stat-input" value="2.50" min="0" step="0.01">
+                      </div>
+                      <div class="stat-input-group">
+                          <label for="stat-save-pct">Save Percentage</label>
+                          <input type="text" id="stat-save-pct" class="stat-input" value=".900">
+                      </div>
+                      <div class="stat-input-group">
+                          <label for="stat-shutouts">Shutouts</label>
+                          <input type="number" id="stat-shutouts" class="stat-input" value="0" min="0">
+                      </div>
+                  `;
+                  break;
+          }
+          
+          dynamicStatsHTML += '</div>';
+          document.getElementById('dynamic-stats-container').innerHTML = dynamicStatsHTML;
+      });
+  });
+  
+  // Avatar preview
+  const previewButton = document.getElementById('preview-avatar-btn');
+  previewButton.addEventListener('click', function() {
+      const imageUrl = document.getElementById('avatar-url').value.trim();
+      const avatarImage = document.getElementById('avatar-image');
+      
+      if (imageUrl) {
+          avatarImage.src = imageUrl;
+          
+          // Handle error
+          avatarImage.onerror = function() {
+              avatarImage.src = '/api/placeholder/120/120';
+              // Show error message in demo
+              const errorDiv = document.getElementById('character-form-error');
+              errorDiv.textContent = 'Invalid image URL or image could not be loaded.';
+              errorDiv.style.display = 'block';
+          };
+          
+          // Handle success
+          avatarImage.onload = function() {
+              // Hide error if showing
+              document.getElementById('character-form-error').style.display = 'none';
+          };
+      } else {
+          // Show error for empty URL
+          const errorDiv = document.getElementById('character-form-error');
+          errorDiv.textContent = 'Please enter an image URL.';
+          errorDiv.style.display = 'block';
+      }
+  });
+});

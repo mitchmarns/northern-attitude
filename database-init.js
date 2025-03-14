@@ -71,6 +71,7 @@ function initDatabase() {
         stats_json TEXT NOT NULL,
         bio TEXT,
         avatar_url VARCHAR(255),
+        header_image_url VARCHAR(255),
         is_active BOOLEAN DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
