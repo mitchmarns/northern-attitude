@@ -165,33 +165,25 @@
                     
                     <!-- Team Description Section -->
                     <div class="form-section">
-                        <h3 class="form-section-title">Team Details</h3>
+                        <h3 class="form-section-title">Basic Information</h3>
                         
                         <div class="form-group">
-                            <label for="team-description">Description</label>
-                            <textarea id="team-description" class="form-control" rows="4" placeholder="Describe your team's history, playing style, or other information..."></textarea>
-                            <p class="form-text">This will be displayed on your team's profile page</p>
+                            <label for="logo-url">Team Logo URL</label>
+                            <input type="url" id="logo-url" class="form-control" placeholder="https://example.com/your-logo.png">
+                            <p class="form-text">Enter a URL to an image for your team's logo</p>
                         </div>
                         
-                        <div class="form-row">
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="primary-color">Primary Color</label>
-                                    <div class="color-input-group">
-                                        <div class="color-preview" id="primary-color-preview"></div>
-                                        <input type="color" id="primary-color" class="form-control" value="#5a8095">
-                                    </div>
-                                </div>
+                        <div class="team-logo-container">
+                            <div class="team-logo-preview">
+                                <img id="logo-preview" src="/api/placeholder/120/120" alt="Team logo">
                             </div>
-                            <div class="form-col">
-                                <div class="form-group">
-                                    <label for="secondary-color">Secondary Color</label>
-                                    <div class="color-input-group">
-                                        <div class="color-preview" id="secondary-color-preview"></div>
-                                        <input type="color" id="secondary-color" class="form-control" value="#3c474b">
-                                    </div>
-                                </div>
-                            </div>
+                            <button type="button" class="btn btn-secondary" id="preview-logo-btn">Preview Logo</button>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="team-name">Team Name</label>
+                            <input type="text" id="team-name" class="form-control" required>
+                            <p class="form-text">Enter the full name of your hockey team</p>
                         </div>
                     </div>
                     

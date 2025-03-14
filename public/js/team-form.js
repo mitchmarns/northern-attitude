@@ -1,138 +1,31 @@
-// team-form.js - Client-side functionality for team creation and editing
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Check if user is authenticated
-  window.authUtils.checkAuth(true);
-  
-  // Set up logout functionality
-  window.authUtils.setupLogoutButton();
-  
-  // Get team ID from URL (if editing)
-  const urlParams = new URLSearchParams(window.location.search);
-  const teamId = urlParams.get('id');
-  
-  // Check if user has permission to create/edit teams
-  checkTeamPermissions(teamId);
-  
-  // If editing, load team data
-  if (teamId) {
-    document.getElementById('form-title').textContent = 'Edit Team';
-    document.getElementById('submit-btn').textContent = 'Update Team';
-    loadTeamData(teamId);
-  }
-  
-  // Set up team logo preview
-  setupLogoPreview();
-  
-  // Set up form submission
-  document.getElementById('team-form').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    if (teamId) {
-      updateTeam(teamId);
-    } else {
-      createTeam();
-    }
-  });
-});
-
-// Function to check if user has permission to create/edit teams
-async function checkTeamPermissions(teamId) {
-  try {
-    let endpoint = '/api/user/permissions';
-    
-    if (teamId) {
-      endpoint = `/api/teams/${teamId}/permissions`;
-    }
-    
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      credentials: 'include'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch permissions');
-    }
-    
-    const permissions = await response.json();
-    
-    if (!permissions.canCreateTeam && !teamId) {
-      // Redirect to teams list if user can't create teams
-      window.location.href = 'teams.html';
-      return;
-    }
-    
-    if (!permissions.canEditTeam && teamId) {
-      // Redirect to team detail if user can't edit this team
-      window.location.href = `team-detail.html?id=${teamId}`;
-      return;
-    }
-  } catch (error) {
-    console.error('Error checking permissions:', error);
-    window.location.href = 'teams.html';
-  }
-}
-
-// Function to load team data for editing
-async function loadTeamData(teamId) {
-  try {
-    const response = await fetch(`/api/teams/${teamId}`, {
-      method: 'GET',
-      credentials: 'include'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch team data');
-    }
-    
-    const team = await response.json();
-    
-    // Populate form with team data
-    document.getElementById('team-name').value = team.name;
-    document.getElementById('team-description').value = team.description || '';
-    
-    // Set logo preview if available
-    if (team.logo_url) {
-      document.getElementById('logo-preview').src = team.logo_url;
-    }
-    
-    // Load team colors
-    if (team.primary_color) {
-      document.getElementById('primary-color').value = team.primary_color;
-    }
-    
-    if (team.secondary_color) {
-      document.getElementById('secondary-color').value = team.secondary_color;
-    }
-  } catch (error) {
-    console.error('Error loading team data:', error);
-    
-    // Show error message
-    const errorMessage = document.getElementById('team-form-error');
-    errorMessage.textContent = 'Failed to load team data. Please try again later.';
-    errorMessage.style.display = 'block';
-  }
-}
+// Update to team-form.js to handle image URLs instead of file uploads
 
 // Function to set up logo preview
 function setupLogoPreview() {
-  const logoInput = document.getElementById('logo-file');
+  const logoUrlInput = document.getElementById('logo-url');
+  const previewButton = document.getElementById('preview-logo-btn');
   const logoPreview = document.getElementById('logo-preview');
   
-  logoInput.addEventListener('change', function() {
-    if (this.files && this.files[0]) {
-      const reader = new FileReader();
+  previewButton.addEventListener('click', function() {
+    const imageUrl = logoUrlInput.value.trim();
+    
+    if (imageUrl) {
+      // Update the preview image
+      logoPreview.src = imageUrl;
       
-      reader.onload = function(e) {
-        logoPreview.src = e.target.result;
+      // Handle load errors by reverting to placeholder
+      logoPreview.onerror = function() {
+        logoPreview.src = '/api/placeholder/120/120';
+        window.authUtils.showFormError('team-form', 'Invalid image URL or image could not be loaded');
       };
-      
-      reader.readAsDataURL(this.files[0]);
+    } else {
+      // If no URL, show placeholder
+      logoPreview.src = '/api/placeholder/120/120';
     }
   });
 }
 
-// Function to create a new team
+// Create a new team with image URL
 async function createTeam() {
   try {
     // Validate form
@@ -145,10 +38,7 @@ async function createTeam() {
     const teamDescription = document.getElementById('team-description').value.trim();
     const primaryColor = document.getElementById('primary-color').value;
     const secondaryColor = document.getElementById('secondary-color').value;
-    
-    // Create FormData for logo upload
-    const formData = new FormData();
-    const logoFile = document.getElementById('logo-file').files[0];
+    const logoUrl = document.getElementById('logo-url').value.trim();
     
     // Show loading state
     const submitButton = document.getElementById('submit-btn');
@@ -158,25 +48,6 @@ async function createTeam() {
     
     // Clear previous messages
     window.authUtils.clearFormMessages('team-form');
-    
-    // First, upload logo if provided
-    let logoUrl = null;
-    if (logoFile) {
-      formData.append('logo', logoFile);
-      
-      const logoResponse = await fetch('/api/upload/team-logo', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      
-      if (!logoResponse.ok) {
-        throw new Error('Failed to upload team logo');
-      }
-      
-      const logoData = await logoResponse.json();
-      logoUrl = logoData.url;
-    }
     
     // Create team data
     const teamData = {
@@ -227,7 +98,49 @@ async function createTeam() {
   }
 }
 
-// Function to update an existing team
+// Function to load team data for editing - modified for image URLs
+async function loadTeamData(teamId) {
+  try {
+    const response = await fetch(`/api/teams/${teamId}`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch team data');
+    }
+    
+    const team = await response.json();
+    
+    // Populate form with team data
+    document.getElementById('team-name').value = team.name;
+    document.getElementById('team-description').value = team.description || '';
+    
+    // Set logo URL if available
+    if (team.logo_url) {
+      document.getElementById('logo-url').value = team.logo_url;
+      document.getElementById('logo-preview').src = team.logo_url;
+    }
+    
+    // Load team colors
+    if (team.primary_color) {
+      document.getElementById('primary-color').value = team.primary_color;
+    }
+    
+    if (team.secondary_color) {
+      document.getElementById('secondary-color').value = team.secondary_color;
+    }
+  } catch (error) {
+    console.error('Error loading team data:', error);
+    
+    // Show error message
+    const errorMessage = document.getElementById('team-form-error');
+    errorMessage.textContent = 'Failed to load team data. Please try again later.';
+    errorMessage.style.display = 'block';
+  }
+}
+
+// Update team function - modified for image URLs
 async function updateTeam(teamId) {
   try {
     // Validate form
@@ -240,10 +153,7 @@ async function updateTeam(teamId) {
     const teamDescription = document.getElementById('team-description').value.trim();
     const primaryColor = document.getElementById('primary-color').value;
     const secondaryColor = document.getElementById('secondary-color').value;
-    
-    // Create FormData for logo upload
-    const formData = new FormData();
-    const logoFile = document.getElementById('logo-file').files[0];
+    const logoUrl = document.getElementById('logo-url').value.trim();
     
     // Show loading state
     const submitButton = document.getElementById('submit-btn');
@@ -253,25 +163,6 @@ async function updateTeam(teamId) {
     
     // Clear previous messages
     window.authUtils.clearFormMessages('team-form');
-    
-    // First, upload logo if provided
-    let logoUrl = null;
-    if (logoFile) {
-      formData.append('logo', logoFile);
-      
-      const logoResponse = await fetch('/api/upload/team-logo', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include'
-      });
-      
-      if (!logoResponse.ok) {
-        throw new Error('Failed to upload team logo');
-      }
-      
-      const logoData = await logoResponse.json();
-      logoUrl = logoData.url;
-    }
     
     // Create team data
     const teamData = {
@@ -322,19 +213,4 @@ async function updateTeam(teamId) {
     // Show error message
     window.authUtils.showFormError('team-form', 'Failed to update team. Please try again later.');
   }
-}
-
-// Function to validate the form
-function validateForm() {
-  // Clear previous messages
-  window.authUtils.clearFormMessages('team-form');
-  
-  // Check team name
-  const teamName = document.getElementById('team-name').value.trim();
-  if (!teamName) {
-    window.authUtils.showFormError('team-form', 'Team name is required');
-    return false;
-  }
-  
-  return true;
 }

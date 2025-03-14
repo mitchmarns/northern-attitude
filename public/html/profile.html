@@ -295,35 +295,16 @@
                     <div class="profile-form">
                         <form id="privacy-form">
                             <div class="form-group">
-                                <label>Profile Visibility</label>
-                                <div class="form-check">
-                                    <input type="radio" id="visibility-public" name="visibility" value="public">
-                                    <label for="visibility-public">Public - Anyone can view your profile</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" id="visibility-members" name="visibility" value="members">
-                                    <label for="visibility-members">Members Only - Only registered users can view your profile</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="radio" id="visibility-team" name="visibility" value="team">
-                                    <label for="visibility-team">Team Only - Only your team members can view your profile</label>
-                                </div>
+                                <label for="avatar-url">Profile Avatar URL</label>
+                                <input type="url" id="avatar-url" class="form-control" placeholder="https://example.com/your-avatar.jpg">
+                                <p class="form-text">Enter a URL to an image for your profile avatar</p>
                             </div>
                             
-                            <div class="form-group">
-                                <label>Communication Preferences</label>
-                                <div class="form-check">
-                                    <input type="checkbox" id="receive-messages" name="preferences" value="messages">
-                                    <label for="receive-messages">Allow direct messages from other members</label>
+                            <div class="avatar-container">
+                                <div class="avatar-preview">
+                                    <img id="avatar-image" src="/api/placeholder/150/150" alt="Profile avatar">
                                 </div>
-                                <div class="form-check">
-                                    <input type="checkbox" id="show-online-status" name="preferences" value="online-status">
-                                    <label for="show-online-status">Show my online status</label>
-                                </div>
-                                <div class="form-check">
-                                    <input type="checkbox" id="email-notifications" name="preferences" value="email-notifications">
-                                    <label for="email-notifications">Receive email notifications</label>
-                                </div>
+                                <button type="button" class="btn btn-secondary" id="preview-avatar-btn">Preview Avatar</button>
                             </div>
                             
                             <button type="submit" class="btn btn-primary">Save Privacy Settings</button>

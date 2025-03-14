@@ -1,49 +1,9 @@
-// character-routes.js - API routes for character management
+// Update character-routes.js to handle image URLs instead of file uploads
 
 const express = require('express');
 const router = express.Router();
 const { characterOperations } = require('../config/db');
 const { authMiddleware } = require('../public/js/auth');
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
-
-// Set up file storage for avatars
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    const uploadDir = path.join(__dirname, '../../public/uploads/avatars');
-    
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    cb(null, uploadDir);
-  },
-  filename: function(req, file, cb) {
-    // Create unique filename using timestamp and original extension
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, 'avatar-' + uniqueSuffix + ext);
-  }
-});
-
-// File filter to only allow images
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed'), false);
-  }
-};
-
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 2 * 1024 * 1024 // 2MB limit
-  },
-  fileFilter: fileFilter
-});
 
 // Get all characters for the logged-in user
 router.get('/my-characters', authMiddleware.isAuthenticated, async (req, res) => {
@@ -174,40 +134,6 @@ router.put('/characters/:id', authMiddleware.isAuthenticated, async (req, res) =
   }
 });
 
-// Delete a character
-router.delete('/characters/:id', authMiddleware.isAuthenticated, async (req, res) => {
-  try {
-    const characterId = req.params.id;
-    
-    // Check if the character belongs to the requesting user
-    const isOwner = await characterOperations.isCharacterOwner(req.user.id, characterId);
-    
-    if (!isOwner) {
-      return res.status(403).json({ message: 'You do not have permission to delete this character' });
-    }
-    
-    // Get character to check if it's active
-    const character = await characterOperations.getCharacterById(characterId);
-    
-    // Delete character
-    await characterOperations.deleteCharacter(characterId);
-    
-    // If this was the user's active character, set another one as active if available
-    if (character.is_active) {
-      const remainingCharacters = await characterOperations.getUserCharacters(req.user.id);
-      
-      if (remainingCharacters.length > 0) {
-        await characterOperations.setActiveCharacter(req.user.id, remainingCharacters[0].id);
-      }
-    }
-    
-    res.status(200).json({ message: 'Character deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting character:', error);
-    res.status(500).json({ message: 'Failed to delete character' });
-  }
-});
-
 // Set a character as active
 router.put('/characters/:id/set-active', authMiddleware.isAuthenticated, async (req, res) => {
   try {
@@ -252,23 +178,37 @@ router.get('/characters/:id/games', authMiddleware.isAuthenticated, async (req, 
   }
 });
 
-// Upload avatar image
-router.post('/upload/avatar', authMiddleware.isAuthenticated, upload.single('avatar'), (req, res) => {
+// Delete a character
+router.delete('/characters/:id', authMiddleware.isAuthenticated, async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+    const characterId = req.params.id;
+    
+    // Check if the character belongs to the requesting user
+    const isOwner = await characterOperations.isCharacterOwner(req.user.id, characterId);
+    
+    if (!isOwner) {
+      return res.status(403).json({ message: 'You do not have permission to delete this character' });
     }
     
-    // Create URL for the uploaded avatar
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    // Get character to check if it's active
+    const character = await characterOperations.getCharacterById(characterId);
     
-    res.status(200).json({
-      message: 'Avatar uploaded successfully',
-      url: avatarUrl
-    });
+    // Delete character
+    await characterOperations.deleteCharacter(characterId);
+    
+    // If this was the user's active character, set another one as active if available
+    if (character.is_active) {
+      const remainingCharacters = await characterOperations.getUserCharacters(req.user.id);
+      
+      if (remainingCharacters.length > 0) {
+        await characterOperations.setActiveCharacter(req.user.id, remainingCharacters[0].id);
+      }
+    }
+    
+    res.status(200).json({ message: 'Character deleted successfully' });
   } catch (error) {
-    console.error('Error uploading avatar:', error);
-    res.status(500).json({ message: 'Failed to upload avatar' });
+    console.error('Error deleting character:', error);
+    res.status(500).json({ message: 'Failed to delete character' });
   }
 });
 

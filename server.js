@@ -1,9 +1,8 @@
-// server.js - Main application file
+// Updated server.js - Removed file upload dependencies
 
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-const fs = require('fs');
 const { characterOperations } = require('./config/db');
 
 // Create Express app
@@ -16,8 +15,6 @@ app.use(cookieParser());
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
-// Also serve uploads directory for character avatars
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Import route handlers
 const authRoutes = require('./routes/auth');  
@@ -32,20 +29,6 @@ app.use('/api', apiRoutes);
 app.use('/api', characterRoutes);  
 app.use('/api/users', userRoutes);  
 app.use('/api', teamRoutes);  
-
-const uploadsDir = path.join(__dirname, 'public/uploads');
-const avatarsDir = path.join(uploadsDir, 'avatars');
-const logosDir = path.join(uploadsDir, 'logos');
-
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-if (!fs.existsSync(avatarsDir)) {
-  fs.mkdirSync(avatarsDir, { recursive: true });
-}
-if (!fs.existsSync(logosDir)) {
-  fs.mkdirSync(logosDir, { recursive: true });
-}
 
 // Add new columns to Characters table if needed
 characterOperations.addCharacterColumns()
@@ -76,6 +59,7 @@ app.use((err, req, res, next) => {
   res.status(500).send('Server error occurred. Please try again later.');
 });
 
+// Generate placeholder images
 app.get('/api/placeholder/:width/:height', (req, res) => {
   const width = parseInt(req.params.width) || 100;
   const height = parseInt(req.params.height) || 100;

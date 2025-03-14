@@ -1,51 +1,9 @@
-// user-routes.js - API routes for user profile management
+// Updated user-routes.js for image URLs
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const bcrypt = require('bcrypt');
 const { db } = require('../config/db');
 const { authMiddleware } = require('../public/js/auth');
-
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    const uploadDir = path.join(__dirname, '../../uploads/avatars');
-    
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    cb(null, uploadDir);
-  },
-  filename: function(req, file, cb) {
-    // Create unique filename with user id and timestamp
-    const userId = req.user.id;
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname);
-    cb(null, `${userId}_${timestamp}${ext}`);
-  }
-});
-
-// File filter to only allow image files
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed'), false);
-  }
-};
-
-// Set up multer upload
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 2 * 1024 * 1024 // 2MB limit
-  },
-  fileFilter: fileFilter
-});
 
 // Middleware to check if user has a profile
 async function checkUserProfile(req, res, next) {
@@ -189,6 +147,33 @@ router.put('/profile', authMiddleware.isAuthenticated, checkUserProfile, (req, r
   });
 });
 
+// Route to update avatar with URL
+router.put('/avatar', authMiddleware.isAuthenticated, (req, res) => {
+  const userId = req.user.id;
+  const { avatar_url } = req.body;
+  
+  if (!avatar_url) {
+    return res.status(400).json({ message: 'Avatar URL is required' });
+  }
+  
+  // Update user's avatar URL in database
+  db.run(`
+    UPDATE Users
+    SET avatar_url = ?
+    WHERE id = ?
+  `, [avatar_url, userId], function(err) {
+    if (err) {
+      console.error('Error updating avatar URL:', err);
+      return res.status(500).json({ message: 'Server error' });
+    }
+    
+    res.status(200).json({ 
+      message: 'Avatar updated successfully',
+      avatar_url: avatar_url
+    });
+  });
+});
+
 // Route to update account settings
 router.put('/account', authMiddleware.isAuthenticated, async (req, res) => {
   const userId = req.user.id;
@@ -299,33 +284,6 @@ router.put('/privacy', authMiddleware.isAuthenticated, checkUserProfile, (req, r
   });
 });
 
-// Route to upload avatar
-router.post('/avatar', authMiddleware.isAuthenticated, upload.single('avatar'), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
-  
-  const userId = req.user.id;
-  const avatarUrl = `/uploads/avatars/${req.file.filename}`;
-  
-  // Update user's avatar URL in database
-  db.run(`
-    UPDATE Users
-    SET avatar_url = ?
-    WHERE id = ?
-  `, [avatarUrl, userId], function(err) {
-    if (err) {
-      console.error('Error updating avatar URL:', err);
-      return res.status(500).json({ message: 'Server error' });
-    }
-    
-    res.status(200).json({ 
-      message: 'Avatar uploaded successfully',
-      avatar_url: avatarUrl
-    });
-  });
-});
-
 // Route to get public profile of a user
 router.get('/profile/:username', (req, res) => {
   const { username } = req.params;
@@ -340,9 +298,9 @@ router.get('/profile/:username', (req, res) => {
     LEFT JOIN UserPrivacySettings s ON u.id = s.user_id
     LEFT JOIN Teams t ON p.favorite_team_id = t.id
     WHERE u.username = ?
-  `, [username], (req, row) => {
-    if (req) {
-      console.error('Error fetching public profile:', req);
+  `, [username], (err, row) => {
+    if (err) {
+      console.error('Error fetching public profile:', err);
       return res.status(500).json({ message: 'Server error' });
     }
     

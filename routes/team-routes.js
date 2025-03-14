@@ -1,50 +1,9 @@
-// team-routes.js - API routes for team management
-
+// Updated team-routes.js for image URLs
 const express = require('express');
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs');
 const { db } = require('../config/db');
 const { teamOperations, characterOperations } = require('../config/db');
 const { authMiddleware } = require('../public/js/auth');
-
-// Set up file storage for team logos
-const storage = multer.diskStorage({
-  destination: function(req, file, cb) {
-    const uploadDir = path.join(__dirname, '../public/uploads/logos');
-    
-    // Create directory if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    
-    cb(null, uploadDir);
-  },
-  filename: function(req, file, cb) {
-    // Create unique filename using timestamp and original extension
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const ext = path.extname(file.originalname);
-    cb(null, 'logo-' + uniqueSuffix + ext);
-  }
-});
-
-// File filter to only allow images
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Only image files are allowed'), false);
-  }
-};
-
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 2 * 1024 * 1024 // 2MB limit
-  },
-  fileFilter: fileFilter
-});
 
 // Get all teams
 router.get('/teams', async (req, res) => {
@@ -304,26 +263,6 @@ router.delete('/teams/:id', authMiddleware.isAuthenticated, async (req, res) => 
   }
 });
 
-// Upload team logo
-router.post('/upload/team-logo', authMiddleware.isAuthenticated, upload.single('logo'), (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-    
-    // Create URL for the uploaded logo
-    const logoUrl = `/uploads/logos/${req.file.filename}`;
-    
-    res.status(200).json({
-      message: 'Logo uploaded successfully',
-      url: logoUrl
-    });
-  } catch (error) {
-    console.error('Error uploading logo:', error);
-    res.status(500).json({ message: 'Failed to upload logo' });
-  }
-});
-
 // Join a team
 router.post('/teams/:id/join', authMiddleware.isAuthenticated, async (req, res) => {
   try {
@@ -556,7 +495,7 @@ router.post('/teams/join-requests/:requestId/approve', authMiddleware.isAuthenti
     const isOwner = await teamOperations.isTeamOwner(userId, joinRequest.team_id);
     const isStaff = await teamOperations.isTeamStaff(userId, joinRequest.team_id);
     
-    if (!isOwner && !isStaff) {
+    if (!isOwner && !isStaff && joinRequest.user_id !== userId) {
       return res.status(403).json({ message: 'You do not have permission to approve join requests' });
     }
     
@@ -596,7 +535,7 @@ router.post('/teams/join-requests/:requestId/reject', authMiddleware.isAuthentic
     const isOwner = await teamOperations.isTeamOwner(userId, joinRequest.team_id);
     const isStaff = await teamOperations.isTeamStaff(userId, joinRequest.team_id);
     
-    if (!isOwner && !isStaff) {
+    if (!isOwner && !isStaff && joinRequest.user_id !== userId) {
       return res.status(403).json({ message: 'You do not have permission to reject join requests' });
     }
     
