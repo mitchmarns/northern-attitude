@@ -5,13 +5,35 @@
 
 /* Main container with max-width */
 .container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 0 var(--space-5);
-  width: 100%;
+  padding: 0 var(--spacing-md);
 }
 
-/* Container width variants */
+.content-area {
+  background: var(--card-bg);
+  border-radius: 4px;
+  padding: var(--spacing-md);
+  box-shadow: 0 4px 12px var(--shadow);
+}
+
+.content-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.content-header h2 {
+  font-family: var(--accentfont);
+  font-weight: var(--medium);
+  font-size: 1.8rem;
+  color: var(--header);
+}
+
+/* Container width variants 
 .container--narrow {
   max-width: 800px;
 }
@@ -24,27 +46,27 @@
   max-width: 100%;
 }
 
-/* Container with padding */
+/* Container with padding 
 .container--padded {
   padding-top: var(--space-8);
   padding-bottom: var(--space-8);
 }
 
-/* Container with vertical centering */
+/* Container with vertical centering 
 .container--centered {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 180px); /* Subtract header + footer height */
+  min-height: calc(100vh - 180px); /* Subtract header + footer height 
 }
 
-/* Content area wrapper */
+/* Content area wrapper 
 .content-wrapper {
   padding: var(--space-5) 0;
 }
 
-/* Header for content sections */
+/* Header for content sections 
 .content-header {
   display: flex;
   justify-content: space-between;
@@ -54,7 +76,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 768px) {
   .content-header {
     flex-direction: column;
@@ -65,3 +87,4 @@
     margin-bottom: var(--space-3);
   }
 }
+  */

@@ -5,19 +5,19 @@
 
 /* Base styles for all text */
 body {
-  font-family: var(--font-main);
-  font-weight: var(--weight-regular);
-  color: var(--color-text);
+  font-family: var(--mainfont);
+  font-weight: var(--regular);
+  color: var(--lighttext);
   line-height: var(--leading-normal);
 }
 
 /* Heading styles */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-accent);
-  font-weight: var(--weight-medium);
-  color: var(--color-heading);
+  font-family: var(--accentfont);
+  font-weight: var(--medium);
+  color: var(--header);
   line-height: var(--leading-tight);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--spacing-md);
 }
 
 h1 {
@@ -42,12 +42,12 @@ h5 {
 
 h6 {
   font-size: var(--text-base);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--semibold);
 }
 
 /* Paragraph spacing */
 p {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-sm);
 }
 
 p:last-child {
@@ -56,108 +56,32 @@ p:last-child {
 
 /* Decorative logo text */
 .logo {
-  font-family: var(--font-decor);
-  font-size: var(--text-3xl);
-  font-weight: var(--weight-bold);
+  font-family: var(--decorfont);
+  font-size: 2rem;
+  font-weight: var(--bold);
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--color-text-dark);
+  color: var(--darktext);
 }
 
 .logo span {
-  color: var(--color-gradient-blue);
-  font-weight: var(--weight-bold);
+  color: var(--gradient1);
+  font-weight: var(--bold);
 }
 
 /* Links */
 a {
-  color: var(--color-primary);
+  color: var(--lighttext);
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--color-primary-400);
-}
-
-/* Section headings with line */
-.section-heading {
-  position: relative;
-  padding-bottom: var(--space-2);
-  margin-bottom: var(--space-5);
-}
-
-.section-heading::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 60px;
-  height: 2px;
-  background-color: var(--color-primary);
-}
-
-/* Text utilities */
-.text-center {
-  text-align: center;
-}
-
-.text-muted {
-  color: var(--color-text-muted);
-}
-
-.text-primary {
-  color: var(--color-primary);
-}
-
-.text-success {
-  color: var(--color-success-light);
-}
-
-.text-danger {
-  color: var(--color-danger-light);
-}
-
-.text-warning {
-  color: var(--color-warning);
+  color: var(--header);
 }
 
 .accent-text {
-  color: var(--color-primary);
-  font-weight: var(--weight-semibold);
-}
-
-/* Font weights */
-.font-light {
-  font-weight: var(--weight-light);
-}
-
-.font-normal {
-  font-weight: var(--weight-regular);
-}
-
-.font-medium {
-  font-weight: var(--weight-medium);
-}
-
-.font-semibold {
-  font-weight: var(--weight-semibold);
-}
-
-.font-bold {
-  font-weight: var(--weight-bold);
-}
-
-/* Font styles */
-.italic {
-  font-style: italic;
-}
-
-.uppercase {
-  text-transform: uppercase;
-}
-
-.capitalize {
-  text-transform: capitalize;
+  color: var(--header);
+  font-weight: var(--semibold);
 }
 
 /* Responsive typography */

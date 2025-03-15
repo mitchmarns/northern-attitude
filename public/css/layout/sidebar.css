@@ -5,16 +5,72 @@
 
 /* Main sidebar */
 .sidebar {
-  background-color: var(--color-card-bg);
-  border-radius: var(--radius-md);
-  padding: var(--space-5);
-  box-shadow: var(--shadow-md);
+  background: var(--card-bg);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  box-shadow: 0 5px 15px var(--shadow);
   height: fit-content;
   position: relative;
 }
 
-/* Sidebar with accent border */
-.sidebar--accented::before {
+.sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(to bottom, var(--gradient1), var(--gradient2), var(--gradient3));
+  border-radius: 8px 0 0 8px;
+}
+
+.sidebar h3 {
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: var(--accentfont);
+  font-size: 1.3rem;
+  font-weight: var(--medium);
+  color: var(--header);
+}
+
+.sidebar ul {
+  list-style: none;
+  margin-bottom: var(--spacing-md);
+  padding-left: 5px;
+}
+
+.sidebar li {
+  margin-bottom: var(--spacing-sm);
+}
+
+.sidebar li a {
+  color: var(--lighttext);
+  text-decoration: none;
+  display: block;
+  position: relative;
+  padding: var(--spacing-xs);
+  transition: var(--transition-fast);
+  font-family: var(--mainfont);
+  font-weight: var(--light);
+  padding-left: 15px;
+}
+
+.sidebar li a:hover {
+  color: var(--header-hover);
+  background-color: rgba(255, 255, 255, 0.05);
+  padding-left: var(--spacing-md);
+  transform: translateX(5px);
+}
+
+.sidebar li a:hover::before {
+  opacity: 1;
+  width: 7px;
+  height: 7px;
+}
+
+/* Sidebar with accent border 
+.sidebar-accented::before {
   content: '';
   position: absolute;
   top: 0;
@@ -24,8 +80,8 @@
   background: var(--gradient-secondary);
   border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
-
-/* Sidebar section */
+*/
+/* Sidebar section 
 .sidebar__section {
   margin-bottom: var(--space-6);
 }
@@ -33,8 +89,8 @@
 .sidebar__section:last-child {
   margin-bottom: 0;
 }
-
-/* Sidebar section heading */
+*/
+/* Sidebar section heading 
 .sidebar__heading {
   font-family: var(--font-accent);
   color: var(--color-primary);
@@ -44,8 +100,8 @@
   font-size: var(--text-lg);
   font-weight: var(--weight-medium);
 }
-
-/* Sidebar navigation */
+*/
+/* Sidebar navigation 
 .sidebar__nav {
   list-style: none;
   margin-bottom: var(--space-5);
@@ -93,8 +149,8 @@
   width: 7px;
   height: 7px;
 }
-
-/* Active sidebar link */
+*/
+/* Active sidebar link 
 .sidebar__nav-link--active {
   color: var(--color-primary);
   background-color: rgba(90, 128, 149, 0.1);
@@ -106,8 +162,8 @@
   width: 7px;
   height: 7px;
 }
-
-/* Sidebar link with badge */
+*/
+/* Sidebar link with badge 
 .sidebar__nav-badge {
   display: inline-block;
   background-color: var(--color-primary);
@@ -121,8 +177,8 @@
   margin-left: var(--space-2);
   font-weight: var(--weight-medium);
 }
-
-/* Activity items in sidebar */
+*/
+/* Activity items in sidebar 
 .activity-list {
   list-style: none;
   padding-left: var(--space-1);
@@ -149,14 +205,14 @@
   font-size: var(--text-xs);
   color: var(--color-text-muted);
 }
-
-/* Sticky sidebar */
+*/
+/* Sticky sidebar 
 .sidebar--sticky {
   position: sticky;
   top: var(--space-5);
 }
-
-/* Responsive adjustments */
+*/
+/* Responsive adjustments 
 @media (max-width: 768px) {
   .sidebar {
     margin-bottom: var(--space-5);
@@ -166,3 +222,4 @@
     position: static;
   }
 }
+  */

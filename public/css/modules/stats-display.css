@@ -11,7 +11,7 @@
   padding: var(--space-4);
   margin-bottom: var(--space-4);
 }
-
+/*
 .stat-block__title {
   color: var(--color-primary);
   text-align: center;
@@ -32,14 +32,14 @@
   opacity: 0.5;
 }
 
-/* Stat grid layout */
+/* Stat grid layout 
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: var(--space-2);
 }
 
-/* Individual stat item */
+/* Individual stat item 
 .stat-item {
   background-color: rgba(0, 0, 0, 0.15);
   padding: var(--space-2);
@@ -67,7 +67,7 @@
   color: var(--color-text-light);
 }
 
-/* Stats highlight section */
+/* Stats highlight section 
 .stats-highlight {
   display: flex;
   justify-content: space-around;
@@ -96,7 +96,7 @@
   margin-top: var(--space-1);
 }
 
-/* Position-specific stats blocks */
+/* Position-specific stats blocks 
 .position-stats {
   margin-top: var(--space-5);
 }
@@ -108,7 +108,7 @@
   font-size: var(--text-lg);
 }
 
-/* Stats comparisons */
+/* Stats comparisons 
 .stats-comparison {
   display: flex;
   align-items: center;
@@ -143,7 +143,7 @@
   text-align: right;
 }
 
-/* Stats table improvements */
+/* Stats table improvements 
 .stats-table th {
   white-space: nowrap;
   text-align: center;
@@ -158,7 +158,7 @@
   text-align: left;
 }
 
-/* Career stats summaries */
+/* Career stats summaries 
 .career-stats {
   display: flex;
   flex-wrap: wrap;
@@ -224,7 +224,7 @@
   font-weight: var(--weight-medium);
 }
 
-/* Circular stats (for goalie save percentage, etc) */
+/* Circular stats (for goalie save percentage, etc) 
 .circular-stat {
   position: relative;
   width: 120px;
@@ -250,7 +250,7 @@
 
 .circular-stat__circle--value {
   stroke: var(--color-primary);
-  stroke-dasharray: 283; /* π * 2 * r, where r is (width - stroke-width) / 2 */
+  stroke-dasharray: 283; /* π * 2 * r, where r is (width - stroke-width) / 2 
   transition: stroke-dashoffset var(--transition-medium);
 }
 
@@ -272,7 +272,7 @@
   color: var(--color-text-muted);
 }
 
-/* Stat cards */
+/* Stat cards 
 .stat-card {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -316,7 +316,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Statistical trends */
+/* Statistical trends 
 .stat-trend {
   display: flex;
   align-items: center;
@@ -335,7 +335,7 @@
   margin-right: var(--space-1);
 }
 
-/* Mini stat list */
+/* Mini stat list 
 .mini-stats {
   display: flex;
   flex-wrap: wrap;
@@ -362,7 +362,7 @@
   font-weight: var(--weight-medium);
 }
 
-/* Season compare display */
+/* Season compare display 
 .season-compare {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -405,7 +405,7 @@
   font-weight: var(--weight-medium);
 }
 
-/* Position rankings */
+/* Position rankings 
 .position-rankings {
   margin-bottom: var(--space-6);
 }
@@ -461,7 +461,7 @@
   text-align: right;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 768px) {
   .stats-highlight {
     flex-wrap: wrap;
@@ -499,3 +499,4 @@
     margin-bottom: var(--space-1);
   }
 }
+  */

@@ -6,11 +6,242 @@
 /* Dashboard layout container */
 .dashboard {
   display: grid;
-  grid-template-columns: 300px 1fr;
-  gap: var(--space-5);
+  grid-template-columns: 1fr 3fr;
+  gap: var(--spacing-md);
 }
 
-/* Dashboard sidebar */
+.badge {
+  display: inline-block;
+  background-color: #5a8095;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  text-align: center;
+  line-height: 20px;
+  margin-left: 10px;
+}
+
+.activity-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.activity-item a {
+  color: var(--light-text);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.activity-item a:hover {
+  color: #5a8095;
+}
+
+.activity-time {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.content-area {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.announcements {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  margin-bottom: 10px;
+}
+
+.announcement-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.announcement-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 15px;
+  border: 2px solid #5a8095;
+}
+
+.announcement-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.announcement-info h3 {
+  font-family: 'freight-display-pro', serif;
+  color: #5a8095;
+  margin-bottom: 3px;
+  font-size: 1.2rem;
+}
+
+.announcement-info span {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.announcement-content {
+  line-height: 1.7;
+  margin-bottom: 15px;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.dashboard-card {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, rgba(90, 128, 149, 0.2), transparent);
+  border-radius: 0 0 0 100%;
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover::before {
+  width: 120px;
+  height: 120px;
+}
+
+.dashboard-card h3 {
+  font-family: 'freight-display-pro', serif;
+  color: #5a8095;
+  margin-bottom: 10px;
+  position: relative;
+  font-size: 1.3rem;
+}
+
+.dashboard-card p {
+  margin-bottom: 5px;
+}
+
+.accent-text {
+  color: #5a8095;
+  font-weight: 500;
+}
+
+.dashboard-card a {
+  display: inline-block;
+  margin-top: 15px;
+  color: #5a8095;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.dashboard-card a::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: #5a8095;
+  transition: width 0.3s ease;
+}
+
+.dashboard-card a:hover {
+  color: #6c96ad;
+}
+
+.dashboard-card a:hover::after {
+  width: 100%;
+}
+
+.team-invites-section {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.team-invites-section h3 {
+  font-family: 'freight-display-pro', serif;
+  color: #5a8095;
+  margin-bottom: 15px;
+  font-size: 1.3rem;
+}
+
+.invite-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.invite-info h4 {
+  color: #5a8095;
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+}
+
+.invite-actions {
+  display: flex;
+  gap: 10px;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+      grid-template-columns: 1fr;
+  }
+  
+  .card-grid {
+      grid-template-columns: 1fr;
+  }
+  
+  .invite-card {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+  
+  .invite-actions {
+      margin-top: 10px;
+      width: 100%;
+      justify-content: flex-end;
+  }
+}
+
+/* Dashboard sidebar 
 .dashboard__sidebar {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -29,22 +260,22 @@
   background: var(--gradient-secondary);
   border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
-
-/* Dashboard main content */
+*/
+/* Dashboard main content 
 .dashboard__content {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
 }
-
-/* Dashboard card grid */
+*/
+/* Dashboard card grid 
 .dashboard__cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: var(--space-5);
 }
-
-/* Dashboard card styles */
+*/
+/* Dashboard card styles 
 .dashboard__card {
   background: var(--gradient-primary);
   border-radius: var(--radius-md);
@@ -115,8 +346,8 @@
 .dashboard__card-link:hover::after {
   transform: translateX(3px);
 }
-
-/* Activity feed */
+*/
+/* Activity feed 
 .activity-feed {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -160,8 +391,8 @@
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
-
-/* Team invitations section */
+*/
+/* Team invitations section 
 .team-invites {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -201,8 +432,8 @@
   display: flex;
   gap: var(--space-2);
 }
-
-/* Welcome message and announcements */
+*/
+/* Welcome message and announcements 
 .welcome-message {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -257,8 +488,8 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: var(--space-4);
 }
-
-/* Quick stats section */
+*/
+/* Quick stats section 
 .quick-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -290,8 +521,8 @@
   font-size: var(--text-sm);
   color: var(--color-text-muted);
 }
-
-/* Dashboard calendar */
+*/
+/* Dashboard calendar 
 .dashboard-calendar {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -348,8 +579,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-/* Recent games section */
+*/
+/* Recent games section 
 .recent-games {
   margin-top: var(--space-5);
 }
@@ -360,8 +591,8 @@
   margin-bottom: var(--space-4);
   font-size: var(--text-xl);
 }
-
-/* Leaderboard section */
+*/
+/* Leaderboard section 
 .leaderboard {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -420,7 +651,7 @@
   object-fit: cover;
 }
 
-/* Progress widget */
+/* Progress widget 
 .progress-widget {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -471,7 +702,7 @@
   transition: width var(--transition-medium);
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 768px) {
   .dashboard {
     grid-template-columns: 1fr;
@@ -486,7 +717,7 @@
   }
   
   .dashboard-calendar {
-    display: none; /* Hide calendar on mobile */
+    display: none; /* Hide calendar on mobile 
   }
   
   .invite-card {
@@ -508,3 +739,4 @@
     grid-template-columns: 1fr;
   }
 }
+*/

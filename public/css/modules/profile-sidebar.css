@@ -25,7 +25,7 @@
   border-radius: var(--radius-md) 0 0 var(--radius-md);
 }
 
-/* Profile avatar */
+/* Profile avatar 
 .profile-sidebar__avatar {
   width: 150px;
   height: 150px;
@@ -47,7 +47,7 @@
   transition: filter var(--transition-fast);
 }
 
-/* Profile info */
+/* Profile info 
 .profile-sidebar__name {
   font-family: var(--font-accent);
   color: var(--color-primary);
@@ -63,7 +63,7 @@
   font-weight: var(--weight-light);
 }
 
-/* Character status indicator */
+/* Character status indicator 
 .profile-sidebar__status {
   display: inline-block;
   padding: var(--space-1) var(--space-3);
@@ -89,7 +89,7 @@
   border: 1px solid var(--color-warning);
 }
 
-/* Stat blocks in sidebar */
+/* Stat blocks in sidebar 
 .profile-sidebar__stats {
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: var(--radius-sm);
@@ -149,7 +149,7 @@
   color: var(--color-text-light);
 }
 
-/* Action buttons */
+/* Action buttons 
 .profile-sidebar__actions {
   display: flex;
   flex-direction: column;
@@ -157,7 +157,7 @@
   margin-top: var(--space-5);
 }
 
-/* Profile sidebar with jersey number */
+/* Profile sidebar with jersey number 
 .profile-sidebar--with-jersey {
   padding-top: 40px;
   margin-top: 40px;
@@ -183,7 +183,7 @@
   font-family: var(--font-decor);
 }
 
-/* Profile contact info section */
+/* Profile contact info section 
 .profile-sidebar__contact {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
@@ -214,7 +214,7 @@
   font-size: var(--text-sm);
 }
 
-/* Profile sidebar social links */
+/* Profile sidebar social links 
 .profile-sidebar__social {
   display: flex;
   justify-content: center;
@@ -240,7 +240,7 @@
   transform: translateY(-3px);
 }
 
-/* Team info sections */
+/* Team info sections 
 .profile-sidebar__team-info {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
@@ -282,7 +282,7 @@
   margin-bottom: var(--space-3);
 }
 
-/* For team staff, owner info */
+/* For team staff, owner info 
 .profile-sidebar__staff-item {
   display: flex;
   align-items: center;
@@ -314,7 +314,7 @@
   margin-left: var(--space-2);
 }
 
-/* Character bio preview */
+/* Character bio preview 
 .profile-sidebar__bio {
   margin-top: var(--space-4);
   font-size: var(--text-sm);
@@ -348,7 +348,7 @@
   text-decoration: underline;
 }
 
-/* Character achievements/badges */
+/* Character achievements/badges 
 .profile-sidebar__achievements {
   margin-top: var(--space-4);
   padding-top: var(--space-4);
@@ -395,7 +395,7 @@
   color: var(--color-text-muted);
 }
 
-/* Character stats progression */
+/* Character stats progression 
 .profile-sidebar__progression {
   margin-top: var(--space-4);
 }
@@ -439,13 +439,13 @@
   border-radius: var(--radius-full);
 }
 
-/* Sticky profile sidebar */
+/* Sticky profile sidebar 
 .profile-sidebar--sticky {
   position: sticky;
   top: var(--space-5);
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 768px) {
   .profile-sidebar {
     margin-bottom: var(--space-5);
@@ -470,3 +470,4 @@
     flex: 0 0 calc(50% - var(--space-2));
   }
 }
+  */

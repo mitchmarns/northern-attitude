@@ -10,7 +10,7 @@
   margin-bottom: var(--space-6);
 }
 
-/* Table header */
+/* Table header 
 .table thead th {
   background-color: rgba(0, 0, 0, 0.2);
   color: var(--color-primary);
@@ -22,7 +22,7 @@
   position: relative;
 }
 
-/* Table header with sorting */
+/* Table header with sorting 
 .table th.sortable {
   cursor: pointer;
   transition: background-color var(--transition-fast);
@@ -54,7 +54,7 @@
   opacity: 1;
 }
 
-/* Table body */
+/* Table body 
 .table tbody tr {
   transition: background-color var(--transition-fast);
 }
@@ -68,17 +68,17 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Table row alternating colors */
+/* Table row alternating colors 
 .table--striped tbody tr:nth-child(even) {
   background-color: rgba(0, 0, 0, 0.1);
 }
 
-/* Highlight current row */
+/* Highlight current row 
 .table tr.active {
   background-color: rgba(90, 128, 149, 0.1) !important;
 }
 
-/* Table with borders */
+/* Table with borders 
 .table--bordered {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-sm);
@@ -90,14 +90,14 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Compact table */
+/* Compact table 
 .table--compact th,
 .table--compact td {
   padding: var(--space-2);
   font-size: var(--text-sm);
 }
 
-/* Table with position highlighting */
+/* Table with position highlighting 
 .table tr.position-header {
   background-color: rgba(0, 0, 0, 0.3);
   font-weight: var(--weight-semibold);
@@ -111,12 +111,12 @@
   padding: var(--space-2) var(--space-4);
 }
 
-/* Table with clickable rows */
+/* Table with clickable rows 
 .table--clickable tbody tr {
   cursor: pointer;
 }
 
-/* Table with fixed header */
+/* Table with fixed header 
 .table-container--fixed-header {
   max-height: 500px;
   overflow-y: auto;
@@ -131,7 +131,7 @@
   background-color: rgba(30, 31, 30, 0.95);
 }
 
-/* Table footer */
+/* Table footer 
 .table tfoot {
   background-color: rgba(0, 0, 0, 0.2);
   font-weight: var(--weight-medium);
@@ -142,7 +142,7 @@
   border-top: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Table caption */
+/* Table caption 
 .table caption {
   margin-bottom: var(--space-3);
   text-align: left;
@@ -151,7 +151,7 @@
   font-size: var(--text-sm);
 }
 
-/* Responsive table */
+/* Responsive table 
 @media (max-width: 768px) {
   .table--responsive {
     display: block;
@@ -160,7 +160,7 @@
     -webkit-overflow-scrolling: touch;
   }
   
-  /* Card-style responsive table */
+  /* Card-style responsive table 
   .table--cards {
     display: block;
     border: none;
@@ -202,3 +202,4 @@
     color: var(--color-primary);
   }
 }
+  */

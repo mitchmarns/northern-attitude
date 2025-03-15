@@ -36,7 +36,7 @@
   border-bottom: 3px solid var(--color-primary);
 }
 
-/* Tab panel/content */
+/* Tab panel/content 
 .tab-content {
   display: none;
   animation: fade-in 0.3s ease;
@@ -51,7 +51,7 @@
   display: block;
 }
 
-/* Tab content with background */
+/* Tab content with background 
 .tab-content--card {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -59,7 +59,7 @@
   box-shadow: var(--shadow-md);
 }
 
-/* Vertical tabs */
+/* Vertical tabs 
 .tabs--vertical {
   flex-direction: column;
   border-bottom: none;
@@ -82,7 +82,7 @@
   border-bottom: none;
 }
 
-/* Vertical tabs container */
+/* Vertical tabs container 
 .tabs-container--vertical {
   display: flex;
 }
@@ -92,7 +92,7 @@
   padding-left: var(--space-5);
 }
 
-/* Tab variants */
+/* Tab variants 
 .tabs--pills {
   border-bottom: none;
   gap: var(--space-2);
@@ -110,7 +110,7 @@
   color: var(--color-text-light);
 }
 
-/* Bordered tabs */
+/* Bordered tabs 
 .tabs--bordered {
   padding: var(--space-1);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -128,7 +128,7 @@
   background-color: rgba(90, 128, 149, 0.1);
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 768px) {
   .tabs-container--vertical {
     flex-direction: column;
@@ -181,3 +181,4 @@
     border-radius: var(--radius-sm);
   }
 }
+  */

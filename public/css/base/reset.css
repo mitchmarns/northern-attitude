@@ -24,13 +24,13 @@ html {
 }
 
 body {
-  min-height: 100vh;
-  font-family: var(--font-main);
-  font-weight: var(--weight-regular);
-  color: var(--color-text);
-  background-color: var(--color-bg);
+  background-color: var(--bg);
+  color: var(--lighttext);
+  font-family: var(--mainfont);
+  font-weight: var(--regular);
+  line-height: 1.6;
   background-image: var(--gradient-bg);
-  line-height: var(--leading-normal);
+  min-height: 100vh;
 }
 
 /* Remove styling from lists */
@@ -83,45 +83,21 @@ button::-moz-focus-inner,
   padding: 0;
 }
 
-/* Correct styles for buttons */
-button {
-  background-color: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-/* Responsive images */
-img {
-  max-width: 100%;
-  height: auto;
-  border-style: none;
-}
-
-/* Tables */
-table {
-  border-collapse: collapse;
-  width: 100%;
-}
-
-/* Make sure textarea only resizes vertically by default */
-textarea {
-  resize: vertical;
-}
-
 /* Custom scrollbar for WebKit browsers */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: var(--bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
-  border-radius: var(--radius-sm);
+  background: var(--header);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-400);
+  background: var(--header-hover);
 }

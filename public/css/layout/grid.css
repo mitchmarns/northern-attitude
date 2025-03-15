@@ -9,7 +9,7 @@
   gap: var(--space-5);
 }
 
-/* Grid column variants */
+/* Grid column variants 
 .grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
 .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
 .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
@@ -17,13 +17,13 @@
 .grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
 .grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
 
-/* Auto-fill grid - minimum column width */
+/* Auto-fill grid - minimum column width 
 .grid-cols-auto-sm { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
 .grid-cols-auto-md { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
 .grid-cols-auto-lg { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .grid-cols-auto-xl { grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); }
 
-/* Grid gap options */
+/* Grid gap options 
 .grid-gap-0 { gap: 0; }
 .grid-gap-1 { gap: var(--space-1); }
 .grid-gap-2 { gap: var(--space-2); }
@@ -34,7 +34,7 @@
 .grid-gap-8 { gap: var(--space-8); }
 .grid-gap-10 { gap: var(--space-10); }
 
-/* Column gap */
+/* Column gap 
 .grid-col-gap-0 { column-gap: 0; }
 .grid-col-gap-1 { column-gap: var(--space-1); }
 .grid-col-gap-2 { column-gap: var(--space-2); }
@@ -45,7 +45,7 @@
 .grid-col-gap-8 { column-gap: var(--space-8); }
 .grid-col-gap-10 { column-gap: var(--space-10); }
 
-/* Row gap */
+/* Row gap 
 .grid-row-gap-0 { row-gap: 0; }
 .grid-row-gap-1 { row-gap: var(--space-1); }
 .grid-row-gap-2 { row-gap: var(--space-2); }
@@ -56,7 +56,7 @@
 .grid-row-gap-8 { row-gap: var(--space-8); }
 .grid-row-gap-10 { row-gap: var(--space-10); }
 
-/* Grid column span */
+/* Grid column span 
 .col-span-1 { grid-column: span 1; }
 .col-span-2 { grid-column: span 2; }
 .col-span-3 { grid-column: span 3; }
@@ -65,7 +65,7 @@
 .col-span-6 { grid-column: span 6; }
 .col-span-full { grid-column: 1 / -1; }
 
-/* Grid row span */
+/* Grid row span 
 .row-span-1 { grid-row: span 1; }
 .row-span-2 { grid-row: span 2; }
 .row-span-3 { grid-row: span 3; }
@@ -74,7 +74,7 @@
 .row-span-6 { grid-row: span 6; }
 .row-span-full { grid-row: 1 / -1; }
 
-/* Grid placement */
+/* Grid placement 
 .col-start-1 { grid-column-start: 1; }
 .col-start-2 { grid-column-start: 2; }
 .col-start-3 { grid-column-start: 3; }
@@ -90,7 +90,7 @@
 .col-end-6 { grid-column-end: 6; }
 .col-end-7 { grid-column-end: 7; }
 
-/* Flex grid system (alternative to CSS Grid) */
+/* Flex grid system (alternative to CSS Grid) 
 .flex-grid {
   display: flex;
   flex-wrap: wrap;
@@ -102,7 +102,7 @@
   padding: var(--space-3);
 }
 
-/* Flex grid column variants */
+/* Flex grid column variants 
 .flex-grid-cols-2 > * {
   flex-basis: 50%;
   max-width: 50%;
@@ -118,7 +118,7 @@
   max-width: 25%;
 }
 
-/* Responsive grid - tablet */
+/* Responsive grid - tablet 
 @media (max-width: 768px) {
   .grid-cols-2,
   .grid-cols-3,
@@ -142,7 +142,7 @@
   .md-col-span-full { grid-column: 1 / -1; }
 }
 
-/* Responsive grid - mobile */
+/* Responsive grid - mobile 
 @media (max-width: 480px) {
   .grid-cols-2,
   .grid-cols-3,
@@ -169,3 +169,4 @@
   .sm-col-span-1 { grid-column: span 1; }
   .sm-col-span-full { grid-column: 1 / -1; }
 }
+  */

@@ -2,8 +2,58 @@
  * modals.css
  * Modal component styles for Northern Attitude Hockey Roleplay
  */
+ .leave-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
 
-/* Modal backdrop */
+.modal-content {
+  background-color: var(--card-bg);
+  padding: var(--spacing-lg);
+  border-radius: 4px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.modal-title {
+  font-family: var(--accentfont);
+  color: var(--header);
+  margin-bottom: var(--spacing-md);
+}
+
+.modal-message {
+  margin-bottom: var(--spacing-md);
+  line-height: 1.6;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.delete-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Modal backdrop 
 .modal {
   display: none;
   position: fixed;
@@ -23,7 +73,7 @@
   display: flex;
 }
 
-/* Modal container */
+/* Modal container 
 .modal__container {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -47,7 +97,7 @@
   }
 }
 
-/* Modal size variants */
+/* Modal size variants 
 .modal__container--sm {
   max-width: 400px;
 }
@@ -65,14 +115,14 @@
   height: 90%;
 }
 
-/* Modal header */
+/* Modal header 
 .modal__header {
   margin-bottom: var(--space-5);
   padding-bottom: var(--space-3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Modal title */
+/* Modal title 
 .modal__title {
   font-family: var(--font-accent);
   color: var(--color-primary);
@@ -80,7 +130,7 @@
   font-size: var(--text-2xl);
 }
 
-/* Modal close button */
+/* Modal close button 
 .modal__close {
   position: absolute;
   top: var(--space-4);
@@ -104,18 +154,18 @@
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Modal body */
+/* Modal body 
 .modal__body {
   margin-bottom: var(--space-5);
 }
 
-/* Modal message */
+/* Modal message 
 .modal__message {
   line-height: var(--leading-relaxed);
   margin-bottom: var(--space-5);
 }
 
-/* Modal footer with actions */
+/* Modal footer with actions 
 .modal__footer {
   display: flex;
   justify-content: flex-end;
@@ -125,7 +175,7 @@
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Color variants */
+/* Color variants 
 .modal__container--danger {
   border-top: 5px solid var(--color-danger);
 }
@@ -142,19 +192,19 @@
   border-top: 5px solid var(--color-primary);
 }
 
-/* Scrollable modal content */
+/* Scrollable modal content 
 .modal__content--scrollable {
   max-height: 60vh;
   overflow-y: auto;
   padding-right: var(--space-2);
 }
 
-/* Prevent body scrolling when modal is open */
+/* Prevent body scrolling when modal is open 
 body.modal-open {
   overflow: hidden;
 }
 
-/* Confirmation specific modal styles */
+/* Confirmation specific modal styles 
 .modal--confirm .modal__footer {
   justify-content: space-between;
 }
@@ -165,7 +215,7 @@ body.modal-open {
   margin: var(--space-6) 0;
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 480px) {
   .modal__container {
     padding: var(--space-4);
@@ -179,3 +229,4 @@ body.modal-open {
     width: 100%;
   }
 }
+  */

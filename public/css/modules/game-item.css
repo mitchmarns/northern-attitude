@@ -4,14 +4,14 @@
  * Following BEM naming convention
  */
 
-/* Games list container */
+/* Games list container 
 .games-list {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
 
-/* Base game item */
+/* Base game item 
 .game-item {
   display: flex;
   justify-content: space-between;
@@ -28,7 +28,7 @@
   background-color: rgba(0, 0, 0, 0.25);
 }
 
-/* Game item info side */
+/* Game item info side 
 .game-item__info {
   flex: 1;
 }
@@ -48,14 +48,14 @@
   color: var(--color-text-muted);
 }
 
-/* Game item stats side */
+/* Game item stats side 
 .game-item__stats {
   font-weight: var(--weight-semibold);
   color: var(--color-primary);
   text-align: right;
 }
 
-/* Game result indicators */
+/* Game result indicators 
 .game-item--win {
   border-left: 4px solid var(--color-success);
 }
@@ -72,7 +72,7 @@
   border-left: 4px solid var(--color-primary);
 }
 
-/* Game cards for schedule view */
+/* Game cards for schedule view 
 .game-card {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -207,7 +207,7 @@
   color: var(--color-text-muted);
 }
 
-/* Game schedule grid */
+/* Game schedule grid 
 .game-schedule {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -215,7 +215,7 @@
   margin-bottom: var(--space-6);
 }
 
-/* Game calendar view */
+/* Game calendar view 
 .game-calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -284,7 +284,7 @@
   border-left: 2px solid var(--color-warning);
 }
 
-/* Game detail modal */
+/* Game detail modal 
 .game-detail {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -366,14 +366,14 @@
   font-family: var(--font-accent);
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 768px) {
   .game-schedule {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
   
   .game-calendar {
-    display: none; /* Hide calendar view on mobile */
+    display: none; /* Hide calendar view on mobile 
   }
   
   .game-detail__matchup {
@@ -405,3 +405,4 @@
     grid-template-columns: 1fr;
   }
 }
+  */

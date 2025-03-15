@@ -32,7 +32,7 @@
   box-shadow: var(--shadow-lg);
 }
 
-/* Team logo */
+/* Team logo 
 .team-card__logo {
   width: 80px;
   height: 80px;
@@ -64,7 +64,7 @@
   filter: none;
 }
 
-/* Team card content */
+/* Team card content 
 .team-card__name {
   font-family: var(--font-accent);
   font-size: var(--text-xl);
@@ -87,7 +87,7 @@
   margin-top: auto;
 }
 
-/* Team card with team colors */
+/* Team card with team colors 
 .team-card--custom-colors {
   position: relative;
   overflow: hidden;
@@ -128,7 +128,7 @@
   color: var(--team-secondary-color, var(--color-primary-400));
 }
 
-/* Team card sizes */
+/* Team card sizes 
 .team-card--sm {
   padding: var(--space-3);
 }
@@ -155,7 +155,7 @@
   font-size: var(--text-2xl);
 }
 
-/* Team card with badge (e.g. "your team") */
+/* Team card with badge (e.g. "your team") 
 .team-card__badge {
   position: absolute;
   top: var(--space-3);
@@ -170,7 +170,7 @@
   letter-spacing: 1px;
 }
 
-/* Featured team card */
+/* Featured team card 
 .team-card--featured {
   grid-column: span 2;
   display: grid;
@@ -222,7 +222,7 @@
   color: var(--color-text);
 }
 
-/* Empty state when no teams are found */
+/* Empty state when no teams are found 
 .teams-empty {
   background-color: var(--color-card-bg);
   border-radius: var(--radius-md);
@@ -242,7 +242,7 @@
   margin-bottom: var(--space-5);
 }
 
-/* Responsive adjustments */
+/* Responsive adjustments 
 @media (max-width: 768px) {
   .teams-grid {
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -268,3 +268,4 @@
     grid-template-columns: 1fr;
   }
 }
+  */
