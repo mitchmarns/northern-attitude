@@ -1,0 +1,510 @@
+/*
+ * dashboard.css
+ * Dashboard page specific styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Dashboard layout container */
+.dashboard {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-5);
+}
+
+/* Dashboard sidebar */
+.dashboard__sidebar {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+.dashboard__sidebar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--gradient-secondary);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+/* Dashboard main content */
+.dashboard__content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+/* Dashboard card grid */
+.dashboard__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+/* Dashboard card styles */
+.dashboard__card {
+  background: var(--gradient-primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard__card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--color-overlay);
+  opacity: 0.7;
+  z-index: 1;
+}
+
+.dashboard__card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.dashboard__card-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+}
+
+.dashboard__card-title {
+  font-family: var(--font-accent);
+  font-size: var(--text-xl);
+  color: var(--color-text-light);
+  margin-bottom: var(--space-3);
+}
+
+.dashboard__card-text {
+  margin-bottom: var(--space-2);
+  color: var(--color-text-light);
+  font-weight: var(--weight-light);
+}
+
+.dashboard__card-link {
+  display: inline-block;
+  margin-top: var(--space-3);
+  color: var(--color-text-light);
+  text-decoration: none;
+  font-weight: var(--weight-semibold);
+  transition: all var(--transition-fast);
+}
+
+.dashboard__card-link:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.dashboard__card-link::after {
+  content: ' →';
+  transition: transform var(--transition-fast);
+  display: inline-block;
+}
+
+.dashboard__card-link:hover::after {
+  transform: translateX(3px);
+}
+
+/* Activity feed */
+.activity-feed {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+.activity-feed__title {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: var(--text-xl);
+}
+
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: var(--space-2);
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.activity-item__link {
+  color: var(--color-text-light);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.activity-item__link:hover {
+  color: var(--color-primary);
+}
+
+.activity-item__time {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Team invitations section */
+.team-invites {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+  margin-top: var(--space-5);
+}
+
+.team-invites__title {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-xl);
+}
+
+.invite-card {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.invite-card:last-child {
+  margin-bottom: 0;
+}
+
+.invite-card__info h4 {
+  color: var(--color-primary);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-lg);
+}
+
+.invite-card__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Welcome message and announcements */
+.welcome-message {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--space-5);
+}
+
+.welcome-message__header {
+  display: flex;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.welcome-message__avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-right: var(--space-3);
+  border: 2px solid var(--color-primary);
+}
+
+.welcome-message__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.welcome-message__title {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-xl);
+}
+
+.welcome-message__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.welcome-message__content {
+  line-height: var(--leading-relaxed);
+  margin-bottom: var(--space-4);
+}
+
+.welcome-message__content p {
+  margin-bottom: var(--space-3);
+}
+
+.welcome-message__actions {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: var(--space-4);
+}
+
+/* Quick stats section */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.stat-card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-fast);
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+}
+
+.stat-card__value {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  margin-bottom: var(--space-1);
+}
+
+.stat-card__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Dashboard calendar */
+.dashboard-calendar {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+.dashboard-calendar__title {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-xl);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.calendar-grid__header {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: var(--space-2);
+  text-align: center;
+  font-weight: var(--weight-medium);
+  font-size: var(--text-sm);
+}
+
+.calendar-grid__day {
+  background-color: rgba(0, 0, 0, 0.1);
+  min-height: 80px;
+  padding: var(--space-2);
+  position: relative;
+}
+
+.calendar-grid__date {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.calendar-grid__event {
+  font-size: var(--text-xs);
+  margin-top: var(--space-4);
+  padding: var(--space-1) var(--space-2);
+  background-color: rgba(90, 128, 149, 0.2);
+  border-left: 2px solid var(--color-primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Recent games section */
+.recent-games {
+  margin-top: var(--space-5);
+}
+
+.recent-games__title {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-xl);
+}
+
+/* Leaderboard section */
+.leaderboard {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+.leaderboard__title {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-xl);
+}
+
+.leaderboard__table {
+  width: 100%;
+}
+
+.leaderboard__table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-primary);
+  font-weight: var(--weight-medium);
+}
+
+.leaderboard__table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.leaderboard__table tr:last-child td {
+  border-bottom: none;
+}
+
+.leaderboard__rank {
+  font-weight: var(--weight-semibold);
+}
+
+.leaderboard__player {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.leaderboard__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.leaderboard__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Progress widget */
+.progress-widget {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+.progress-widget__title {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  font-size: var(--text-xl);
+}
+
+.progress-item {
+  margin-bottom: var(--space-4);
+}
+
+.progress-item:last-child {
+  margin-bottom: 0;
+}
+
+.progress-item__header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-1);
+}
+
+.progress-item__label {
+  font-weight: var(--weight-medium);
+}
+
+.progress-item__value {
+  color: var(--color-primary);
+}
+
+.progress-item__bar {
+  height: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.progress-item__fill {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-medium);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard__sidebar {
+    margin-bottom: var(--space-5);
+  }
+  
+  .quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .dashboard-calendar {
+    display: none; /* Hide calendar on mobile */
+  }
+  
+  .invite-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .invite-card__info {
+    margin-bottom: var(--space-3);
+  }
+}
+
+@media (max-width: 480px) {
+  .quick-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard__cards {
+    grid-template-columns: 1fr;
+  }
+}
