@@ -1,0 +1,140 @@
+/*
+ * team-management.css
+ * Team management page styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Tabs container */
+.tabs-container {
+  margin-bottom: var(--space-5);
+}
+
+/* Tab content */
+.tab-content {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+/* Roster management */
+.roster-management {
+  margin-bottom: var(--space-5);
+}
+
+/* Invite section */
+.invite-section {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Staff section */
+.staff-form {
+  margin-top: var(--space-5);
+}
+
+/* Staff list */
+.staff-list {
+  margin-bottom: var(--space-5);
+}
+
+.staff-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.staff-info {
+  display: flex;
+  align-items: center;
+}
+
+.staff-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  margin-right: var(--space-3);
+  overflow: hidden;
+}
+
+.staff-role {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin-left: var(--space-3);
+}
+
+/* Join requests */
+.pending-requests {
+  margin-top: var(--space-5);
+}
+
+.request-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3);
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-2);
+}
+
+.request-user {
+  display: flex;
+  align-items: center;
+}
+
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  margin-right: var(--space-3);
+  overflow: hidden;
+}
+
+.request-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Settings form */
+.settings-form {
+  margin-bottom: var(--space-5);
+}
+
+/* Danger zone */
+.danger-zone {
+  background-color: rgba(220, 53, 69, 0.1);
+  border: 1px solid rgba(220, 53, 69, 0.3);
+  border-radius: var(--radius-sm);
+  padding: var(--space-5);
+  margin-top: var(--space-6);
+}
+
+.danger-zone h3 {
+  color: var(--color-danger-light);
+  margin-bottom: var(--space-3);
+}
+
+/* Confirmation modals */
+.confirm-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: var(--z-modal);
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: var(--color-card-bg);
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  max-width: 500px;
+  width: 90%;
+}

@@ -1,0 +1,128 @@
+/*
+ * character-profile.css
+ * Character profile page styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Character name banner */
+.name-banner {
+  position: relative;
+  height: 250px;
+  background-color: var(--color-dark-bg);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-md);
+  border-radius: var(--radius-md);
+}
+
+.name-banner__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(47, 47, 47, 0.7);
+  z-index: 1;
+}
+
+.name-banner__content {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  padding: var(--space-5);
+}
+
+.name-banner__name {
+  font-family: var(--font-accent);
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+  text-shadow: 0 4px 7px var(--color-shadow);
+  transition: letter-spacing 0.3s ease;
+}
+
+.name-banner:hover .name-banner__name {
+  letter-spacing: 2px;
+}
+
+.name-banner__jersey {
+  position: absolute;
+  font-family: var(--font-decor);
+  font-size: 15rem;
+  font-weight: var(--weight-bold);
+  opacity: 0.15;
+  color: var(--color-text-light);
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+}
+
+/* Profile content layout */
+.profile-content {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: var(--space-6);
+}
+
+/* Career highlights */
+.career-highlights {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  margin: var(--space-8) 0;
+}
+
+.highlight-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.highlight-stat__value {
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-semibold);
+  color: var(--color-primary);
+  line-height: 1;
+}
+
+.highlight-stat__label {
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  letter-spacing: 1px;
+  opacity: 0.7;
+  margin-top: var(--space-1);
+}
+
+/* Delete confirmation modal */
+.delete-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: var(--z-modal);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .name-banner__name {
+    font-size: var(--text-3xl);
+  }
+  
+  .name-banner__jersey {
+    font-size: 10rem;
+  }
+}
