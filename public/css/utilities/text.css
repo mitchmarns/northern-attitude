@@ -1,0 +1,178 @@
+/*
+ * text.css
+ * Text utility classes for Northern Attitude Hockey Roleplay
+ */
+
+/* Text alignment */
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-justify { text-align: justify; }
+
+/* Font families */
+.font-main { font-family: var(--font-main); }
+.font-accent { font-family: var(--font-accent); }
+.font-decor { font-family: var(--font-decor); }
+
+/* Font weights */
+.font-light { font-weight: var(--weight-light); }
+.font-normal { font-weight: var(--weight-regular); }
+.font-medium { font-weight: var(--weight-medium); }
+.font-semibold { font-weight: var(--weight-semibold); }
+.font-bold { font-weight: var(--weight-bold); }
+
+/* Font sizes */
+.text-xs { font-size: var(--text-xs); }
+.text-sm { font-size: var(--text-sm); }
+.text-base { font-size: var(--text-base); }
+.text-lg { font-size: var(--text-lg); }
+.text-xl { font-size: var(--text-xl); }
+.text-2xl { font-size: var(--text-2xl); }
+.text-3xl { font-size: var(--text-3xl); }
+.text-4xl { font-size: var(--text-4xl); }
+.text-5xl { font-size: var(--text-5xl); }
+
+/* Line heights */
+.leading-none { line-height: 1; }
+.leading-tight { line-height: var(--leading-tight); }
+.leading-snug { line-height: var(--leading-snug); }
+.leading-normal { line-height: var(--leading-normal); }
+.leading-relaxed { line-height: var(--leading-relaxed); }
+.leading-loose { line-height: var(--leading-loose); }
+
+/* Letter spacing */
+.tracking-tighter { letter-spacing: -0.05em; }
+.tracking-tight { letter-spacing: -0.025em; }
+.tracking-normal { letter-spacing: 0; }
+.tracking-wide { letter-spacing: 0.025em; }
+.tracking-wider { letter-spacing: 0.05em; }
+.tracking-widest { letter-spacing: 0.1em; }
+.tracking-accent { letter-spacing: 1px; }
+
+/* Text transforms */
+.uppercase { text-transform: uppercase; }
+.lowercase { text-transform: lowercase; }
+.capitalize { text-transform: capitalize; }
+.normal-case { text-transform: none; }
+
+/* Text decorations */
+.underline { text-decoration: underline; }
+.line-through { text-decoration: line-through; }
+.no-underline { text-decoration: none; }
+
+/* Font styles */
+.italic { font-style: italic; }
+.not-italic { font-style: normal; }
+
+/* Text overflow */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overflow-ellipsis { text-overflow: ellipsis; }
+.overflow-clip { text-overflow: clip; }
+
+/* White space */
+.whitespace-normal { white-space: normal; }
+.whitespace-nowrap { white-space: nowrap; }
+.whitespace-pre { white-space: pre; }
+.whitespace-pre-line { white-space: pre-line; }
+.whitespace-pre-wrap { white-space: pre-wrap; }
+
+/* Word breaks */
+.break-normal { overflow-wrap: normal; word-break: normal; }
+.break-words { overflow-wrap: break-word; }
+.break-all { word-break: break-all; }
+
+/* Text content */
+.accent-text { color: var(--color-primary); font-weight: var(--weight-semibold); }
+.highlight-text { background-color: rgba(90, 128, 149, 0.2); padding: 0 var(--space-1); border-radius: var(--radius-sm); }
+.caption-text { font-size: var(--text-sm); color: var(--color-text-muted); }
+.quote-text { 
+  font-style: italic; 
+  padding-left: var(--space-4); 
+  border-left: 3px solid var(--color-primary);
+  margin: var(--space-4) 0;
+}
+
+/* List style utilities */
+.list-none { list-style-type: none; }
+.list-disc { list-style-type: disc; }
+.list-decimal { list-style-type: decimal; }
+.list-inside { list-style-position: inside; }
+.list-outside { list-style-position: outside; }
+
+/* Vertical alignment */
+.align-baseline { vertical-align: baseline; }
+.align-top { vertical-align: top; }
+.align-middle { vertical-align: middle; }
+.align-bottom { vertical-align: bottom; }
+.align-text-top { vertical-align: text-top; }
+.align-text-bottom { vertical-align: text-bottom; }
+
+/* First letter/line styling */
+.first-letter-large::first-letter {
+  font-size: 2em;
+  font-weight: var(--weight-semibold);
+  color: var(--color-primary);
+  float: left;
+  line-height: 0.8;
+  margin-right: var(--space-1);
+}
+
+.first-line-accent::first-line {
+  font-weight: var(--weight-medium);
+  color: var(--color-primary);
+}
+
+/* Text shadow */
+.text-shadow { text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); }
+.text-shadow-lg { text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5); }
+.text-shadow-none { text-shadow: none; }
+
+/* Page section titles */
+.section-title {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  margin-bottom: var(--space-5);
+  position: relative;
+  padding-bottom: var(--space-2);
+}
+
+.section-title::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background-color: var(--color-primary);
+}
+
+.section-title--center {
+  text-align: center;
+}
+
+.section-title--center::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Responsive text adjustments */
+@media (max-width: 768px) {
+  .md-text-left { text-align: left; }
+  .md-text-center { text-align: center; }
+  .md-text-right { text-align: right; }
+  .md-text-sm { font-size: var(--text-sm); }
+  .md-text-base { font-size: var(--text-base); }
+}
+
+@media (max-width: 480px) {
+  .sm-text-left { text-align: left; }
+  .sm-text-center { text-align: center; }
+  .sm-text-right { text-align: right; }
+  .sm-text-xs { font-size: var(--text-xs); }
+  .sm-text-sm { font-size: var(--text-sm); }
+}
