@@ -215,8 +215,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // For one-on-one conversations, use the other participant's info
         const otherParticipant = conversation.participants.find(p => p.character_id != characterId);
         if (otherParticipant) {
-          title = otherParticipant.name;
-          avatarUrl = otherParticipant.avatar_url;
+          title = otherParticipant.custom_name || otherParticipant.name;
+          avatarUrl = otherParticipant.custom_image || otherParticipant.avatar_url;
         }
       }
       
@@ -296,7 +296,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           // Find the other participant
           const otherParticipant = participants.find(p => p.character_id != characterId);
-          elements.conversationTitle.textContent = otherParticipant?.name || 'Conversation';
+          elements.conversationTitle.textContent = otherParticipant?.custom_name || otherParticipant?.name || 'Conversation';
         }
       }
       
@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (showSender) {
           senderHtml = `
             <div class="message-character-info">
-              <div class="message-sender">${message.sender_name}</div>
+              <div class="message-sender">${message.custom_name || message.sender_name}</div>
               ${message.sender_position ? `<div class="message-position">${message.sender_position}</div>` : ''}
               ${message.team_name ? `<div class="message-team">${message.team_name}</div>` : ''}
             </div>

@@ -198,6 +198,29 @@ router.put('/characters/:id', authRequired, checkCharacterOwnership, async (req,
   }
 });
 
+// Set or update a contact
+router.put('/characters/:id/contacts/:targetId', authRequired, checkCharacterOwnership, async (req, res) => {
+  try {
+    const characterId = req.params.id;
+    const targetId = req.params.targetId;
+    const { custom_name, custom_image } = req.body;
+    
+    const contact = await characterOperations.setCharacterContact(
+      characterId, 
+      targetId, 
+      custom_name, 
+      custom_image
+    );
+    
+    res.status(200).json({ 
+      message: 'Contact updated successfully',
+      contact
+    });
+  } catch (error) {
+    handleApiError(res, error, 'Failed to update character contact');
+  }
+});
+
 // Set a character as active
 router.put('/characters/:id/set-active', authRequired, checkCharacterOwnership, async (req, res) => {
   try {
@@ -205,6 +228,29 @@ router.put('/characters/:id/set-active', authRequired, checkCharacterOwnership, 
     res.status(200).json({ message: 'Character set as active successfully' });
   } catch (error) {
     handleApiError(res, error, 'Failed to set character as active');
+  }
+});
+
+// Get contacts for a character
+router.get('/characters/:id/contacts', authRequired, checkCharacterOwnership, async (req, res) => {
+  try {
+    const characterId = req.params.id;
+    const contacts = await characterOperations.getCharacterContacts(characterId);
+    res.status(200).json(contacts);
+  } catch (error) {
+    handleApiError(res, error, 'Failed to fetch character contacts');
+  }
+});
+
+// Get a specific contact
+router.get('/characters/:id/contacts/:targetId', authRequired, checkCharacterOwnership, async (req, res) => {
+  try {
+    const characterId = req.params.id;
+    const targetId = req.params.targetId;
+    const contact = await characterOperations.getCharacterContact(characterId, targetId);
+    res.status(200).json(contact || { target_character_id: targetId });
+  } catch (error) {
+    handleApiError(res, error, 'Failed to fetch character contact');
   }
 });
 
@@ -244,6 +290,22 @@ router.delete('/characters/:id', authRequired, checkCharacterOwnership, async (r
     res.status(200).json({ message: 'Character deleted successfully' });
   } catch (error) {
     handleApiError(res, error, 'Failed to delete character');
+  }
+});
+
+// Delete a contact
+router.delete('/characters/:id/contacts/:targetId', authRequired, checkCharacterOwnership, async (req, res) => {
+  try {
+    const characterId = req.params.id;
+    const targetId = req.params.targetId;
+    
+    await characterOperations.deleteCharacterContact(characterId, targetId);
+    
+    res.status(200).json({ 
+      message: 'Contact deleted successfully'
+    });
+  } catch (error) {
+    handleApiError(res, error, 'Failed to delete character contact');
   }
 });
 

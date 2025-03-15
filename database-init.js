@@ -285,6 +285,31 @@ const tableSchemas = {
       FOREIGN KEY (conversation_id) REFERENCES Conversations(id) ON DELETE CASCADE,
       FOREIGN KEY (character_id) REFERENCES Users(id) ON DELETE CASCADE
     )
+  `,
+
+      // Contacts table
+    characterContacts: `
+    CREATE TABLE CharacterContacts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      owner_character_id INTEGER NOT NULL,  -- Character who set this contact info
+      target_character_id INTEGER NOT NULL, -- Character being renamed
+      custom_name TEXT,                     -- Custom name for this contact
+      custom_image TEXT,                    -- Custom image for this contact
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (owner_character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+      FOREIGN KEY (target_character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+      UNIQUE(owner_character_id, target_character_id)
+    )
+  `,
+
+        // timestamp trigger
+    timestampTrigger: `
+    CREATE TRIGGER update_character_contacts_timestamp 
+    AFTER UPDATE ON CharacterContacts
+    BEGIN
+      UPDATE CharacterContacts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+    END;
   `
 };
 

@@ -125,6 +125,7 @@ async function loadCharacterProfile(characterId) {
     
     // Set up button functionality
     setupButtons(elements, character);
+    setupContactsTab(character);
     
   } catch (error) {
     console.error('Error loading character profile:', error);
@@ -773,3 +774,378 @@ if (messageCharacterBtn && character.id) {
     }
   });
 }
+
+// Setup contacts tab functionality
+function setupContactsTab(character) {
+  // Cache DOM elements
+  const elements = {
+    searchInput: document.getElementById('contacts-search'),
+    searchButton: document.getElementById('contacts-search-btn'),
+    resultsContainer: document.getElementById('contacts-results'),
+    savedContactsContainer: document.getElementById('saved-contacts'),
+    contactsError: document.getElementById('contacts-error'),
+    contactsSuccess: document.getElementById('contacts-success'),
+    
+    // Modal elements
+    modal: document.getElementById('contact-edit-modal'),
+    form: document.getElementById('contact-form'),
+    targetIdInput: document.getElementById('contact-target-id'),
+    originalNameInput: document.getElementById('contact-original-name'),
+    customNameInput: document.getElementById('contact-custom-name'),
+    customImageInput: document.getElementById('contact-custom-image'),
+    previewButton: document.getElementById('preview-contact-btn'),
+    originalAvatarPreview: document.getElementById('original-avatar-preview'),
+    customAvatarPreview: document.getElementById('custom-avatar-preview'),
+    cancelButton: document.getElementById('cancel-contact-btn'),
+    deleteButton: document.getElementById('delete-contact-btn'),
+    formError: document.getElementById('contact-form-error')
+  };
+  
+  // Check if elements exist
+  if (!elements.searchInput || !elements.searchButton || !elements.resultsContainer) {
+    console.error('Contacts tab elements not found');
+    return;
+  }
+  
+  // Load saved contacts
+  loadSavedContacts(character.id);
+  
+  // Set up search functionality
+  elements.searchButton.addEventListener('click', () => {
+    const query = elements.searchInput.value.trim();
+    if (query.length < 2) {
+      showContactsError('Please enter at least 2 characters to search');
+      return;
+    }
+    
+    searchCharacters(query, character.id);
+  });
+  
+  // Search on enter key
+  elements.searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      elements.searchButton.click();
+    }
+  });
+  
+  // Contact modal functionality
+  if (elements.modal) {
+    // Close modal when clicking cancel
+    elements.cancelButton.addEventListener('click', () => {
+      elements.modal.style.display = 'none';
+    });
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === elements.modal) {
+        elements.modal.style.display = 'none';
+      }
+    });
+    
+    // Preview button
+    elements.previewButton.addEventListener('click', () => {
+      const imageUrl = elements.customImageInput.value.trim();
+      
+      if (imageUrl) {
+        elements.customAvatarPreview.src = imageUrl;
+        
+        // Handle load errors
+        elements.customAvatarPreview.onerror = () => {
+          elements.customAvatarPreview.src = elements.originalAvatarPreview.src;
+          showFormError('contact-form', 'Invalid image URL or image could not be loaded');
+        };
+        
+        // Clear errors on successful load
+        elements.customAvatarPreview.onload = () => {
+          elements.formError.style.display = 'none';
+        };
+      } else {
+        // If no URL entered, use original avatar
+        elements.customAvatarPreview.src = elements.originalAvatarPreview.src;
+        elements.formError.style.display = 'none';
+      }
+    });
+    
+    // Form submission
+    elements.form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const targetId = elements.targetIdInput.value;
+      const customName = elements.customNameInput.value.trim();
+      const customImage = elements.customImageInput.value.trim();
+      
+      if (!targetId) {
+        showFormError('contact-form', 'Missing target character ID');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/characters/${character.id}/contacts/${targetId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            custom_name: customName,
+            custom_image: customImage
+          }),
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Failed to update contact');
+        }
+        
+        // Close modal
+        elements.modal.style.display = 'none';
+        
+        // Show success message
+        showContactsSuccess('Contact updated successfully');
+        
+        // Reload contacts
+        loadSavedContacts(character.id);
+      } catch (error) {
+        console.error('Error updating contact:', error);
+        showFormError('contact-form', error.message || 'Failed to update contact');
+      }
+    });
+    
+    // Delete button
+    elements.deleteButton.addEventListener('click', async () => {
+      const targetId = elements.targetIdInput.value;
+      
+      if (!targetId) {
+        showFormError('contact-form', 'Missing target character ID');
+        return;
+      }
+      
+      // Confirm deletion
+      if (!confirm('Are you sure you want to delete this contact? This will remove your custom settings for this character.')) {
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/characters/${character.id}/contacts/${targetId}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.message || 'Failed to delete contact');
+        }
+        
+        // Close modal
+        elements.modal.style.display = 'none';
+        
+        // Show success message
+        showContactsSuccess('Contact deleted successfully');
+        
+        // Reload contacts
+        loadSavedContacts(character.id);
+      } catch (error) {
+        console.error('Error deleting contact:', error);
+        showFormError('contact-form', error.message || 'Failed to delete contact');
+      }
+    });
+  }
+
+
+  // Helper function to show contacts error
+  function showContactsError(message) {
+    if (elements.contactsError) {
+      elements.contactsError.textContent = message;
+      elements.contactsError.style.display = 'block';
+      
+      // Auto-hide after a few seconds
+      setTimeout(() => {
+        elements.contactsError.style.display = 'none';
+      }, 5000);
+    }
+  }
+
+    // Helper function to show contacts success
+    function showContactsSuccess(message) {
+      if (elements.contactsSuccess) {
+        elements.contactsSuccess.textContent = message;
+        elements.contactsSuccess.style.display = 'block';
+        
+        // Auto-hide after a few seconds
+        setTimeout(() => {
+          elements.contactsSuccess.style.display = 'none';
+        }, 5000);
+      }
+    }
+
+// Helper function to show form error
+function showFormError(formId, message) {
+  const errorDiv = document.getElementById(`${formId}-error`);
+  if (errorDiv) {
+    errorDiv.textContent = message;
+    errorDiv.style.display = 'block';
+  }
+}
+
+// Function to load saved contacts
+async function loadSavedContacts(characterId) {
+  try {
+    const response = await fetch(`/api/characters/${characterId}/contacts`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch contacts');
+    }
+    
+    const contacts = await response.json();
+    
+    if (elements.savedContactsContainer) {
+      if (contacts.length === 0) {
+        elements.savedContactsContainer.innerHTML = '<p class="empty-text">No saved contacts yet. Search for characters above to add them.</p>';
+        return;
+      }
+      
+      // Clear container
+      elements.savedContactsContainer.innerHTML = '';
+      
+      // Create contact cards
+      contacts.forEach(contact => {
+        const contactCard = document.createElement('div');
+        contactCard.className = 'contact-card';
+        
+        // Use custom name/image if available, otherwise use original
+        const displayName = contact.custom_name || contact.original_name;
+        const displayImage = contact.custom_image || contact.original_avatar || '/api/placeholder/80/80';
+        
+        contactCard.innerHTML = `
+          <div class="contact-avatar">
+            <img src="${displayImage}" alt="${displayName}">
+          </div>
+          <div class="contact-info">
+            <div class="contact-name">${displayName}</div>
+            <div class="contact-original">${contact.custom_name ? `(${contact.original_name})` : ''}</div>
+          </div>
+          <button class="btn btn-secondary btn-sm edit-contact-btn">Edit</button>
+        `;
+        
+        // Add edit button event
+        const editButton = contactCard.querySelector('.edit-contact-btn');
+        editButton.addEventListener('click', () => {
+          openContactEditModal(character.id, contact);
+        });
+        
+        elements.savedContactsContainer.appendChild(contactCard);
+      });
+    }
+  } catch (error) {
+    console.error('Error loading contacts:', error);
+    if (elements.savedContactsContainer) {
+      elements.savedContactsContainer.innerHTML = '<p class="error-text">Failed to load contacts. Please try again later.</p>';
+    }
+  }
+}
+
+// Function to search for characters
+async function searchCharacters(query, characterId) {
+  try {
+    // Show loading state
+    elements.resultsContainer.innerHTML = '<p class="loading-text">Searching...</p>';
+    
+    const response = await fetch(`/api/characters/search?q=${encodeURIComponent(query)}`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to search characters');
+    }
+    
+    const characters = await response.json();
+    
+    // Filter out the current character
+    const filteredCharacters = characters.filter(char => char.id !== characterId);
+    
+    if (filteredCharacters.length === 0) {
+      elements.resultsContainer.innerHTML = '<p class="empty-text">No characters found matching your search.</p>';
+      return;
+    }
+    
+    // Clear container
+    elements.resultsContainer.innerHTML = '';
+    
+    // Create character cards
+    filteredCharacters.forEach(char => {
+      const characterCard = document.createElement('div');
+      characterCard.className = 'character-result';
+      
+      characterCard.innerHTML = `
+        <div class="character-avatar">
+          <img src="${char.avatar_url || '/api/placeholder/60/60'}" alt="${char.name}">
+        </div>
+        <div class="character-info">
+          <div class="character-name">${char.name}</div>
+          <div class="character-details">
+            <span class="character-position">${char.position || 'Unknown position'}</span>
+            ${char.team_name ? `<span class="character-team">${char.team_name}</span>` : ''}
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm add-contact-btn">Add Contact</button>
+      `;
+      
+      // Add button event
+      const addButton = characterCard.querySelector('.add-contact-btn');
+      addButton.addEventListener('click', async () => {
+        // Check if contact already exists
+        try {
+          const contactResponse = await fetch(`/api/characters/${characterId}/contacts/${char.id}`, {
+            method: 'GET',
+            credentials: 'include'
+          });
+          
+          if (contactResponse.ok) {
+            const contact = await contactResponse.json();
+            openContactEditModal(characterId, contact);
+          } else {
+            // Create new contact modal
+            openContactEditModal(characterId, {
+              target_character_id: char.id,
+              original_name: char.name,
+              original_avatar: char.avatar_url
+            });
+          }
+        } catch (error) {
+          console.error('Error checking contact:', error);
+          showContactsError('Failed to check if contact exists');
+        }
+      });
+      
+      elements.resultsContainer.appendChild(characterCard);
+    });
+  } catch (error) {
+    console.error('Error searching characters:', error);
+    elements.resultsContainer.innerHTML = '<p class="error-text">Failed to search characters. Please try again later.</p>';
+  }
+}
+
+// Function to open contact edit modal
+function openContactEditModal(characterId, contact) {
+  // Set form values
+  elements.targetIdInput.value = contact.target_character_id;
+  elements.originalNameInput.value = contact.original_name;
+  elements.customNameInput.value = contact.custom_name || '';
+  elements.customImageInput.value = contact.custom_image || '';
+  
+  // Set preview images
+  elements.originalAvatarPreview.src = contact.original_avatar || '/api/placeholder/80/80';
+  elements.customAvatarPreview.src = contact.custom_image || contact.original_avatar || '/api/placeholder/80/80';
+  
+  // Clear error message
+  elements.formError.style.display = 'none';
+  
+  // Show modal
+  elements.modal.style.display = 'flex';
+}
+}
+

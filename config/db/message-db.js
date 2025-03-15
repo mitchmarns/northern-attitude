@@ -23,19 +23,24 @@ const SQL = {
   getConversationMessages: `
     SELECT m.id, m.conversation_id, m.sender_character_id, m.content, m.is_read, m.created_at,
            ch.name as sender_name, ch.avatar_url as sender_avatar, ch.position as sender_position,
-           t.name as team_name
+           t.name as team_name,
+           cc.custom_name, cc.custom_image
     FROM CharacterMessages m
     JOIN Characters ch ON m.sender_character_id = ch.id
     LEFT JOIN Teams t ON ch.team_id = t.id
+    LEFT JOIN CharacterConversationParticipants cp ON m.conversation_id = cp.conversation_id
+    LEFT JOIN CharacterContacts cc ON cc.owner_character_id = ? AND cc.target_character_id = m.sender_character_id
     WHERE m.conversation_id = ?
     ORDER BY m.created_at ASC
   `,
   
   getConversationParticipants: `
-    SELECT cp.character_id, ch.name, ch.avatar_url, ch.position, t.name as team_name
+    SELECT cp.character_id, ch.name, ch.avatar_url, ch.position, t.name as team_name,
+           cc.custom_name, cc.custom_image
     FROM CharacterConversationParticipants cp
     JOIN Characters ch ON cp.character_id = ch.id
     LEFT JOIN Teams t ON ch.team_id = t.id
+    LEFT JOIN CharacterContacts cc ON cc.owner_character_id = ? AND cc.target_character_id = cp.character_id
     WHERE cp.conversation_id = ?
   `,
   
@@ -92,8 +97,8 @@ const SQL = {
 
 const messageOperations = {
   // Get character's conversations
-  getCharacterConversations: (characterId) => {
-    return dbQueryAll(SQL.getCharacterConversations, [characterId, characterId]);
+  getConversationMessages: async (conversationId, viewerCharacterId) => {
+    return dbQueryAll(SQL.getConversationMessages, [viewerCharacterId, conversationId]);
   },
   
   // Get messages for a conversation
@@ -102,8 +107,8 @@ const messageOperations = {
   },
   
   // Get participants in a conversation
-  getConversationParticipants: (conversationId) => {
-    return dbQueryAll(SQL.getConversationParticipants, [conversationId]);
+  getConversationParticipants: async (conversationId, viewerCharacterId) => {
+    return dbQueryAll(SQL.getConversationParticipants, [viewerCharacterId, conversationId]);
   },
   
   // Create a new conversation

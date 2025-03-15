@@ -54,6 +54,7 @@
                     <button class="tab" onclick="openTab('stats')">Statistics</button>
                     <button class="tab" onclick="openTab('games')">Games</button>
                     <button class="tab" onclick="openTab('bio')">Biography</button>
+                    <button class="tab" onclick="openTab('contactsTab')">Contacts</button>
                 </div>
             </div>
 
@@ -144,6 +145,93 @@
             <div id="bio" class="tab-content">
                 <div class="biocon" id="full-bio">
                     <!-- Full biography will be populated by JavaScript if available -->
+                </div>
+            </div>
+
+            <!-- contacts tab -->
+            <div id="contactsTab" class="tab-content">
+                <div class="contacts-container">
+                <h2>Character Contacts</h2>
+                <p class="section-intro">
+                    Manage how other characters appear in your messages.
+                    These settings only affect how you see others in conversations.
+                </p>
+                
+                <div id="contacts-search-container" class="search-container">
+                    <input type="text" id="contacts-search" class="form-control" placeholder="Search by character name...">
+                    <button id="contacts-search-btn" class="btn btn-secondary">Search</button>
+                </div>
+                
+                <div id="contacts-error" class="auth-error" style="display: none;"></div>
+                <div id="contacts-success" class="auth-success" style="display: none;"></div>
+                
+                <div id="contacts-results" class="contacts-results">
+                    <!-- Search results will go here -->
+                </div>
+                
+                <h3 class="subsection-title">Saved Contacts</h3>
+                <div id="saved-contacts" class="saved-contacts">
+                    <p class="loading-text">Loading your contacts...</p>
+                </div>
+                
+                <!-- Contact Edit Modal -->
+                <div id="contact-edit-modal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                    <h3 class="modal-title">Edit Contact</h3>
+                    <div id="contact-form-error" class="auth-error" style="display: none;"></div>
+                    
+                    <form id="contact-form">
+                        <input type="hidden" id="contact-target-id">
+                        
+                        <div class="form-group">
+                        <label for="contact-original-name">Original Name</label>
+                        <input type="text" id="contact-original-name" class="form-control" disabled>
+                        </div>
+                        
+                        <div class="form-group">
+                        <label for="contact-custom-name">Custom Name</label>
+                        <input type="text" id="contact-custom-name" class="form-control" placeholder="How you want to see this character">
+                        <p class="form-text">Leave empty to use original name</p>
+                        </div>
+                        
+                        <div class="form-row">
+                        <div class="form-col">
+                            <div class="form-group">
+                            <label for="contact-custom-image">Custom Image URL</label>
+                            <input type="url" id="contact-custom-image" class="form-control" placeholder="https://example.com/your-image.jpg">
+                            <p class="form-text">Leave empty to use original avatar</p>
+                            </div>
+                        </div>
+                        <div class="form-col" style="display: flex; align-items: flex-end;">
+                            <button type="button" id="preview-contact-btn" class="btn btn-secondary">Preview</button>
+                        </div>
+                        </div>
+                        
+                        <div class="image-preview-row">
+                        <div class="image-preview-container">
+                            <h4>Original</h4>
+                            <div class="image-preview">
+                            <img id="original-avatar-preview" src="/api/placeholder/80/80" alt="Original avatar">
+                            </div>
+                        </div>
+                        <div class="image-preview-container">
+                            <h4>Custom</h4>
+                            <div class="image-preview">
+                            <img id="custom-avatar-preview" src="/api/placeholder/80/80" alt="Custom avatar">
+                            </div>
+                        </div>
+                        </div>
+                        
+                        <div class="modal-buttons">
+                        <button type="button" id="delete-contact-btn" class="btn btn-danger">Delete Contact</button>
+                        <div class="right-buttons">
+                            <button type="button" id="cancel-contact-btn" class="btn btn-secondary">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Contact</button>
+                        </div>
+                        </div>
+                    </form>
+                    </div>
+                </div>
                 </div>
             </div>
             

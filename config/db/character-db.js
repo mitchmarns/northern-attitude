@@ -104,4 +104,69 @@ const characterOperations = {
   }
 };
 
-module.exports = characterOperations;
+const contactOperations = {
+  // Get all contacts for a character
+  getCharacterContacts: async (characterId) => {
+    return dbQueryAll(`
+      SELECT cc.*, c.name as original_name, c.avatar_url as original_avatar
+      FROM CharacterContacts cc
+      JOIN Characters c ON cc.target_character_id = c.id
+      WHERE cc.owner_character_id = ?
+    `, [characterId]);
+  },
+  
+  // Get a specific contact
+  getCharacterContact: async (characterId, targetId) => {
+    return dbQuery(`
+      SELECT cc.*, c.name as original_name, c.avatar_url as original_avatar
+      FROM CharacterContacts cc
+      JOIN Characters c ON cc.target_character_id = c.id
+      WHERE cc.owner_character_id = ? AND cc.target_character_id = ?
+    `, [characterId, targetId]);
+  },
+  
+  // Set or update a contact
+  setCharacterContact: async (characterId, targetId, customName, customImage) => {
+    // Check if contact already exists
+    const existing = await dbQuery(`
+      SELECT id FROM CharacterContacts 
+      WHERE owner_character_id = ? AND target_character_id = ?
+    `, [characterId, targetId]);
+    
+    if (existing) {
+      // Update existing contact
+      await dbExecute(`
+        UPDATE CharacterContacts 
+        SET custom_name = ?, custom_image = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE owner_character_id = ? AND target_character_id = ?
+      `, [customName, customImage, characterId, targetId]);
+      
+      return dbQuery(`
+        SELECT * FROM CharacterContacts
+        WHERE owner_character_id = ? AND target_character_id = ?
+      `, [characterId, targetId]);
+    } else {
+      // Create new contact
+      await dbExecute(`
+        INSERT INTO CharacterContacts 
+        (owner_character_id, target_character_id, custom_name, custom_image)
+        VALUES (?, ?, ?, ?)
+      `, [characterId, targetId, customName, customImage]);
+      
+      return dbQuery(`
+        SELECT * FROM CharacterContacts
+        WHERE owner_character_id = ? AND target_character_id = ?
+      `, [characterId, targetId]);
+    }
+  },
+  
+  // Delete a contact
+  deleteCharacterContact: async (characterId, targetId) => {
+    return dbExecute(`
+      DELETE FROM CharacterContacts
+      WHERE owner_character_id = ? AND target_character_id = ?
+    `, [characterId, targetId]);
+  }
+};
+
+module.exports = characterOperations, contactOperations;

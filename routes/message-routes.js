@@ -38,7 +38,8 @@ router.get('/conversations/:id/messages', authMiddleware.isAuthenticated, async 
       return res.status(403).json({ message: 'You do not have permission to access this character' });
     }
     
-    const messages = await messageOperations.getConversationMessages(conversationId);
+    // Pass the viewer character ID
+    const messages = await messageOperations.getConversationMessages(conversationId, characterId);
     
     // Mark conversation as read
     await messageOperations.markConversationAsRead(conversationId, characterId);
@@ -66,7 +67,9 @@ router.get('/conversations/:id/participants', authMiddleware.isAuthenticated, as
       return res.status(403).json({ message: 'You do not have permission to access this character' });
     }
     
-    const participants = await messageOperations.getConversationParticipants(conversationId);
+    // Pass the viewer character ID
+    const participants = await messageOperations.getConversationParticipants(conversationId, characterId);
+    
     res.status(200).json(participants);
   } catch (error) {
     console.error('Error fetching participants:', error);
