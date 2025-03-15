@@ -473,7 +473,14 @@ async function createCharacter() {
       team_id: teamId,
       bio: bio || null,
       avatar_url: avatarUrl || null,
-      header_image_url: headerImageUrl || null // Include this in the data sent to the server
+      header_image_url: headerImageUrl || null,
+      age: document.getElementById('character-age')?.value,
+      nationality: document.getElementById('character-nationality')?.value,
+      hometown: document.getElementById('character-hometown')?.value,
+      height: document.getElementById('character-height')?.value,
+      weight: document.getElementById('character-weight')?.value,
+      handedness: document.getElementById('character-handedness')?.value,
+      years_pro: document.getElementById('character-years-pro')?.value,
     };
 
     // Add type-specific data

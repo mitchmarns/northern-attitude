@@ -117,7 +117,15 @@ router.post('/characters', authRequired, async (req, res) => {
       bio, 
       avatar_url, 
       header_image_url, // Add this line
-      is_active 
+      is_active,
+      full_name,
+      age,
+      nationality,
+      hometown,
+      height,
+      weight,
+      handedness,
+      years_pro
     } = req.body;
     
     // Check existing characters to determine active state
@@ -134,7 +142,15 @@ router.post('/characters', authRequired, async (req, res) => {
       bio || null,
       avatar_url || null,
       header_image_url || null, // Add this line
-      isActive
+      isActive,
+      full_name || name, // Default to character name if full name not provided
+      age || null,
+      nationality || null,
+      hometown || null,
+      height || null,
+      weight || null,
+      handedness || null,
+      years_pro || null
     );
     
     // If this is set as active, update all other characters in a single operation
@@ -162,14 +178,24 @@ router.put('/characters/:id', authRequired, checkCharacterOwnership, async (req,
       stats_json, 
       bio, 
       avatar_url,
-      header_image_url // Add this line
+      header_image_url,
+      full_name,
+      age,
+      nationality,
+      hometown,
+      height,
+      weight,
+      handedness,
+      years_pro
     } = req.body;
     
     // Validate that at least one field is being updated
     if (!name && !position && !team_id && !stats_json && !bio && 
-        avatar_url === undefined && header_image_url === undefined) { // Update this line
-      return res.status(400).json({ message: 'No update data provided' });
-    }
+      avatar_url === undefined && header_image_url === undefined &&
+      !full_name && !age && !nationality && !hometown && !height && 
+      !weight && !handedness && !years_pro) {
+    return res.status(400).json({ message: 'No update data provided' });
+  }
     
     // If position provided, validate it
     if (position) {
@@ -187,7 +213,15 @@ router.put('/characters/:id', authRequired, checkCharacterOwnership, async (req,
     if (stats_json) updateData.stats_json = stats_json;
     if (bio !== undefined) updateData.bio = bio;
     if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
-    if (header_image_url !== undefined) updateData.header_image_url = header_image_url; // Add this line
+    if (header_image_url !== undefined) updateData.header_image_url = header_image_url;
+    if (full_name) updateData.full_name = full_name;
+    if (age !== undefined) updateData.age = age;
+    if (nationality) updateData.nationality = nationality;
+    if (hometown) updateData.hometown = hometown;
+    if (height) updateData.height = height;
+    if (weight !== undefined) updateData.weight = weight;
+    if (handedness) updateData.handedness = handedness;
+    if (years_pro !== undefined) updateData.years_pro = years_pro;
     
     // Update character with a single database call
     await characterOperations.updateCharacter(characterId, updateData);

@@ -306,6 +306,82 @@
                             </div>
                         </div>
 
+                        <div class="form-section">
+                            <h3 class="form-section-title">Character Details</h3>
+                            
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="character-age">Age</label>
+                                        <input type="number" id="character-age" class="form-control" min="18" max="45" placeholder="Player's age">
+                                        <p class="form-text">Age of your character (18-45 for players)</p>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="character-nationality">Nationality</label>
+                                        <select id="character-nationality" class="form-control">
+                                            <option value="">Select nationality</option>
+                                            <option value="Canadian">Canadian</option>
+                                            <option value="American">American</option>
+                                            <option value="Swedish">Swedish</option>
+                                            <option value="Finnish">Finnish</option>
+                                            <option value="Russian">Russian</option>
+                                            <option value="Czech">Czech</option>
+                                            <option value="Slovak">Slovak</option>
+                                            <option value="German">German</option>
+                                            <option value="Swiss">Swiss</option>
+                                            <option value="Danish">Danish</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="character-hometown">Hometown</label>
+                                        <input type="text" id="character-hometown" class="form-control" placeholder="City, State/Province">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="character-years-pro">Years Professional</label>
+                                        <input type="number" id="character-years-pro" class="form-control" min="0" max="25" placeholder="Years as a professional">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="character-height">Height</label>
+                                        <input type="text" id="character-height" class="form-control" placeholder="e.g. 6'2&quot;">
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="character-weight">Weight</label>
+                                        <div class="input-group">
+                                            <input type="number" id="character-weight" class="form-control" min="150" max="250" placeholder="Weight in pounds">
+                                            <span class="input-group-text">lbs</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-col">
+                                    <div class="form-group">
+                                        <label for="character-handedness">Shoots/Catches</label>
+                                        <select id="character-handedness" class="form-control">
+                                            <option value="">Select</option>
+                                            <option value="Left">Left</option>
+                                            <option value="Right">Right</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Dynamic position-specific stats container -->
                         <div id="dynamic-stats-container" class="dynamic-stats-container">
                             <!-- This will be filled by JavaScript based on position -->

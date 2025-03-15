@@ -45,6 +45,8 @@
 @import 'pages/teams.css';
 @import 'pages/error.css';
 @import 'pages/messages.css';
+@import 'pages/basics-tab.css';
+@import 'pages/contact-tab.css';
 
 /* Utilities */
 @import 'utilities/spacing.css';

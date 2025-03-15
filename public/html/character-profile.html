@@ -51,6 +51,7 @@
             <div id="tab-container">
                 <div class="tabs">
                     <button class="tab active" onclick="openTab('profile')">Profile</button>
+                    <button class="tab" onclick="openTab('basics')">Basics</button>
                     <button class="tab" onclick="openTab('stats')">Statistics</button>
                     <button class="tab" onclick="openTab('games')">Games</button>
                     <button class="tab" onclick="openTab('bio')">Biography</button>
@@ -69,9 +70,7 @@
                         <h2 class="character-name" id="sidebar-character-name">Character Name</h2>
                         <div class="character-position" id="character-position">Position</div>
                         <div class="character-team" id="character-team">Team Name</div>
-                        <div class="character-status" id="character-status">Status</div>
-                        <button id="message-character-btn" class="btn btn-secondary">Message Character</button>
-                        
+                        <div class="character-status" id="character-status">Status</div>                        
                         <!-- Player Statistics Block -->
                         <div class="stat-block">
                             <h4>Player Statistics</h4>
@@ -90,6 +89,7 @@
                         
                         <!-- Action Buttons -->
                         <div class="action-buttons">
+                            <button id="message-character-btn" class="btn btn-secondary">Message Character</button>
                             <a href="#" id="edit-character-link" class="btn btn-primary">Edit Character</a>
                             <button id="delete-character-btn" class="btn btn-danger">Delete</button>
                             <button id="set-active-btn" class="btn btn-secondary" style="display: none;">Set Active</button>
@@ -117,6 +117,97 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Add this after the profile tab content and before stats tab content -->
+<div id="basics" class="tab-content">
+    <h2>Character Information</h2>
+    <div class="basics-container">
+        <div class="basics-card">
+            <h3>Personal Information</h3>
+            <div class="basics-grid">
+                <div class="basics-item">
+                    <span class="basics-label">Full Name</span>
+                    <span class="basics-value" id="basics-full-name">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Age</span>
+                    <span class="basics-value" id="basics-age">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Date of Birth</span>
+                    <span class="basics-value" id="basics-dob">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Nationality</span>
+                    <span class="basics-value" id="basics-nationality">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Hometown</span>
+                    <span class="basics-value" id="basics-hometown">...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="basics-card">
+            <h3>Physical Attributes</h3>
+            <div class="basics-grid">
+                <div class="basics-item">
+                    <span class="basics-label">Height</span>
+                    <span class="basics-value" id="basics-height">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Weight</span>
+                    <span class="basics-value" id="basics-weight">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Shoots/Catches</span>
+                    <span class="basics-value" id="basics-handedness">...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="basics-card">
+            <h3>Hockey Information</h3>
+            <div class="basics-grid">
+                <div class="basics-item">
+                    <span class="basics-label">Jersey Number</span>
+                    <span class="basics-value" id="basics-jersey">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Position</span>
+                    <span class="basics-value" id="basics-position">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Team</span>
+                    <span class="basics-value" id="basics-team">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Years Professional</span>
+                    <span class="basics-value" id="basics-years-pro">...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- For non-player types -->
+        <div class="basics-card" id="basics-role-section" style="display: none;">
+            <h3>Role Information</h3>
+            <div class="basics-grid">
+                <div class="basics-item">
+                    <span class="basics-label">Role</span>
+                    <span class="basics-value" id="basics-role">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Organization</span>
+                    <span class="basics-value" id="basics-organization">...</span>
+                </div>
+                <div class="basics-item">
+                    <span class="basics-label">Experience</span>
+                    <span class="basics-value" id="basics-experience">...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
             
             <!-- Statistics Tab Content -->
             <div id="stats" class="tab-content">

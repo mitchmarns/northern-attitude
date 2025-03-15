@@ -21,8 +21,9 @@ const SQL = {
   createCharacter: `
     INSERT INTO Characters (
       user_id, name, position, team_id, stats_json, bio, avatar_url, header_image_url, is_active, 
+      full_name, age, nationality, hometown, height, weight, handedness, years_pro,
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
   `,
   updateCharacter: `
     UPDATE Characters SET {placeholders}, updated_at = CURRENT_TIMESTAMP
@@ -58,10 +59,16 @@ const characterOperations = {
   },
 
   // Create a new character - update to include header_image_url
-  createCharacter: (userId, name, position, teamId, statsJson, bio, avatarUrl, headerImageUrl, isActive) => {
+  createCharacter: (
+    userId, name, position, teamId, statsJson, bio, avatarUrl, headerImageUrl, isActive,
+    fullName, age, nationality, hometown, height, weight, handedness, yearsPro
+  ) => {
     return dbExecute(
       SQL.createCharacter,
-      [userId, name, position, teamId, statsJson, bio, avatarUrl, headerImageUrl, isActive ? 1 : 0]
+      [
+        userId, name, position, teamId, statsJson, bio, avatarUrl, headerImageUrl, isActive ? 1 : 0,
+        fullName, age, nationality, hometown, height, weight, handedness, yearsPro
+      ]
     ).then(result => result.lastId);
   },
 
