@@ -1,0 +1,407 @@
+/*
+ * game-item.css
+ * Game item module styles for Northern Attitude Hockey Roleplay
+ * Following BEM naming convention
+ */
+
+/* Games list container */
+.games-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+/* Base game item */
+.game-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.game-item:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  background-color: rgba(0, 0, 0, 0.25);
+}
+
+/* Game item info side */
+.game-item__info {
+  flex: 1;
+}
+
+.game-item__teams {
+  font-weight: var(--weight-medium);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-lg);
+}
+
+.game-item__team-name {
+  color: var(--color-primary);
+}
+
+.game-item__date {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Game item stats side */
+.game-item__stats {
+  font-weight: var(--weight-semibold);
+  color: var(--color-primary);
+  text-align: right;
+}
+
+/* Game result indicators */
+.game-item--win {
+  border-left: 4px solid var(--color-success);
+}
+
+.game-item--loss {
+  border-left: 4px solid var(--color-danger);
+}
+
+.game-item--tie {
+  border-left: 4px solid var(--color-warning);
+}
+
+.game-item--upcoming {
+  border-left: 4px solid var(--color-primary);
+}
+
+/* Game cards for schedule view */
+.game-card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.game-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.game-card__header {
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.game-card__date {
+  font-weight: var(--weight-medium);
+}
+
+.game-card__time {
+  color: var(--color-primary);
+}
+
+.game-card__status {
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 1px;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.game-card__status--upcoming {
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+.game-card__status--live {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger-light);
+}
+
+.game-card__status--finished {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-light);
+}
+
+.game-card__body {
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.game-card__matchup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.game-card__team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40%;
+}
+
+.game-card__team-logo {
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+  background-color: var(--color-dark-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-primary);
+}
+
+.game-card__team-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-card__team-name {
+  font-weight: var(--weight-medium);
+  text-align: center;
+}
+
+.game-card__vs {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+}
+
+.game-card__score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.game-card__score-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  font-family: var(--font-accent);
+  color: var(--color-text-light);
+}
+
+.game-card__score-separator {
+  font-size: var(--text-xl);
+  color: var(--color-text-muted);
+}
+
+.game-card__footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: var(--space-3) var(--space-4);
+  text-align: center;
+}
+
+.game-card__location {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Game schedule grid */
+.game-schedule {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+/* Game calendar view */
+.game-calendar {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: var(--space-6);
+}
+
+.game-calendar__header {
+  grid-column: 1 / -1;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  padding: var(--space-3);
+  text-align: center;
+  font-family: var(--font-accent);
+}
+
+.game-calendar__day-header {
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: var(--space-2);
+  text-align: center;
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  font-size: var(--text-xs);
+  letter-spacing: 1px;
+}
+
+.game-calendar__day {
+  background-color: var(--color-card-bg);
+  min-height: 100px;
+  padding: var(--space-2);
+  position: relative;
+}
+
+.game-calendar__date {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.game-calendar__game {
+  margin-top: var(--space-5);
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background-color: rgba(90, 128, 149, 0.1);
+  margin-bottom: var(--space-1);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.game-calendar__game:hover {
+  background-color: rgba(90, 128, 149, 0.2);
+}
+
+.game-calendar__game--home {
+  border-left: 2px solid var(--color-primary);
+}
+
+.game-calendar__game--away {
+  border-left: 2px solid var(--color-warning);
+}
+
+/* Game detail modal */
+.game-detail {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.game-detail__header {
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.game-detail__title {
+  font-family: var(--font-accent);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-xl);
+}
+
+.game-detail__date {
+  font-size: var(--text-sm);
+}
+
+.game-detail__body {
+  padding: var(--space-5);
+}
+
+.game-detail__matchup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.game-detail__team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40%;
+}
+
+.game-detail__team-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-2);
+  border: 3px solid var(--color-primary);
+}
+
+.game-detail__team-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-detail__team-name {
+  font-weight: var(--weight-medium);
+  font-size: var(--text-lg);
+  text-align: center;
+  margin-bottom: var(--space-1);
+}
+
+.game-detail__team-record {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.game-detail__score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.game-detail__score-value {
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-bold);
+  font-family: var(--font-accent);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .game-schedule {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+  
+  .game-calendar {
+    display: none; /* Hide calendar view on mobile */
+  }
+  
+  .game-detail__matchup {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  
+  .game-detail__team {
+    width: 100%;
+  }
+  
+  .game-detail__score {
+    margin: var(--space-3) 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .game-item__stats {
+    margin-top: var(--space-2);
+    text-align: left;
+  }
+  
+  .game-schedule {
+    grid-template-columns: 1fr;
+  }
+}

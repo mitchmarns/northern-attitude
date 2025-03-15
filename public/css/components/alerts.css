@@ -1,0 +1,272 @@
+/*
+ * alerts.css
+ * Alert and notification component styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Base alert */
+.alert {
+  position: relative;
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  border-radius: var(--radius-md);
+  border-left: 4px solid transparent;
+}
+
+/* Alert variants */
+.alert--success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-light);
+  border-left-color: var(--color-success-light);
+}
+
+.alert--danger {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger-light);
+  border-left-color: var(--color-danger-light);
+}
+
+.alert--warning {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+  border-left-color: var(--color-warning);
+}
+
+.alert--info {
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+  border-left-color: var(--color-primary);
+}
+
+/* Alert with title */
+.alert__title {
+  margin-bottom: var(--space-2);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-lg);
+}
+
+/* Alert with icon */
+.alert--with-icon {
+  padding-left: var(--space-10);
+}
+
+.alert__icon {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-4);
+  font-size: var(--text-xl);
+}
+
+/* Dismissible alert */
+.alert__close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  background: transparent;
+  border: none;
+  font-size: var(--text-lg);
+  cursor: pointer;
+  opacity: 0.7;
+  color: currentColor;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+.alert__close:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Animated alert */
+.alert--animated {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Toast notification (appearing temporarily) */
+.toast {
+  position: fixed;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: var(--z-modal);
+  width: 300px;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  animation: toast-in 0.3s ease, toast-out 0.3s ease 2.7s forwards;
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-out {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}
+
+/* Toast variants */
+.toast--success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.toast--danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.toast--warning {
+  background-color: var(--color-warning);
+  color: var(--color-dark-accent);
+}
+
+.toast--info {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Toast with progress bar */
+.toast--with-progress::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.5);
+  width: 100%;
+  animation: progress 3s linear;
+}
+
+@keyframes progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* Banners (full width alerts) */
+.banner {
+  width: 100%;
+  padding: var(--space-3);
+  text-align: center;
+  font-weight: var(--weight-medium);
+  margin-bottom: var(--space-5);
+}
+
+/* Banner variants */
+.banner--success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.banner--danger {
+  background-color: var(--color-danger);
+  color: white;
+}
+
+.banner--warning {
+  background-color: var(--color-warning);
+  color: var(--color-dark-accent);
+}
+
+.banner--info {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+/* Inline notification (for forms) */
+.form__notification {
+  padding: var(--space-2) var(--space-3);
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* Form notification variants */
+.form__notification--success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-light);
+}
+
+.form__notification--error {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger-light);
+}
+
+.form__notification--warning {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.form__notification--info {
+  background-color: var(--color-info-bg);
+  color: var(--color-primary);
+}
+
+/* Status indicators (small dots) */
+.status-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  margin-right: var(--space-2);
+}
+
+.status-indicator--success {
+  background-color: var(--color-success);
+}
+
+.status-indicator--danger {
+  background-color: var(--color-danger);
+}
+
+.status-indicator--warning {
+  background-color: var(--color-warning);
+}
+
+.status-indicator--info {
+  background-color: var(--color-primary);
+}
+
+.status-indicator--offline {
+  background-color: var(--color-text-muted);
+}
+
+/* Status with text */
+.status {
+  display: flex;
+  align-items: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .toast {
+    width: calc(100% - var(--space-8));
+  }
+}

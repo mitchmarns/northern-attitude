@@ -1,0 +1,203 @@
+/*
+ * buttons.css
+ * Button styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Base button styles */
+.btn {
+  display: inline-block;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-sm);
+  font-weight: var(--weight-medium);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: var(--text-sm);
+  border: none;
+  line-height: 1.5;
+}
+
+/* Primary button */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-400);
+  box-shadow: 0 0 15px rgba(90, 128, 149, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(90, 128, 149, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Secondary button */
+.btn-secondary {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(90, 128, 149, 0.1);
+  box-shadow: 0 0 15px rgba(90, 128, 149, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-secondary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(90, 128, 149, 0.2);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+/* Danger button */
+.btn-danger {
+  background-color: var(--color-danger);
+  color: var(--color-text-light);
+}
+
+.btn-danger:hover {
+  background-color: var(--color-danger-light);
+  box-shadow: 0 0 15px rgba(220, 53, 69, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-danger:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.3);
+}
+
+/* Success button */
+.btn-success {
+  background-color: var(--color-success);
+  color: var(--color-text-light);
+}
+
+.btn-success:hover {
+  background-color: var(--color-success-light);
+  box-shadow: 0 0 15px rgba(40, 167, 69, 0.5);
+  transform: translateY(-2px);
+}
+
+/* Button sizes */
+.btn-lg {
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-base);
+}
+
+.btn-sm {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-xs);
+}
+
+.btn-xs {
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Full width button */
+.btn-block {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  font-size: var(--text-base);
+}
+
+/* Icon button */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon svg,
+.btn-icon img {
+  margin-right: var(--space-2);
+}
+
+/* Disabled state */
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Loading state */
+.btn-loading {
+  position: relative;
+  color: transparent !important;
+}
+
+.btn-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1em;
+  height: 1em;
+  margin-top: -0.5em;
+  margin-left: -0.5em;
+  border-radius: 50%;
+  border: 2px solid var(--color-text-light);
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Button group */
+.btn-group {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.btn-group--vertical {
+  flex-direction: column;
+}
+
+/* Link button */
+.btn-link {
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.btn-link:hover {
+  color: var(--color-primary-400);
+  text-decoration: none;
+}
+
+/* Responsive adaptations */
+@media (max-width: 480px) {
+  .btn-responsive {
+    display: block;
+    width: 100%;
+  }
+  
+  .btn-group {
+    flex-direction: column;
+  }
+}

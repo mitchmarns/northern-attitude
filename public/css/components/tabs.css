@@ -1,0 +1,183 @@
+/*
+ * tabs.css
+ * Tab component styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Tab container */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Tab button/trigger */
+.tab {
+  background-color: transparent;
+  color: var(--color-text);
+  border: none;
+  padding: var(--space-3) var(--space-5);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-weight: var(--weight-medium);
+  font-family: var(--font-main);
+  position: relative;
+  letter-spacing: 0.5px;
+  margin-bottom: -1px; /* Align with border */
+  border-bottom: 3px solid transparent;
+}
+
+.tab:hover {
+  color: var(--color-primary);
+}
+
+.tab--active {
+  color: var(--color-primary);
+  border-bottom: 3px solid var(--color-primary);
+}
+
+/* Tab panel/content */
+.tab-content {
+  display: none;
+  animation: fade-in 0.3s ease;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.tab-content--active {
+  display: block;
+}
+
+/* Tab content with background */
+.tab-content--card {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+}
+
+/* Vertical tabs */
+.tabs--vertical {
+  flex-direction: column;
+  border-bottom: none;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0;
+  width: 200px;
+}
+
+.tabs--vertical .tab {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: 0;
+  margin-right: -1px;
+  border-bottom: none;
+  border-right: 3px solid transparent;
+}
+
+.tabs--vertical .tab--active {
+  border-right: 3px solid var(--color-primary);
+  border-bottom: none;
+}
+
+/* Vertical tabs container */
+.tabs-container--vertical {
+  display: flex;
+}
+
+.tabs-container--vertical .tab-content {
+  flex: 1;
+  padding-left: var(--space-5);
+}
+
+/* Tab variants */
+.tabs--pills {
+  border-bottom: none;
+  gap: var(--space-2);
+}
+
+.tabs--pills .tab {
+  border-radius: var(--radius-full);
+  margin-bottom: 0;
+  border: none;
+  padding: var(--space-2) var(--space-4);
+}
+
+.tabs--pills .tab--active {
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+}
+
+/* Bordered tabs */
+.tabs--bordered {
+  padding: var(--space-1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-md);
+  gap: var(--space-1);
+}
+
+.tabs--bordered .tab {
+  border-radius: var(--radius-sm);
+  margin-bottom: 0;
+  border: none;
+}
+
+.tabs--bordered .tab--active {
+  background-color: rgba(90, 128, 149, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tabs-container--vertical {
+    flex-direction: column;
+  }
+  
+  .tabs--vertical {
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    width: 100%;
+    margin-bottom: var(--space-4);
+  }
+  
+  .tabs--vertical .tab {
+    margin-right: 0;
+    margin-bottom: -1px;
+    border-right: none;
+    border-bottom: 3px solid transparent;
+  }
+  
+  .tabs--vertical .tab--active {
+    border-bottom: 3px solid var(--color-primary);
+    border-right: none;
+  }
+  
+  .tabs-container--vertical .tab-content {
+    padding-left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs {
+    flex-direction: column;
+    border-bottom: none;
+  }
+  
+  .tab {
+    width: 100%;
+    text-align: left;
+    padding: var(--space-3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .tab--active {
+    background-color: rgba(90, 128, 149, 0.1);
+  }
+  
+  .tabs--pills .tab {
+    border-radius: var(--radius-sm);
+  }
+}

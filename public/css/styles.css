@@ -1,45 +1,3 @@
-:root {
-  --bg: #2f2f2f;
-  --card-bg: #474747;
-  --navbar-bg: #d4d5d4;
-  --overlay: rgba(47, 47, 47, 0.85);
-  --shadow: #1e1f1e;
-  --border: #2f2f2f;
-  --gradient1: rgba(72, 114, 153, 1); 
-  --gradient2: rgba(86, 130, 124, 1); 
-  --gradient3: rgba(106, 122, 137, 1); 
-  --gradient-bg: radial-gradient(
-      circle closest-side,
-      rgba(47, 47, 47, 1) 50%,
-      rgba(80, 133, 139, 0) 300%
-  );
-  --graypicture: grayscale(80%) contrast(110%);
-
-  --header: #5a8095;
-  --header-hover: #6c96ad;
-  --lighttext: #e8e9e8;
-  --darktext: #3c474b;
-
-  --spacing-xs: 5px;
-  --spacing-sm: 10px;
-  --spacing-md: 20px;
-  --spacing-lg: 40px;
-
-  --mainfont: 'proxima-nova', sans-serif;
-  --accentfont: 'freight-display-pro', serif;
-  --decorfont: 'industry-inc-base', sans-serif;
-
-  --transition-fast: 0.3s ease-in-out;
-  --transition-medium: 0.5s ease-in-out;
-  --transition-slow: 1s ease-in-out;
-
-  --light: 300;
-  --regular: 400;
-  --medium: 500;
-  --semibold: 600;
-  --bold: 700;
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -55,6 +13,8 @@ body {
   background-image: var(--gradient-bg);
   min-height: 100vh;
 }
+
+
 
 .container {
   max-width: 1100px;

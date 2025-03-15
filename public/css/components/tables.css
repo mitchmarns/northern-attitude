@@ -1,0 +1,204 @@
+/*
+ * tables.css
+ * Table component styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Base table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--space-6);
+}
+
+/* Table header */
+.table thead th {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-accent);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+}
+
+/* Table header with sorting */
+.table th.sortable {
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.table th.sortable:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.table th.sortable::after {
+  content: '↕';
+  position: absolute;
+  right: var(--space-3);
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+
+.table th.sortable:hover::after {
+  opacity: 1;
+}
+
+.table th.sort-asc::after {
+  content: '↓';
+  opacity: 1;
+}
+
+.table th.sort-desc::after {
+  content: '↑';
+  opacity: 1;
+}
+
+/* Table body */
+.table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.table tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.table tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Table row alternating colors */
+.table--striped tbody tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Highlight current row */
+.table tr.active {
+  background-color: rgba(90, 128, 149, 0.1) !important;
+}
+
+/* Table with borders */
+.table--bordered {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.table--bordered th,
+.table--bordered td {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Compact table */
+.table--compact th,
+.table--compact td {
+  padding: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+/* Table with position highlighting */
+.table tr.position-header {
+  background-color: rgba(0, 0, 0, 0.3);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: var(--text-sm);
+}
+
+.table tr.position-header td {
+  padding: var(--space-2) var(--space-4);
+}
+
+/* Table with clickable rows */
+.table--clickable tbody tr {
+  cursor: pointer;
+}
+
+/* Table with fixed header */
+.table-container--fixed-header {
+  max-height: 500px;
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.table-container--fixed-header .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: rgba(30, 31, 30, 0.95);
+}
+
+/* Table footer */
+.table tfoot {
+  background-color: rgba(0, 0, 0, 0.2);
+  font-weight: var(--weight-medium);
+}
+
+.table tfoot td {
+  padding: var(--space-3) var(--space-4);
+  border-top: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Table caption */
+.table caption {
+  margin-bottom: var(--space-3);
+  text-align: left;
+  font-style: italic;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+  .table--responsive {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Card-style responsive table */
+  .table--cards {
+    display: block;
+    border: none;
+  }
+  
+  .table--cards thead {
+    display: none;
+  }
+  
+  .table--cards tbody, 
+  .table--cards tr {
+    display: block;
+    width: 100%;
+  }
+  
+  .table--cards tr {
+    margin-bottom: var(--space-4);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-card-bg);
+  }
+  
+  .table--cards td {
+    display: flex;
+    padding: var(--space-2) var(--space-4);
+    text-align: right;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  
+  .table--cards td:last-child {
+    border-bottom: none;
+  }
+  
+  .table--cards td::before {
+    content: attr(data-label);
+    width: 50%;
+    font-weight: var(--weight-medium);
+    text-align: left;
+    color: var(--color-primary);
+  }
+}

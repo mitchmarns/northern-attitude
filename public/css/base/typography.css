@@ -1,0 +1,194 @@
+/*
+ * typography.css
+ * Typography styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Base styles for all text */
+body {
+  font-family: var(--font-main);
+  font-weight: var(--weight-regular);
+  color: var(--color-text);
+  line-height: var(--leading-normal);
+}
+
+/* Heading styles */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-accent);
+  font-weight: var(--weight-medium);
+  color: var(--color-heading);
+  line-height: var(--leading-tight);
+  margin-bottom: var(--space-4);
+}
+
+h1 {
+  font-size: var(--text-4xl);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+}
+
+h4 {
+  font-size: var(--text-xl);
+}
+
+h5 {
+  font-size: var(--text-lg);
+}
+
+h6 {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+/* Paragraph spacing */
+p {
+  margin-bottom: var(--space-4);
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+/* Decorative logo text */
+.logo {
+  font-family: var(--font-decor);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--color-text-dark);
+}
+
+.logo span {
+  color: var(--color-gradient-blue);
+  font-weight: var(--weight-bold);
+}
+
+/* Links */
+a {
+  color: var(--color-primary);
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary-400);
+}
+
+/* Section headings with line */
+.section-heading {
+  position: relative;
+  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.section-heading::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background-color: var(--color-primary);
+}
+
+/* Text utilities */
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.text-primary {
+  color: var(--color-primary);
+}
+
+.text-success {
+  color: var(--color-success-light);
+}
+
+.text-danger {
+  color: var(--color-danger-light);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.accent-text {
+  color: var(--color-primary);
+  font-weight: var(--weight-semibold);
+}
+
+/* Font weights */
+.font-light {
+  font-weight: var(--weight-light);
+}
+
+.font-normal {
+  font-weight: var(--weight-regular);
+}
+
+.font-medium {
+  font-weight: var(--weight-medium);
+}
+
+.font-semibold {
+  font-weight: var(--weight-semibold);
+}
+
+.font-bold {
+  font-weight: var(--weight-bold);
+}
+
+/* Font styles */
+.italic {
+  font-style: italic;
+}
+
+.uppercase {
+  text-transform: uppercase;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
+
+/* Responsive typography */
+@media (max-width: 768px) {
+  h1 {
+    font-size: var(--text-3xl);
+  }
+  
+  h2 {
+    font-size: var(--text-2xl);
+  }
+  
+  h3 {
+    font-size: var(--text-xl);
+  }
+  
+  .logo {
+    font-size: var(--text-2xl);
+  }
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px; /* Slightly smaller base font on mobile */
+  }
+  
+  h1 {
+    font-size: var(--text-2xl);
+  }
+  
+  h2 {
+    font-size: var(--text-xl);
+  }
+}

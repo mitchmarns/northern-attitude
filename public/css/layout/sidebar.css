@@ -1,0 +1,168 @@
+/*
+ * sidebar.css
+ * Sidebar styles for Northern Attitude Hockey Roleplay
+ */
+
+/* Main sidebar */
+.sidebar {
+  background-color: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-md);
+  height: fit-content;
+  position: relative;
+}
+
+/* Sidebar with accent border */
+.sidebar--accented::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--gradient-secondary);
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+}
+
+/* Sidebar section */
+.sidebar__section {
+  margin-bottom: var(--space-6);
+}
+
+.sidebar__section:last-child {
+  margin-bottom: 0;
+}
+
+/* Sidebar section heading */
+.sidebar__heading {
+  font-family: var(--font-accent);
+  color: var(--color-primary);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+}
+
+/* Sidebar navigation */
+.sidebar__nav {
+  list-style: none;
+  margin-bottom: var(--space-5);
+}
+
+.sidebar__nav-item {
+  margin-bottom: var(--space-2);
+}
+
+.sidebar__nav-link {
+  color: var(--color-text);
+  text-decoration: none;
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  font-family: var(--font-main);
+  font-weight: var(--weight-light);
+  position: relative;
+  padding-left: var(--space-4);
+}
+
+.sidebar__nav-link::before {
+  content: '';
+  position: absolute;
+  left: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: var(--radius-full);
+  background-color: var(--color-primary);
+  opacity: 0.7;
+  transition: all var(--transition-fast);
+}
+
+.sidebar__nav-link:hover {
+  color: var(--color-primary-400);
+  background-color: rgba(255, 255, 255, 0.05);
+  transform: translateX(var(--space-1));
+}
+
+.sidebar__nav-link:hover::before {
+  opacity: 1;
+  width: 7px;
+  height: 7px;
+}
+
+/* Active sidebar link */
+.sidebar__nav-link--active {
+  color: var(--color-primary);
+  background-color: rgba(90, 128, 149, 0.1);
+  font-weight: var(--weight-medium);
+}
+
+.sidebar__nav-link--active::before {
+  opacity: 1;
+  width: 7px;
+  height: 7px;
+}
+
+/* Sidebar link with badge */
+.sidebar__nav-badge {
+  display: inline-block;
+  background-color: var(--color-primary);
+  color: var(--color-text-light);
+  border-radius: var(--radius-full);
+  min-width: 20px;
+  height: 20px;
+  font-size: var(--text-xs);
+  text-align: center;
+  line-height: 20px;
+  margin-left: var(--space-2);
+  font-weight: var(--weight-medium);
+}
+
+/* Activity items in sidebar */
+.activity-list {
+  list-style: none;
+  padding-left: var(--space-1);
+}
+
+.activity-item {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.activity-item a {
+  color: var(--color-text);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.activity-item a:hover {
+  color: var(--color-primary);
+}
+
+.activity-time {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* Sticky sidebar */
+.sidebar--sticky {
+  position: sticky;
+  top: var(--space-5);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    margin-bottom: var(--space-5);
+  }
+  
+  .sidebar--sticky {
+    position: static;
+  }
+}
