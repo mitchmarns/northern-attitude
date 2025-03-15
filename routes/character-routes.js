@@ -81,7 +81,16 @@ router.post('/characters', authRequired, async (req, res) => {
     // Validate input
     if (!validateCharacterData(req, res)) return;
     
-    const { name, position, team_id, stats_json, bio, avatar_url, is_active } = req.body;
+    const { 
+      name, 
+      position, 
+      team_id, 
+      stats_json, 
+      bio, 
+      avatar_url, 
+      header_image_url, // Add this line
+      is_active 
+    } = req.body;
     
     // Check existing characters to determine active state
     const existingCharacters = await characterOperations.getUserCharacters(req.user.id);
@@ -96,6 +105,7 @@ router.post('/characters', authRequired, async (req, res) => {
       stats_json,
       bio || null,
       avatar_url || null,
+      header_image_url || null, // Add this line
       isActive
     );
     
@@ -117,10 +127,19 @@ router.post('/characters', authRequired, async (req, res) => {
 router.put('/characters/:id', authRequired, checkCharacterOwnership, async (req, res) => {
   try {
     const characterId = req.params.id;
-    const { name, position, team_id, stats_json, bio, avatar_url } = req.body;
+    const { 
+      name, 
+      position, 
+      team_id, 
+      stats_json, 
+      bio, 
+      avatar_url,
+      header_image_url // Add this line
+    } = req.body;
     
     // Validate that at least one field is being updated
-    if (!name && !position && !team_id && !stats_json && !bio && avatar_url === undefined) {
+    if (!name && !position && !team_id && !stats_json && !bio && 
+        avatar_url === undefined && header_image_url === undefined) { // Update this line
       return res.status(400).json({ message: 'No update data provided' });
     }
     
@@ -140,6 +159,7 @@ router.put('/characters/:id', authRequired, checkCharacterOwnership, async (req,
     if (stats_json) updateData.stats_json = stats_json;
     if (bio !== undefined) updateData.bio = bio;
     if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
+    if (header_image_url !== undefined) updateData.header_image_url = header_image_url; // Add this line
     
     // Update character with a single database call
     await characterOperations.updateCharacter(characterId, updateData);

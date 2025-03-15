@@ -3,7 +3,7 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-const dbPath = path.resolve(__dirname, 'hockey_roleplay.db');
+const dbPath = path.resolve('config/hockey_roleplay.db');
 
 // Check if database file exists
 const dbExists = fs.existsSync(dbPath);
@@ -67,18 +67,25 @@ function initDatabase() {
         name VARCHAR(100) NOT NULL,
         position VARCHAR(20) NOT NULL,
         team_id INTEGER,
-        stats_json TEXT NOT NULL,
+        character_type TEXT DEFAULT 'player',
+        role TEXT,
+        stats_json TEXT,
         bio TEXT,
-        avatar_url VARCHAR(255),
-        header_image_url VARCHAR(255),
-        is_active BOOLEAN DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        avatar_url TEXT,
+        header_image_url TEXT, -- Add this line to include header image support
+        is_active INTEGER DEFAULT 0,
+        created_at DATETIME,
+        updated_at DATETIME,
         FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
-        FOREIGN KEY (team_id) REFERENCES Teams(id) ON DELETE SET NULL,
-        CONSTRAINT check_position CHECK (position IN ('C', 'LW', 'RW', 'D', 'G'))
+        FOREIGN KEY (team_id) REFERENCES Teams(id) ON DELETE SET NULL
       )
-    `, handleError('Characters'));
+    `, function(err) {
+  if (err) {
+    console.error('Error creating Characters table:', err);
+  } else {
+    console.log('Characters table created or already exists');
+  }
+});
 
     // Create Games table
     db.run(`

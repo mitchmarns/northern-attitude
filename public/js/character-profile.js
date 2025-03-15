@@ -37,6 +37,26 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
+function cacheDOMElements() {
+  const elements = [
+    'character-form', 'character-type', 'character-type-description', 
+    'name-banner', // Add this line
+    'role-selection', 'role-options', 'player-position-section', 
+    'player-position', 'player-stats-section', 'dynamic-stats-container',
+    'character-name', 'team-id', 'character-bio', 'avatar-url', 
+    'avatar-image', 'header-image-url', 'header-image-preview',
+    'jersey-number', 'form-title', 'submit-btn'
+  ];
+  
+  elements.forEach(id => {
+    DOM[id] = document.getElementById(id);
+  });
+  
+  // Cache type and position option collections
+  DOM.typeOptions = document.querySelectorAll('.character-type-option');
+  DOM.positionOptions = document.querySelectorAll('.position-option');
+}
+
 // Function to load character profile data
 async function loadCharacterProfile(characterId) {
   try {
@@ -88,6 +108,9 @@ async function loadCharacterProfile(characterId) {
                          Math.floor(Math.random() * 98) + 1; // Random number between 1-99
     elements.jerseyNumber.textContent = jerseyNumber;
     
+    // Update header image - Add this line
+    updateHeaderImage(character);
+    
     // Update all page data concurrently for better performance
     const updatePromises = [
       updateProfileSidebar(elements, character, stats),
@@ -138,6 +161,21 @@ function setupButtons(elements, character) {
   // Set edit character link
   if (elements.editCharacterLink) {
     elements.editCharacterLink.href = `character-form.html?id=${character.id}`;
+  }
+}
+
+function updateHeaderImage(character) {
+  const nameBanner = document.getElementById('name-banner');
+  
+  if (nameBanner && character.header_image_url) {
+    // Set the header image as background
+    nameBanner.style.backgroundImage = `url('${character.header_image_url}')`;
+    console.log('Setting header image background:', character.header_image_url);
+  } else {
+    // If no header image provided, use a gradient background
+    nameBanner.style.backgroundImage = 'none';
+    nameBanner.style.backgroundColor = 'var(--dark-bg)';
+    console.log('No header image available, using default background');
   }
 }
 

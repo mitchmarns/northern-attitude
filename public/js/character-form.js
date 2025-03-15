@@ -464,7 +464,7 @@ async function createCharacter() {
     const teamId = DOM['team-id'].value || null;
     const bio = DOM['character-bio'].value.trim();
     const avatarUrl = DOM['avatar-url'].value.trim();
-    const headerImageUrl = DOM['header-image-url'].value.trim();
+    const headerImageUrl = DOM['header-image-url'].value.trim(); // Make sure to get this value
 
     // Prepare character data - use a single object construction
     const characterData = {
@@ -473,7 +473,7 @@ async function createCharacter() {
       team_id: teamId,
       bio: bio || null,
       avatar_url: avatarUrl || null,
-      header_image_url: headerImageUrl || null
+      header_image_url: headerImageUrl || null // Include this in the data sent to the server
     };
 
     // Add type-specific data
@@ -502,6 +502,8 @@ async function createCharacter() {
 
     // Clear previous messages
     window.authUtils.clearFormMessages('character-form');
+
+    console.log('Sending character data to server:', characterData);
 
     // Create character
     const response = await fetch('/api/characters', {
@@ -583,7 +585,10 @@ async function updateCharacter(characterId) {
     const characterData = {
       name: formData.name,
       character_type: formData.characterType,
-      team_id: formData.teamId
+      team_id: formData.teamId,
+      bio: formData.bio || null,
+      avatar_url: formData.avatarUrl || null,
+      header_image_url: formData.headerImageUrl || null // Include header image in update data
     };
     
     // Only update bio if it has a value or is explicitly emptied

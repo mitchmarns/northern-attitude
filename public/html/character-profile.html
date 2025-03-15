@@ -7,6 +7,28 @@
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/enhanced-styles.css">
     <link rel="stylesheet" href="https://use.typekit.net/eat5uwv.css">
+    <style>
+        /* Add additional styles for header image */
+        .name-banner {
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .name-banner .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(47, 47, 47, 0.7);
+            z-index: 1;
+        }
+        
+        .name-banner .background {
+            z-index: 2;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -29,9 +51,10 @@
         </div>
     </header>
 
-    <!-- Enhanced Character Name Banner -->
-    <div class="name-banner">
-        <div class="background" style="background-color: var(--bg);">
+    <!-- Enhanced Character Name Banner with Header Image Support -->
+    <div class="name-banner" id="name-banner">
+        <div class="overlay"></div>
+        <div class="background">
             <div class="name" id="banner-character-name">Character Name</div>
             <div class="jersey-number" id="jersey-number">00</div>
         </div>

@@ -46,9 +46,9 @@ const SQL = {
   `,
   createCharacter: `
     INSERT INTO Characters (
-      user_id, name, position, team_id, stats_json, bio, avatar_url, is_active, 
+      user_id, name, position, team_id, stats_json, bio, avatar_url, header_image_url, is_active, 
       created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
   `,
   updateCharacter: `
     UPDATE Characters SET {placeholders}, updated_at = CURRENT_TIMESTAMP
@@ -183,11 +183,11 @@ const characterOperations = {
       .then(row => !!row);
   },
 
-  // Create a new character
-  createCharacter: (userId, name, position, teamId, statsJson, bio, avatarUrl, isActive) => {
+  // Create a new character - update to include header_image_url
+  createCharacter: (userId, name, position, teamId, statsJson, bio, avatarUrl, headerImageUrl, isActive) => {
     return dbExecute(
       SQL.createCharacter,
-      [userId, name, position, teamId, statsJson, bio, avatarUrl, isActive ? 1 : 0]
+      [userId, name, position, teamId, statsJson, bio, avatarUrl, headerImageUrl, isActive ? 1 : 0]
     ).then(result => result.lastId);
   },
 
@@ -227,26 +227,6 @@ const characterOperations = {
   deleteCharacter: (characterId) => {
     return dbExecute(SQL.deleteCharacter, [characterId])
       .then(result => result.changes);
-  },
-
-  // Get recent games for a character
-  getCharacterGames: (characterId, limit = 5) => {
-    const query = `
-      SELECT gs.*, g.*, 
-        ht.name as home_team_name, 
-        at.name as away_team_name,
-        c.team_id as character_team_id
-      FROM GameStatistics gs
-      JOIN Games g ON gs.game_id = g.id
-      JOIN Teams ht ON g.home_team_id = ht.id
-      JOIN Teams at ON g.away_team_id = at.id
-      JOIN Characters c ON gs.character_id = c.id
-      WHERE gs.character_id = ?
-      ORDER BY g.date DESC
-      LIMIT ?
-    `;
-    
-    return dbQueryAll(query, [characterId, limit]);
   }
 };
 
