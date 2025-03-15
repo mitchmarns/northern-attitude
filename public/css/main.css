@@ -44,6 +44,7 @@
 @import 'pages/team-detail.css';
 @import 'pages/teams.css';
 @import 'pages/error.css';
+@import 'pages/messages.css';
 
 /* Utilities */
 @import 'utilities/spacing.css';

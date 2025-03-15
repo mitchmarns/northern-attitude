@@ -250,17 +250,40 @@ const tableSchemas = {
     )
   `,
 
-  // Messaging system
-  messages: `
-    CREATE TABLE IF NOT EXISTS Messages (
+    // Conversations
+  characterConversations: `
+    CREATE TABLE CharacterConversations (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      sender_id INTEGER NOT NULL,
-      receiver_id INTEGER NOT NULL,
+      title TEXT,
+      is_group BOOLEAN DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+
+  // Messaging system
+  characterMessages: `
+    CREATE TABLE IF NOT EXISTS CharacterMessages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id INTEGER NOT NULL,
+      sender_character_id INTEGER NOT NULL,
       content TEXT NOT NULL,
-      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      read BOOLEAN DEFAULT 0,
-      FOREIGN KEY (sender_id) REFERENCES Users(id) ON DELETE CASCADE,
-      FOREIGN KEY (receiver_id) REFERENCES Users(id) ON DELETE CASCADE
+      is_read BOOLEAN DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (conversation_id) REFERENCES Conversations(id) ON DELETE CASCADE,
+      FOREIGN KEY (sender_character_id) REFERENCES Users(id) ON DELETE CASCADE
+    )
+  `,
+
+    // ConversationParticipants table
+    characterConversationParticipants: `
+    CREATE TABLE IF NOT EXISTS CharacterConversationParticipants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id INTEGER NOT NULL,
+      character_id INTEGER NOT NULL,
+      last_read_at TIMESTAMP,
+      FOREIGN KEY (conversation_id) REFERENCES Conversations(id) ON DELETE CASCADE,
+      FOREIGN KEY (character_id) REFERENCES Users(id) ON DELETE CASCADE
     )
   `
 };

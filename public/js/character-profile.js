@@ -751,3 +751,25 @@ function formatIceTime(seconds) {
   
   return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
 }
+
+// Add Message Character button functionality
+const messageCharacterBtn = document.getElementById('message-character-btn');
+if (messageCharacterBtn && character.id) {
+  messageCharacterBtn.addEventListener('click', () => {
+    // Check if this is the user's own character
+    if (character.user_id === currentUserId) {
+      showError('You cannot message your own character');
+      return;
+    }
+    
+    // Get the currently active character from localStorage
+    const authInfo = JSON.parse(localStorage.getItem('authInfo') || sessionStorage.getItem('authInfo') || '{}');
+    if (authInfo && authInfo.activeCharacterId) {
+      // Redirect to character phone with query parameters
+      window.location.href = `character-phone.html?new=1&sender=${authInfo.activeCharacterId}&recipient=${character.id}&name=${encodeURIComponent(character.name)}`;
+    } else {
+      // No active character, show error
+      showError('You need to have an active character to send messages');
+    }
+  });
+}

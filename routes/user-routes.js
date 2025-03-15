@@ -105,6 +105,37 @@ router.get('/profile', authMiddleware.isAuthenticated, checkUserProfile, (req, r
   });
 });
 
+// Search for users
+router.get('/search', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const query = req.query.q || '';
+    
+    if (query.length < 2) {
+      return res.status(400).json({ message: 'Search query must be at least 2 characters' });
+    }
+    
+    // Search for users by username or display_name
+    const users = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT id, username, display_name, avatar_url 
+        FROM Users 
+        WHERE (username LIKE ? OR display_name LIKE ?) 
+        AND id != ? 
+        ORDER BY username
+        LIMIT 20
+      `, [`%${query}%`, `%${query}%`, req.user.id], (err, rows) => {
+        if (err) reject(err);
+        resolve(rows || []);
+      });
+    });
+    
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ message: 'Server error during user search' });
+  }
+});
+
 // Route to update user profile
 router.put('/profile', authMiddleware.isAuthenticated, checkUserProfile, (req, res) => {
   const userId = req.user.id;

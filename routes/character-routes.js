@@ -75,6 +75,34 @@ router.get('/characters/:id', authRequired, checkCharacterOwnership, async (req,
   }
 });
 
+// Search for characters
+router.get('/search', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const query = req.query.q || '';
+    const excludeUserId = req.query.excludeUserId || null;
+    
+    if (query.length < 2) {
+      return res.status(400).json({ message: 'Search query must be at least 2 characters' });
+    }
+    
+    // Search for characters by name
+    const characters = await dbQueryAll(`
+      SELECT c.id, c.name, c.position, c.avatar_url, c.user_id, t.name as team_name
+      FROM Characters c
+      LEFT JOIN Teams t ON c.team_id = t.id
+      WHERE c.name LIKE ? 
+      ${excludeUserId ? 'AND c.id != ?' : ''}
+      ORDER BY c.name
+      LIMIT 20
+    `, [`%${query}%`, ...(excludeUserId ? [excludeUserId] : [])]);
+    
+    res.status(200).json(characters);
+  } catch (error) {
+    console.error('Error searching characters:', error);
+    res.status(500).json({ message: 'Server error during character search' });
+  }
+});
+
 // Create a new character
 router.post('/characters', authRequired, async (req, res) => {
   try {

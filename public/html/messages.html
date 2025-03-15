@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Character Phone | Northern Attitude</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="https://use.typekit.net/eat5uwv.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">northern<span>attitude</span></div>
+            <nav>
+                <ul>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
+                    <li><a href="#">Games</a></li>
+                    <li><a href="#">Messages</a></li>
+                </ul>
+            </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="content-header">
+                <h2>Character Phone</h2>
+                <div class="character-selector-container">
+                    <select id="character-selector" class="character-selector">
+                        <option value="">Select a character</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="phone-error" class="auth-error" style="display: none;"></div>
+            <div id="phone-success" class="auth-success" style="display: none;"></div>
+            
+            <div class="character-phone-container" id="phone-container">
+                <div class="character-phone" id="character-phone">
+                    <div class="phone-notch"></div>
+                    
+                    <div class="phone-header">
+                        <div class="phone-status-bar">
+                            <div class="status-time" id="phone-time">12:00</div>
+                            <div class="status-icons">
+                                <div class="signal-icon">📶</div>
+                                <div class="wifi-icon">📡</div>
+                                <div class="battery-icon">🔋</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="phone-screen">
+                        <!-- Messages screen -->
+                        <div class="phone-app" id="messages-app">
+                            <div class="app-header">
+                                <h2>Messages</h2>
+                                <button id="new-message-btn" class="btn-icon">+</button>
+                            </div>
+                            
+                            <div class="conversation-list" id="conversation-list">
+                                <div class="loading-indicator">Select a character to view messages</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Conversation screen -->
+                        <div class="phone-app" id="conversation-app" style="display: none;">
+                            <div class="app-header conversation-app-header">
+                                <button id="back-to-messages" class="btn-icon">←</button>
+                                <div class="conversation-app-title" id="conversation-title">Conversation</div>
+                                <div class="conversation-app-info" id="conversation-info">i</div>
+                            </div>
+                            
+                            <div class="messages-container" id="messages-container">
+                                <div class="loading-indicator">Loading messages...</div>
+                            </div>
+                            
+                            <div class="message-composer">
+                                <form id="message-form">
+                                    <input type="text" id="message-input" placeholder="Type a message...">
+                                    <button type="submit" class="send-button">Send</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="phone-home-button"></div>
+                </div>
+            </div>
+            
+            <!-- New Message Modal -->
+            <div id="new-message-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>New Message</h3>
+                        <button id="close-modal" class="close-modal">&times;</button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="search-characters">Search for characters:</label>
+                            <input type="text" id="search-characters" class="form-control" placeholder="Enter character name...">
+                        </div>
+                        
+                        <div id="search-results" class="search-results">
+                            <!-- Search results will appear here -->
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="new-message-content">Message:</label>
+                            <textarea id="new-message-content" class="form-control" placeholder="Type your message here..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button id="send-new-message" class="btn btn-primary">Send Message</button>
+                        <button id="cancel-new-message" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conversation Info Modal -->
+            <div id="conversation-info-modal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="conversation-info-title">Conversation Info</h3>
+                        <button id="close-info-modal" class="close-modal">&times;</button>
+                    </div>
+                    
+                    <div class="modal-body">
+                        <div class="participants-list" id="participants-list">
+                            <!-- Participants will be listed here -->
+                        </div>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button id="close-info-btn" class="btn btn-secondary">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Northern Attitude Hockey Roleplay. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth-utils.js"></script>
+    <script src="../js/character-phone.js"></script>
+</body>
+</html>
