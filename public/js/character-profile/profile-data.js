@@ -5,6 +5,7 @@ import { updateBioTab } from "./tabs/bio-tab.js";
 import { updateBasicsTab } from "./tabs/basics-tab.js";
 import { loadRecentGames } from "./tabs/recent-games-tab.js";
 import { setupContactsTab } from "./tabs/contacts-tab.js";
+import { getFullPosition } from "./utils.js";
 
 export async function loadCharacterProfile(characterId) {
   try {

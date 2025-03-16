@@ -1,3 +1,5 @@
+import { getFullPosition } from "../utils.js";
+
 export async function updateBioTab(character) {
   const bioElement = document.getElementById("full-bio");
   if (!bioElement) return;

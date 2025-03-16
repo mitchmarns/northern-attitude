@@ -1,4 +1,5 @@
-import { getFullPosition } from "./utils";
+import { getFullPosition } from "./utils.js";
+import { updateCharacterStats } from "./tabs/stats-tab.js";
 
 export async function updateHeaderImage(character) {
   const nameBanner = document.getElementById("name-banner");
