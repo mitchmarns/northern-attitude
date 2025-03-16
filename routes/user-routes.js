@@ -20,9 +20,9 @@ async function checkUserProfile(req, res, next) {
       if (!row) {
         // Create profile if it doesn't exist
         db.run(`
-          INSERT INTO UserProfiles (user_id, bio, location, experience_level)
-          VALUES (?, ?, ?, ?)
-        `, [userId, '', '', 'beginner'], function(err) {
+          INSERT INTO UserProfiles (user_id, bio, location)
+          VALUES (?, ?, ?)
+        `, [userId, '', ''], function(err) {  // Added parameter array with userId
           if (err) {
             console.error('Error creating user profile:', err);
             return res.status(500).json({ message: 'Failed to create user profile' });
@@ -57,7 +57,7 @@ router.get('/profile', authMiddleware.isAuthenticated, checkUserProfile, (req, r
   
   db.get(`
     SELECT u.id, u.username, u.email, u.display_name, u.avatar_url,
-           p.bio, p.location, p.favorite_team_id, p.favorite_position, p.experience_level,
+           p.bio, p.location,
            s.visibility, s.preferences_json
     FROM Users u
     LEFT JOIN UserProfiles p ON u.id = p.user_id
@@ -92,9 +92,6 @@ router.get('/profile', authMiddleware.isAuthenticated, checkUserProfile, (req, r
       avatar_url: row.avatar_url,
       bio: row.bio,
       location: row.location,
-      favorite_team_id: row.favorite_team_id,
-      favorite_position: row.favorite_position,
-      experience_level: row.experience_level,
       privacy_settings: {
         visibility: row.visibility,
         preferences: preferences
@@ -139,17 +136,7 @@ router.get('/search', authMiddleware.isAuthenticated, async (req, res) => {
 // Route to update user profile
 router.put('/profile', authMiddleware.isAuthenticated, checkUserProfile, (req, res) => {
   const userId = req.user.id;
-  const { display_name, bio, location, favorite_team_id, favorite_position, experience_level } = req.body;
-  
-  // Validate experience level
-  if (experience_level && !['beginner', 'intermediate', 'advanced'].includes(experience_level)) {
-    return res.status(400).json({ message: 'Invalid experience level' });
-  }
-  
-  // Validate position
-  if (favorite_position && !['C', 'LW', 'RW', 'D', 'G', ''].includes(favorite_position)) {
-    return res.status(400).json({ message: 'Invalid position' });
-  }
+  const { display_name, bio, location } = req.body;
   
   // Update display_name in Users table
   db.run(`
@@ -165,9 +152,9 @@ router.put('/profile', authMiddleware.isAuthenticated, checkUserProfile, (req, r
     // Update profile in UserProfiles table
     db.run(`
       UPDATE UserProfiles
-      SET bio = ?, location = ?, favorite_team_id = ?, favorite_position = ?, experience_level = ?, updated_at = CURRENT_TIMESTAMP
+      SET bio = ?, location = ?, updated_at = CURRENT_TIMESTAMP
       WHERE user_id = ?
-    `, [bio, location, favorite_team_id || null, favorite_position, experience_level, userId], function(err) {
+    `, [bio, location, userId], function(err) {
       if (err) {
         console.error('Error updating user profile:', err);
         return res.status(500).json({ message: 'Server error' });
@@ -321,13 +308,12 @@ router.get('/profile/:username', (req, res) => {
   
   db.get(`
     SELECT u.id, u.username, u.display_name, u.avatar_url,
-           p.bio, p.location, p.favorite_team_id, p.favorite_position, p.experience_level,
+           p.bio, p.location,
            s.visibility,
            t.name as team_name
     FROM Users u
     LEFT JOIN UserProfiles p ON u.id = p.user_id
     LEFT JOIN UserPrivacySettings s ON u.id = s.user_id
-    LEFT JOIN Teams t ON p.favorite_team_id = t.id
     WHERE u.username = ?
   `, [username], (err, row) => {
     if (err) {
@@ -355,9 +341,6 @@ router.get('/profile/:username', (req, res) => {
       avatar_url: row.avatar_url,
       bio: row.bio,
       location: row.location,
-      favorite_team: row.team_name,
-      favorite_position: row.favorite_position,
-      experience_level: row.experience_level
     };
     
     res.status(200).json({ profile });
