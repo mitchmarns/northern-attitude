@@ -34,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
     cancelDeleteBtn.addEventListener('click', hideDeleteModal);
   }
   
-  // Clicking outside the modal also closes it
   const deleteModal = document.getElementById('delete-modal');
   if (deleteModal) {
     deleteModal.addEventListener('click', function(e) {
@@ -737,37 +736,43 @@ async function loadRecentGames(characterId) {
 }
 
 function setupButtons(elements, character) {
-  if (elements.deleteBtn) {
-    elements.deleteBtn.addEventListener('click', () => {
+  // Delete Character Button
+  const deleteBtn = document.getElementById('delete-character-btn');
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', () => {
       showDeleteModal(character.id, character.name);
     });
   }
   
-  // Set up confirm delete functionality
-  if (elements.confirmDelete) {
-    elements.confirmDelete.addEventListener('click', () => {
+  // Confirm Delete Button
+  const confirmDeleteBtn = document.getElementById('confirm-delete');
+  if (confirmDeleteBtn) {
+    confirmDeleteBtn.addEventListener('click', () => {
       deleteCharacter(character.id);
     });
   }
   
-  // Set "Set Active" button if not active
-  if (elements.setActiveBtn && !character.is_active) {
-    elements.setActiveBtn.style.display = 'inline-block';
-    elements.setActiveBtn.addEventListener('click', () => {
+  // Set Active Button
+  const setActiveBtn = document.getElementById('set-active-btn');
+  if (setActiveBtn && !character.is_active) {
+    setActiveBtn.style.display = 'inline-block';
+    setActiveBtn.addEventListener('click', () => {
       setActiveCharacter(character.id);
     });
   }
   
-  // Set edit character link
-  if (elements.editCharacterLink) {
-    elements.editCharacterLink.href = `character-form.html?id=${character.id}`;
+  // Edit Character Link
+  const editCharacterLink = document.getElementById('edit-character-link');
+  if (editCharacterLink) {
+    editCharacterLink.href = `character-form.html?id=${character.id}`;
   }
   
-  // Message Character button
-  if (elements.messageCharacterBtn) {
-    elements.messageCharacterBtn.addEventListener('click', () => {
+  // Message Character Button
+  const messageCharacterBtn = document.getElementById('message-character-btn');
+  if (messageCharacterBtn) {
+    messageCharacterBtn.addEventListener('click', () => {
       // Redirect to messages with this character
-      window.location.href = `messages.html?new=1&recipient=${character.id}&name=${encodeURIComponent(character.name)}`;
+      window.location.href = `messages.html?new=1&sender=${character.id}&recipient=${character.id}&name=${encodeURIComponent(character.name)}`;
     });
   }
 }
@@ -802,6 +807,7 @@ async function setActiveCharacter(characterId) {
     setTimeout(() => {
       window.location.reload();
     }, 1000);
+    
   } catch (error) {
     console.error('Error setting active character:', error);
     
@@ -816,24 +822,17 @@ async function setActiveCharacter(characterId) {
 
 // Function to show delete confirmation modal
 function showDeleteModal(characterId, characterName) {
-  const modal = document.getElementById('delete-modal');
-  if (!modal) return;
-  
-  // If there's a message element, update it with character name
-  const message = modal.querySelector('.modal-message');
-  if (message) {
-    message.textContent = `Are you sure you want to delete ${characterName}? This action cannot be undone.`;
+  const deleteModal = document.getElementById('delete-modal');
+  if (deleteModal) {
+    deleteModal.style.display = 'flex';
   }
-  
-  // Show the modal
-  modal.style.display = 'flex';
 }
 
 // Function to hide delete confirmation modal
 function hideDeleteModal() {
-  const modal = document.getElementById('delete-modal');
-  if (modal) {
-    modal.style.display = 'none';
+  const deleteModal = document.getElementById('delete-modal');
+  if (deleteModal) {
+    deleteModal.style.display = 'none';
   }
 }
 
@@ -849,9 +848,6 @@ async function deleteCharacter(characterId) {
       throw new Error('Failed to delete character');
     }
     
-    // Hide modal
-    hideDeleteModal();
-    
     // Show success message
     const successMessage = document.getElementById('character-profile-success');
     if (successMessage) {
@@ -859,16 +855,13 @@ async function deleteCharacter(characterId) {
       successMessage.style.display = 'block';
     }
     
-    // Redirect to character list
+    // Redirect to character list after delay
     setTimeout(() => {
       window.location.href = 'my-characters.html';
     }, 1500);
     
   } catch (error) {
     console.error('Error deleting character:', error);
-    
-    // Hide modal
-    hideDeleteModal();
     
     // Show error message
     const errorMessage = document.getElementById('character-profile-error');
