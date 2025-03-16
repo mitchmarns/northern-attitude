@@ -1,3 +1,5 @@
+import { getFullPosition } from "./utils";
+
 export async function updateHeaderImage(character) {
   const nameBanner = document.getElementById("name-banner");
 

@@ -1,4 +1,6 @@
-export async function showDeleteModal(characterId, characterName) {
+// public/js/character-profile/utils.js
+
+export function showDeleteModal(characterId, characterName) {
   console.log(
     "Showing delete modal for character:",
     characterId,
@@ -30,7 +32,7 @@ export async function showDeleteModal(characterId, characterName) {
   deleteModal.style.alignItems = "center";
 }
 
-export async function hideDeleteModal() {
+export function hideDeleteModal() {
   console.log("Hiding delete modal");
   const deleteModal = document.getElementById("delete-modal");
   if (deleteModal) {
@@ -40,7 +42,7 @@ export async function hideDeleteModal() {
   }
 }
 
-export async function getFullPosition(positionCode) {
+export function getFullPosition(positionCode) {
   const positions = {
     C: "Center",
     LW: "Left Wing",
@@ -52,7 +54,7 @@ export async function getFullPosition(positionCode) {
   return positions[positionCode] || positionCode;
 }
 
-export async function formatIceTime(minutes) {
+export function formatIceTime(minutes) {
   if (!minutes) return "00:00";
 
   const mins = Math.floor(minutes);

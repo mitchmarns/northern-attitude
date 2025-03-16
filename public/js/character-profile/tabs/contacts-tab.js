@@ -1,3 +1,6 @@
+// public/js/character-profile/tabs/contacts-tab.js
+import { getFullPosition } from "../utils.js";
+
 export async function setupContactsTab(character) {
   if (!character) return;
 

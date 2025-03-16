@@ -1,3 +1,11 @@
+// public/js/character-profile/character-data.js
+import { updateHeaderImage, updateProfileSidebar, updateProfileContent, setupButtons } from "./profile-ui.js";
+import { updateCharacterStats, updateStatsTab } from "./tabs/stats-tab.js";
+import { updateBioTab } from "./tabs/bio-tab.js";
+import { updateBasicsTab } from "./tabs/basics-tab.js";
+import { loadRecentGames } from "./tabs/recent-games-tab.js";
+import { setupContactsTab } from "./tabs/contacts-tab.js";
+
 export async function loadCharacterProfile(characterId) {
   try {
     // Fetch character data
@@ -78,24 +86,23 @@ export async function loadCharacterProfile(characterId) {
     updateHeaderImage(character);
 
     // Update all page data concurrently for better performance
-    const updatePromises = [
+    await Promise.all([
       updateProfileSidebar(elements, character, stats),
       updateProfileContent(elements, character, stats),
+      updateCharacterStats(elements, character, stats),
       updateStatsTab(character, stats),
       updateBioTab(character),
       loadRecentGames(characterId),
-      updateBasicsTab(character, stats),
-    ];
-
-    // Wait for all updates to complete
-    await Promise.all(updatePromises);
-
+      updateBasicsTab(character, stats)
+    ]);
+    
     // Set up button functionality
     setupButtons(elements, character);
 
     // Setup contacts tab only after we have the character data
     setupContactsTab(character);
 
+    return character;
   } catch (error) {
     console.error("Error loading character profile:", error);
 
@@ -106,5 +113,7 @@ export async function loadCharacterProfile(characterId) {
         "Failed to load character profile. Please try again later.";
       errorMessage.style.display = "block";
     }
+    
+    throw error;
   }
 }

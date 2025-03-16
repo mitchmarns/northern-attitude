@@ -1,4 +1,4 @@
-import { loadCharacterProfile } from "./character-profile.js";
+import { loadCharacterProfile } from "./profile-data.js";
 import { updateHeaderImage, updateProfileSidebar, updateProfileContent, setupButtons } from "./profile-ui.js";
 import { updateCharacterStats, updateStatsTab, updatePositionSpecificStats } from "./tabs/stats-tab.js";
 import { updateBioTab } from "./tabs/bio-tab.js";
@@ -36,7 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Load character profile
   loadCharacterProfile(characterId);
-  initializeCharacterProfile(characterId);
 
   // Set up modal close functionality
   const cancelDeleteBtn = document.getElementById("cancel-delete");
@@ -60,35 +59,24 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 });
 
-async function initializeCharacterProfile(characterId) {
-  try {
-    // Load character data
-    const character = await loadCharacterData(characterId);
-    
-    // Update page title and header
-    updatePageHeader(character);
-    
-    // Initialize all tabs concurrently for better performance
-    await Promise.all([
-      updateProfileSidebar(character),
-      updateProfileContent(character),
-      updateCharacterStats(character),
-      updateStatsTab(character),
-      updatePositionSpecificStats(character),
-      updateBioTab(character),
-      loadRecentGames(characterId),
-      updateBasicsTab(character),
-      updateBasicsField(character),
-      updateHeaderImage(character)
-    ]);
-    
-    // Set up button functionality
-    setupButtons(character);
-    
-    // Setup contacts tab
-    setupContactsTab(character);
-    
-  } catch (error) {
-    handleLoadError(error);
-  }
-}
+export {
+  loadCharacterProfile,
+  updateHeaderImage,
+  updateProfileSidebar,
+  updateProfileContent,
+  setupButtons,
+  updateCharacterStats,
+  updateStatsTab,
+  updatePositionSpecificStats,
+  updateBioTab,
+  updateBasicsTab,
+  updateBasicsField,
+  loadRecentGames,
+  setActiveCharacter,
+  deleteCharacter,
+  showDeleteModal,
+  hideDeleteModal,
+  getFullPosition,
+  formatIceTime,
+  setupContactsTab
+};
