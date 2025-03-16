@@ -3,7 +3,16 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-const dbPath = path.resolve('config/hockey_roleplay.db');
+const dbPath = path.resolve(__dirname, 'config/hockey_roleplay.db');
+console.log('Database will be created at:', dbPath);
+
+// Ensure the directory exists before creating the database
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  console.log(`Creating directory: ${dbDir}`);
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
 const CURRENT_SCHEMA_VERSION = 2; // Increment when schema changes
 
 // Logger function for consistent output

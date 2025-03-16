@@ -5,12 +5,21 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
 
-// First check if database exists
-const dbPath = path.resolve('config/hockey_roleplay.db');
+let dbPath = path.resolve(__dirname, 'config/hockey_roleplay.db');
+console.log('Checking for database at:', dbPath);
+
 if (!fs.existsSync(dbPath)) {
-  // Try parent directory
-  dbPath = path.resolve(__dirname, '..', 'hockey_roleplay.db');
-  console.log('Trying parent directory:', dbPath, fs.existsSync(dbPath));
+  // Try parent directory as fallback
+  const parentDbPath = path.resolve(__dirname, '../hockey_roleplay.db');
+  console.log('Database not found, trying parent directory:', parentDbPath);
+  
+  if (fs.existsSync(parentDbPath)) {
+    dbPath = parentDbPath;
+    console.log('Found database in parent directory');
+  } else {
+    console.error('Database file not found in either location!');
+    console.error('Please run: node database-init.js');
+  }
 }
 
 // Import database operations after confirming database exists
