@@ -31,16 +31,22 @@ document.addEventListener('DOMContentLoaded', function() {
   // Set up modal close functionality
   const cancelDeleteBtn = document.getElementById('cancel-delete');
   if (cancelDeleteBtn) {
+    console.log('Setting up cancel delete button');
     cancelDeleteBtn.addEventListener('click', hideDeleteModal);
+  } else {
+    console.error('Cancel delete button not found');
   }
   
   const deleteModal = document.getElementById('delete-modal');
   if (deleteModal) {
+    console.log('Setting up delete modal background click');
     deleteModal.addEventListener('click', function(e) {
       if (e.target === this) {
         hideDeleteModal();
       }
     });
+  } else {
+    console.error('Delete modal element not found');
   }
 });
 
@@ -736,49 +742,105 @@ async function loadRecentGames(characterId) {
 }
 
 function setupButtons(elements, character) {
+  console.log('Setting up buttons for character:', character.id, character.name);
+  
   // Delete Character Button
   const deleteBtn = document.getElementById('delete-character-btn');
   if (deleteBtn) {
-    deleteBtn.addEventListener('click', () => {
+    console.log('Delete button found, adding click event');
+    // Remove any existing event listeners first
+    const newDeleteBtn = deleteBtn.cloneNode(true);
+    deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+    
+    newDeleteBtn.addEventListener('click', function() {
+      console.log('Delete button clicked');
       showDeleteModal(character.id, character.name);
     });
+  } else {
+    console.error('Delete button not found in DOM');
   }
   
   // Confirm Delete Button
   const confirmDeleteBtn = document.getElementById('confirm-delete');
   if (confirmDeleteBtn) {
-    confirmDeleteBtn.addEventListener('click', () => {
+    console.log('Confirm delete button found, adding click event');
+    // Remove any existing event listeners first
+    const newConfirmBtn = confirmDeleteBtn.cloneNode(true);
+    confirmDeleteBtn.parentNode.replaceChild(newConfirmBtn, confirmDeleteBtn);
+    
+    newConfirmBtn.addEventListener('click', function() {
+      console.log('Confirm delete button clicked');
       deleteCharacter(character.id);
     });
+  } else {
+    console.error('Confirm delete button not found in DOM');
   }
   
-  // Set Active Button
+  // Set Active Button - only show if character is not active
   const setActiveBtn = document.getElementById('set-active-btn');
-  if (setActiveBtn && !character.is_active) {
-    setActiveBtn.style.display = 'inline-block';
-    setActiveBtn.addEventListener('click', () => {
-      setActiveCharacter(character.id);
-    });
+  if (setActiveBtn) {
+    console.log('Setting active button display based on character.is_active:', character.is_active);
+    // Clone and replace to remove any existing event listeners
+    const newSetActiveBtn = setActiveBtn.cloneNode(true);
+    setActiveBtn.parentNode.replaceChild(newSetActiveBtn, setActiveBtn);
+    
+    if (!character.is_active) {
+      newSetActiveBtn.style.display = 'inline-block';
+      newSetActiveBtn.addEventListener('click', function() {
+        console.log('Set active button clicked');
+        setActiveCharacter(character.id);
+      });
+    } else {
+      // Ensure button is hidden if character is already active
+      newSetActiveBtn.style.display = 'none';
+    }
+  } else {
+    console.error('Set active button not found in DOM');
   }
   
-  // Edit Character Link
+  // Edit Character Link - Convert to button if it's not already
   const editCharacterLink = document.getElementById('edit-character-link');
   if (editCharacterLink) {
-    editCharacterLink.href = `character-form.html?id=${character.id}`;
+    console.log('Setting edit character link');
+    
+    // Check if it's an anchor or button
+    if (editCharacterLink.tagName === 'A') {
+      editCharacterLink.href = `character-form.html?id=${character.id}`;
+    } else {
+      // Remove any existing event listeners first
+      const newEditBtn = editCharacterLink.cloneNode(true);
+      editCharacterLink.parentNode.replaceChild(newEditBtn, editCharacterLink);
+      
+      newEditBtn.addEventListener('click', function() {
+        console.log('Edit button clicked');
+        window.location.href = `character-form.html?id=${character.id}`;
+      });
+    }
+  } else {
+    console.error('Edit character link not found in DOM');
   }
   
   // Message Character Button
   const messageCharacterBtn = document.getElementById('message-character-btn');
   if (messageCharacterBtn) {
-    messageCharacterBtn.addEventListener('click', () => {
+    console.log('Message button found, adding click event');
+    // Remove any existing event listeners first
+    const newMsgBtn = messageCharacterBtn.cloneNode(true);
+    messageCharacterBtn.parentNode.replaceChild(newMsgBtn, messageCharacterBtn);
+    
+    newMsgBtn.addEventListener('click', function() {
+      console.log('Message button clicked');
       // Redirect to messages with this character
       window.location.href = `messages.html?new=1&sender=${character.id}&recipient=${character.id}&name=${encodeURIComponent(character.name)}`;
     });
+  } else {
+    console.error('Message button not found in DOM');
   }
 }
 
 // Complete the setActiveCharacter function
 async function setActiveCharacter(characterId) {
+  console.log('Setting character as active:', characterId);
   try {
     // Show loading/processing indication
     const successMessage = document.getElementById('character-profile-success');
@@ -822,22 +884,47 @@ async function setActiveCharacter(characterId) {
 
 // Function to show delete confirmation modal
 function showDeleteModal(characterId, characterName) {
+  console.log('Showing delete modal for character:', characterId, characterName);
   const deleteModal = document.getElementById('delete-modal');
-  if (deleteModal) {
-    deleteModal.style.display = 'flex';
+  
+  if (!deleteModal) {
+    console.error('Delete modal not found in the DOM');
+    return;
   }
+  
+  // Update the message text
+  const modalMessage = deleteModal.querySelector('.modal-message');
+  if (modalMessage) {
+    modalMessage.textContent = `Are you sure you want to delete ${characterName}? This action cannot be undone.`;
+  }
+  
+  // Display the modal - ensure it has the right styles
+  deleteModal.style.display = 'flex';
+  deleteModal.style.position = 'fixed';
+  deleteModal.style.top = '0';
+  deleteModal.style.left = '0';
+  deleteModal.style.width = '100%';
+  deleteModal.style.height = '100%';
+  deleteModal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+  deleteModal.style.zIndex = '1000';
+  deleteModal.style.justifyContent = 'center';
+  deleteModal.style.alignItems = 'center';
 }
 
 // Function to hide delete confirmation modal
 function hideDeleteModal() {
+  console.log('Hiding delete modal');
   const deleteModal = document.getElementById('delete-modal');
   if (deleteModal) {
     deleteModal.style.display = 'none';
+  } else {
+    console.error('Delete modal not found in the DOM');
   }
 }
 
 // Function to delete a character
 async function deleteCharacter(characterId) {
+  console.log('Deleting character:', characterId);
   try {
     const response = await fetch(`/api/characters/${characterId}`, {
       method: 'DELETE',
@@ -847,6 +934,9 @@ async function deleteCharacter(characterId) {
     if (!response.ok) {
       throw new Error('Failed to delete character');
     }
+    
+    // Hide the modal first
+    hideDeleteModal();
     
     // Show success message
     const successMessage = document.getElementById('character-profile-success');
@@ -862,6 +952,9 @@ async function deleteCharacter(characterId) {
     
   } catch (error) {
     console.error('Error deleting character:', error);
+    
+    // Hide the modal
+    hideDeleteModal();
     
     // Show error message
     const errorMessage = document.getElementById('character-profile-error');
