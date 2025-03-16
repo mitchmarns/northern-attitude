@@ -120,12 +120,10 @@ const tableSchemas = {
       display_name VARCHAR(100),
       bio TEXT,
       location VARCHAR(100),
-      experience_level VARCHAR(20),
       avatar_url VARCHAR(255),
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
-      FOREIGN KEY (favorite_team_id) REFERENCES Teams(id) ON DELETE SET NULL
+      FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
     )
   `,
   
@@ -271,17 +269,17 @@ const tableSchemas = {
 
   // Messaging system
   characterMessages: `
-    CREATE TABLE IF NOT EXISTS CharacterMessages (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      conversation_id INTEGER NOT NULL,
-      sender_character_id INTEGER NOT NULL,
-      content TEXT NOT NULL,
-      is_read BOOLEAN DEFAULT 0,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (conversation_id) REFERENCES Conversations(id) ON DELETE CASCADE,
-      FOREIGN KEY (sender_character_id) REFERENCES Users(id) ON DELETE CASCADE
-    )
-  `,
+  CREATE TABLE IF NOT EXISTS CharacterMessages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  conversation_id INTEGER NOT NULL,
+  sender_character_id INTEGER NOT NULL,
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (conversation_id) REFERENCES CharacterConversations(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_character_id) REFERENCES Characters(id) ON DELETE CASCADE
+  )
+`,
 
     // ConversationParticipants table
     characterConversationParticipants: `
@@ -290,8 +288,8 @@ const tableSchemas = {
       conversation_id INTEGER NOT NULL,
       character_id INTEGER NOT NULL,
       last_read_at TIMESTAMP,
-      FOREIGN KEY (conversation_id) REFERENCES Conversations(id) ON DELETE CASCADE,
-      FOREIGN KEY (character_id) REFERENCES Users(id) ON DELETE CASCADE
+      FOREIGN KEY (conversation_id) REFERENCES CharacterConversations(id) ON DELETE CASCADE,
+      FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE
     )
   `,
 
@@ -327,8 +325,7 @@ const indexes = [
   { sql: "CREATE INDEX IF NOT EXISTS idx_characters_team_id ON Characters(team_id)", description: "creating characters team index" },
   { sql: "CREATE INDEX IF NOT EXISTS idx_games_teams ON Games(home_team_id, away_team_id)", description: "creating games teams index" },
   { sql: "CREATE INDEX IF NOT EXISTS idx_games_date ON Games(date)", description: "creating games date index" },
-  { sql: "CREATE INDEX IF NOT EXISTS idx_messages_users ON Messages(sender_id, receiver_id)", description: "creating messages users index" },
-  { sql: "CREATE INDEX IF NOT EXISTS idx_messages_read ON Messages(receiver_id, read)", description: "creating messages read index" },
+  { sql: "CREATE INDEX IF NOT EXISTS idx_characterMessages_characters ON CharacterMessages(sender_character_id)" },
   { sql: "CREATE INDEX IF NOT EXISTS idx_game_stats_game ON GameStatistics(game_id)", description: "creating game stats game index" },
   { sql: "CREATE INDEX IF NOT EXISTS idx_game_stats_character ON GameStatistics(character_id)", description: "creating game stats character index" },
   { sql: "CREATE INDEX IF NOT EXISTS idx_password_resets_token ON PasswordResets(token)", description: "creating password resets token index" },
@@ -514,18 +511,7 @@ async function insertSampleData() {
       [],
       "inserting sample games"
     );
-    
-    // Insert sample messages
-    await executeSql(
-      `INSERT OR IGNORE INTO Messages (id, sender_id, receiver_id, content, timestamp, read) 
-       VALUES 
-         (1, 3, 1, 'Welcome to the Northern Attitude Hockey League! We''re excited to have you join us.', datetime('now', '-3 days'), 1),
-         (2, 3, 1, 'Don''t forget, we have practice tomorrow at 7:00 AM. Please be on time.', datetime('now', '-1 day'), 0),
-         (3, 2, 1, 'We''re having a team meeting after the game on Friday to discuss strategy.', datetime('now', '-12 hours'), 0),
-         (4, 3, 1, 'Please review the updated league rules for the upcoming season.', datetime('now'), 0)`,
-      [],
-      "inserting sample messages"
-    );
+  
     
     // Insert sample game statistics
     await executeSql(
@@ -548,26 +534,36 @@ async function insertSampleData() {
       "inserting sample team staff"
     );
     
-    // Insert user profiles
+    // Insert sample conversations
     await executeSql(
-      `INSERT OR IGNORE INTO UserProfiles (user_id, bio, location, experience_level, favorite_team_id)
-       VALUES
-         (1, 'Hockey fan since childhood. Love creating interesting characters!', 'Toronto, Canada', 'intermediate', 1),
-         (2, 'New to hockey roleplay but learning fast.', 'Montreal, Canada', 'beginner', 2),
-         (3, 'League administrator and hockey enthusiast.', 'Vancouver, Canada', 'advanced', 4)`,
+      `INSERT OR IGNORE INTO CharacterConversations (id, title, is_group) 
+       VALUES 
+         (1, 'Team Communication', 0)`,
       [],
-      "inserting sample user profiles"
+      "inserting sample conversations"
     );
     
-    // Insert privacy settings
+    // Then, insert conversation participants (this might be optional depending on your exact schema)
     await executeSql(
-      `INSERT OR IGNORE INTO UserPrivacySettings (user_id, visibility, preferences_json)
-       VALUES
-         (1, 'members', '["messages", "email-notifications"]'),
-         (2, 'public', '["messages", "email-notifications", "game-notifications"]'),
-         (3, 'members', '["messages", "email-notifications", "game-notifications"]')`,
+      `INSERT OR IGNORE INTO CharacterConversationParticipants (conversation_id, character_id) 
+       VALUES 
+         (1, 1),
+         (1, 2),
+         (1, 3)`,
       [],
-      "inserting sample privacy settings"
+      "inserting sample conversation participants"
+    );
+    
+    // Ensure the sample messages use the exact character IDs from your previous character insertion
+    await executeSql(
+      `INSERT OR IGNORE INTO CharacterMessages (conversation_id, sender_character_id, content, is_read) 
+       VALUES 
+         (1, 1, 'Welcome to the Northern Attitude Hockey League! We''re excited to have you join us.', 1),
+         (1, 1, 'Don''t forget, we have practice tomorrow at 7:00 AM. Please be on time.', 0),
+         (1, 2, 'We''re having a team meeting after the game on Friday to discuss strategy.', 0),
+         (1, 3, 'Please review the updated league rules for the upcoming season.', 0)`,
+      [],
+      "inserting sample messages"
     );
     
     log('log', 'All sample data inserted successfully');

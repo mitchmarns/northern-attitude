@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 // First check if database exists
-let dbPath = path.resolve(__dirname, 'hockey_roleplay.db');
+const dbPath = path.resolve('config/hockey_roleplay.db');
 if (!fs.existsSync(dbPath)) {
   // Try parent directory
   dbPath = path.resolve(__dirname, '..', 'hockey_roleplay.db');
