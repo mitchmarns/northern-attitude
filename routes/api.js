@@ -6,7 +6,8 @@ const {
   characterOperations, 
   teamOperations, 
   gameOperations,
-  messageOperations
+  messageOperations,
+  contactOperations
 } = require('../config/db');
 
 // Character routes

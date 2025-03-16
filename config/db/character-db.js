@@ -176,4 +176,7 @@ const contactOperations = {
   }
 };
 
-module.exports = characterOperations, contactOperations;
+module.exports = { 
+  characterOperations, 
+  contactOperations 
+};
