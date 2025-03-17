@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roleplay Threads | Northern Attitude</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="https://use.typekit.net/eat5uwv.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">northern<span>attitude</span></div>
+            <nav>
+                <ul>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
+                    <li><a href="#">Games</a></li>
+                    <li><a href="messages.html">Messages</a></li>
+                </ul>
+            </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container">
+            <div class="content-header">
+                <h2>Roleplay Threads</h2>
+                <button id="create-thread-btn" class="btn btn-primary">Create New Thread</button>
+            </div>
+            
+            <div id="threads-error" class="auth-error" style="display: none;"></div>
+            <div id="threads-success" class="auth-success" style="display: none;"></div>
+            
+            <div class="threads-filters">
+                <div class="form-row">
+                    <div class="form-col">
+                        <select id="location-filter" class="form-control">
+                            <option value="">All Locations</option>
+                            <option value="Team Locker Room">Team Locker Room</option>
+                            <option value="Hockey Rink">Hockey Rink</option>
+                            <option value="Local Bar">Local Bar</option>
+                            <option value="Team Bus">Team Bus</option>
+                            <option value="Hotel Lobby">Hotel Lobby</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <select id="status-filter" class="form-control">
+                            <option value="">All Statuses</option>
+                            <option value="open">Open</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="threads-container" class="threads-list">
+                <!-- Threads will be dynamically populated here -->
+            </div>
+            
+            <div id="pagination" class="pagination">
+                <!-- Pagination controls will be added dynamically -->
+            </div>
+        </div>
+    </main>
+    
+    <!-- Create Thread Modal -->
+    <div id="create-thread-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create New Roleplay Thread</h3>
+                <button id="close-create-thread-modal" class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-thread-form">
+                    <div class="form-group">
+                        <label for="thread-title">Thread Title</label>
+                        <input type="text" id="thread-title" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="thread-description">Description (Optional)</label>
+                        <textarea id="thread-description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="thread-location">Location</label>
+                        <select id="thread-location" class="form-control">
+                            <option value="">Select Location</option>
+                            <option value="Team Locker Room">Team Locker Room</option>
+                            <option value="Hockey Rink">Hockey Rink</option>
+                            <option value="Local Bar">Local Bar</option>
+                            <option value="Team Bus">Team Bus</option>
+                            <option value="Hotel Lobby">Hotel Lobby</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Create Thread</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Thread Details Modal -->
+    <div id="thread-details-modal" class="modal">
+      <div class="modal-content">
+          <div class="modal-header">
+              <h3 id="details-thread-title">Thread Title</h3>
+              <button id="close-thread-details-modal" class="close-modal">&times;</button>
+          </div>
+          <div class="modal-body">
+              <div id="details-thread-description" class="thread-description">
+                  <!-- Thread description will be populated here -->
+              </div>
+              <div class="thread-meta">
+                  <div><strong>Location:</strong> <span id="details-thread-location"></span></div>
+                  <div><strong>Status:</strong> <span id="details-thread-status"></span></div>
+              </div>
+              <hr>
+              <div id="thread-posts">
+                  <!-- Thread posts will be dynamically populated here -->
+              </div>
+              <hr>
+              <form id="new-post-form">
+                  <div class="form-group">
+                      <label for="post-content">Reply to Thread:</label>
+                      <textarea id="post-content" class="form-control" rows="3" required></textarea>
+                  </div>
+                  <button type="submit" class="btn btn-primary">Post Reply</button>
+              </form>
+          </div>
+          <div class="modal-footer">
+              <button id="close-thread-btn" class="btn btn-secondary">Close Thread</button>
+          </div>
+      </div>
+  </div>
+  
+  <footer>
+      <div class="container">
+          <p>&copy; 2025 Northern Attitude Hockey Roleplay. All rights reserved.</p>
+      </div>
+  </footer>
+  
+  <script src="../js/auth-utils.js"></script>
+  <script src="../js/threads.js"></script>

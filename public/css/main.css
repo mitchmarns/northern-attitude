@@ -47,6 +47,7 @@
 @import 'pages/messages.css';
 @import 'pages/basics-tab.css';
 @import 'pages/contact-tab.css';
+@import 'pages/threads.css';
 
 /* Utilities */
 @import 'utilities/spacing.css';

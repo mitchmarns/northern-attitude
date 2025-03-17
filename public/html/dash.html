@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Northern Attitude</title>
-    <link rel="stylesheet" href="../css/main.css">
-    <link rel="stylesheet" href="https://use.typekit.net/eat5uwv.css">
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dashboard | Northern Attitude</title>
+        <link rel="stylesheet" href="../css/main.css">
+        <link rel="preload" href="https://use.typekit.net/eat5uwv.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://use.typekit.net/eat5uwv.css"></noscript>
+    </head>
 <body>
     <header>
         <div class="container header-content">
@@ -31,54 +32,47 @@
     <main>
         <div class="container dashboard">
             <aside class="sidebar">
-                <h3>My Account</h3>
-                <ul>
-                    <li><a href="profile.html">My Profile</a></li>
-                    <li><a href="my-characters.html">My Characters</a></li>
-                    <li><a href="messages.html">Messages <span class="badge">4</span></a></li>
-                    <li><a href="#">Settings</a></li>
-                </ul>
+                <nav aria-label="Account Navigation">
+                    <h3>My Account</h3>
+                    <ul>
+                        <li><a href="profile.html">My Profile</a></li>
+                        <li><a href="my-characters.html">My Characters</a></li>
+                        <li><a href="messages.html">Messages <span class="badge" id="message-badge">0</span></a></li>
+                        <li><a href="threads.html">Threads</a></li>
+                    </ul>
+                </nav>
                 
-                <h3>Quick Links</h3>
-                <ul>
-                    <li><a href="teams.html">Teams Directory</a></li>
-                    <li><a href="#">Upcoming Games</a></li>
-                    <li><a href="#">Player Directory</a></li>
-                    <li><a id="manage-team-link" href="team-management.html?id=1">Manage My Team</a></li>
-                </ul>
+                <nav aria-label="Quick Links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="teams.html">Teams Directory</a></li>
+                        <li><a href="#">Upcoming Games</a></li>
+                        <li><a href="#">Player Directory</a></li>
+                        <li><a id="manage-team-link" href="team-management.html?id=1" style="display: none;">Manage My Team</a></li>
+                    </ul>
+                </nav>
                 
-                <h3>Recent Activity</h3>
-                <div class="activity-list" id="recent-activity-list">
-                    <div class="activity-item">
-                        <a href="#">You created a new character</a>
-                        <span class="activity-time">Today</span>
+                <section aria-label="Recent Activity">
+                    <h3>Recent Activity</h3>
+                    <div class="activity-list" id="recent-activity-list">
+                        <!-- Will be populated by JavaScript -->
+                        <p class="loading">Loading recent activity...</p>
                     </div>
-                    <div class="activity-item">
-                        <a href="#">Toronto played against Vancouver</a>
-                        <span class="activity-time">Yesterday</span>
-                    </div>
-                    <div class="activity-item">
-                        <a href="#">Mark Stevens scored 2 goals</a>
-                        <span class="activity-time">3 days ago</span>
-                    </div>
-                    <div class="activity-item">
-                        <a href="#">Team practice scheduled</a>
-                        <span class="activity-time">5 days ago</span>
-                    </div>
-                </div>
+                </section>
             </aside>
             
-            <section class="content-area">
-                <div class="announcements">
-                    <div class="announcement-header">
+            <div class="content-area">
+                <!-- Announcement section with improved semantic markup -->
+                <section class="announcements" aria-labelledby="announcement-title">
+                    <header class="announcement-header">
                         <div class="announcement-avatar">
-                            <img src="/api/placeholder/50/50" alt="Admin Avatar">
+                            <img src="/api/placeholder/50/50" alt="Admin Avatar" loading="lazy">
                         </div>
                         <div class="announcement-info">
-                            <h3>Admin Announcement</h3>
-                            <span>Posted 2 days ago</span>
+                            <h3 id="announcement-title">Admin Announcement</h3>
+                            <time datetime="2025-03-15">Posted 2 days ago</time>
                         </div>
-                    </div>
+                    </header>
                     <div class="announcement-content">
                         <p>Welcome to Northern Attitude Hockey League! Our databases are now connected and working properly. You can now view your player data, team statistics, upcoming games, and messages from the league.</p>
                         <p>Make sure to complete your character profiles and join a team before the start of the new season next week!</p>
@@ -86,60 +80,40 @@
                     <div class="announcement-actions">
                         <a href="#" class="btn btn-secondary">Read All Announcements</a>
                     </div>
-                </div>
+                </section>
                 
                 <!-- Team Invitations Section -->
-                <div class="team-invites-section" id="team-invites-section">
-                    <h3>Team Invitations</h3>
+                <section id="team-invites-section" class="team-invites-section" style="display: none;" aria-labelledby="invites-title">
+                    <h3 id="invites-title">Team Invitations</h3>
                     <div id="team-invites-container">
-                        <div class="invite-card">
-                            <div class="invite-info">
-                                <h4>Invitation to join Toronto Maple Leafs</h4>
-                                <p>You've been invited to join this team.</p>
-                            </div>
-                            <div class="invite-actions">
-                                <button class="btn btn-primary accept-invite" data-request-id="1">Accept</button>
-                                <button class="btn btn-secondary decline-invite" data-request-id="1">Decline</button>
-                            </div>
-                        </div>
+                        <!-- Will be populated via JavaScript -->
                     </div>
-                </div>
+                </section>
                 
-                <div class="card-grid">
-                    <div class="dashboard-card" id="characters-card">
-                        <h3>My Characters</h3>
-                        <p>You have <span class="accent-text">3</span> characters</p>
-                        <p>Active: <span class="accent-text">Mark Stevens</span> (C)</p>
-                        <p>Team: <span class="accent-text">Toronto Maple Leafs</span></p>
-                        <a href="my-characters.html">Manage Characters →</a>
-                    </div>
+                <!-- Dashboard Cards with improved layout -->
+                <div class="card-grid" role="region" aria-label="Dashboard Statistics">
+                    <!-- Four cards with consistent structure -->
+                    <article class="dashboard-card" id="characters-card">
+                        <h4>My Characters</h4>
+                        <p class="loading">Loading character data...</p>
+                    </article>
                     
-                    <div class="dashboard-card" id="games-card">
-                        <h3>Upcoming Games</h3>
-                        <p><span class="accent-text">Toronto</span> vs <span class="accent-text">Montreal</span></p>
-                        <p>Friday, March 21 - 7:00 PM</p>
-                        <p><span class="accent-text">Vancouver</span> vs <span class="accent-text">Boston</span></p>
-                        <p>Sunday, March 23 - 3:30 PM</p>
-                        <a href="#">View Schedule →</a>
-                    </div>
+                    <article class="dashboard-card" id="games-card">
+                        <h4>Upcoming Games</h4>
+                        <p class="loading">Loading game schedule...</p>
+                    </article>
                     
-                    <div class="dashboard-card" id="team-card">
-                        <h3>Team Status</h3>
-                        <p><span class="accent-text">Toronto Maple Leafs</span></p>
-                        <p>Record: <span class="accent-text">8-4-2</span></p>
-                        <p>Standing: <span class="accent-text">2nd</span> in Division</p>
-                        <a href="team-detail.html?id=1">Team Details →</a>
-                    </div>
+                    <article class="dashboard-card" id="team-card">
+                        <h4>Team Status</h4>
+                        <p class="loading">Loading team data...</p>
+                    </article>
                     
-                    <div class="dashboard-card" id="messages-card">
-                        <h3>Messages</h3>
-                        <p>You have <span class="accent-text">4</span> unread messages</p>
-                        <p><span class="accent-text">2</span> from Team Coach</p>
-                        <p><span class="accent-text">1</span> from League Admin</p>
-                        <a href="#">View Messages →</a>
-                    </div>
+                    <article class="dashboard-card" id="messages-card">
+                        <h4>Messages</h4>
+                        <p class="loading">Loading messages...</p>
+                    </article>
                 </div>
-            </section>
+            </div>
         </div>
     </main>
     
@@ -203,5 +177,14 @@
             });
         });
     </script>
+    <script type="module">
+        if (document.querySelector('.dashboard')) {
+          import('../js/dash-components.js').then(module => {
+            if (module.initDashboardExtras) {
+              module.initDashboardExtras();
+            }
+          });
+        }
+      </script>
 </body>
 </html>

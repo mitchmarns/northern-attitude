@@ -91,6 +91,7 @@ const apiRoutes = require('./routes/api');
 const userRoutes = require('./routes/user-routes');  
 const characterRoutes = require('./routes/character-routes');  
 const teamRoutes = require('./routes/team-routes'); 
+const threadRoutes = require('./routes/thread-routes');
 const messageRoutes = require('./routes/message-routes'); 
 const searchRoutes = require('./routes/search-routes');
 
@@ -100,6 +101,7 @@ app.use('/api', apiRoutes);
 app.use('/api/users', userRoutes);  
 app.use('/api', characterRoutes);  
 app.use('/api', teamRoutes);  
+app.use('/api/threads', threadRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/search', searchRoutes);
 

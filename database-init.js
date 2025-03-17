@@ -346,7 +346,48 @@ const tableSchemas = {
     BEGIN
       UPDATE CharacterContacts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
     END;
-  `
+  `,
+
+  roleplayThreads: `
+  CREATE TABLE IF NOT EXISTS RoleplayThreads (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    location VARCHAR(100),
+    status VARCHAR(20) DEFAULT 'open',
+    created_by_character_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(created_by_character_id) REFERENCES Characters(id),
+    CONSTRAINT check_status CHECK (status IN ('open', 'closed', 'completed'))
+  )
+`,
+
+threadParticipants: `
+  CREATE TABLE IF NOT EXISTS ThreadParticipants (
+    thread_id INTEGER,
+    character_id INTEGER,
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_post_at TIMESTAMP,
+    status VARCHAR(20) DEFAULT 'active',
+    PRIMARY KEY(thread_id, character_id),
+    FOREIGN KEY(thread_id) REFERENCES RoleplayThreads(id),
+    FOREIGN KEY(character_id) REFERENCES Characters(id),
+    CONSTRAINT check_participant_status CHECK (status IN ('active', 'inactive'))
+  )
+`,
+
+threadPosts: `
+  CREATE TABLE IF NOT EXISTS ThreadPosts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    thread_id INTEGER NOT NULL,
+    character_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(thread_id) REFERENCES RoleplayThreads(id),
+    FOREIGN KEY(character_id) REFERENCES Characters(id)
+  )
+`
 };
 
 // Define all indexes
