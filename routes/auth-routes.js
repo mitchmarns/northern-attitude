@@ -1,8 +1,8 @@
-// auth-routes.js - Authentication routes
+// routes/auth-routes.js - Authentication routes
 
 const express = require('express');
 const router = express.Router();
-const { authService } = require('../public/js/auth'); // Adjust path as needed
+const { authService, authMiddleware } = require('../public/js/auth');
 
 // Register a new user
 router.post('/register', async (req, res) => {
@@ -35,12 +35,16 @@ router.post('/logout', (req, res) => {
 });
 
 // Get current user info
-router.get('/current-user', async (req, res) => {
+router.get('/current-user', authMiddleware.isAuthenticated, async (req, res) => {
   try {
-    const middleware = require('../public/js/auth').authMiddleware; // Adjust path as needed
-    middleware.isAuthenticated(req, res, () => {
-      authService.getCurrentUser(req, res);
-    });
+    // Retrieve the user from the authenticated request
+    const user = {
+      id: req.user.id,
+      username: req.user.username,  // You might want to add these to the req.user object in the middleware
+      email: req.user.email
+    };
+    
+    res.status(200).json({ user });
   } catch (error) {
     console.error('Error in current-user route:', error);
     res.status(500).json({ message: 'Server error fetching current user' });

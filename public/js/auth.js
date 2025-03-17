@@ -2,7 +2,7 @@
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const { db } = require('../../config/db');
-const authDbOperations = require('./auth-db');
+const authDbOperations = require('../../config/db/auth-db');
 
 // Store active sessions in memory (in production, use Redis or another session store)
 const activeSessions = new Map();
@@ -15,31 +15,45 @@ const SESSION_EXPIRY = 24 * 60 * 60 * 1000;
 
 // Authentication middleware
 const authMiddleware = {
-  isAuthenticated: async (req, res, next) => {
-    const sessionToken = req.cookies.sessionToken;
+  // Middleware to check if user is authenticated
+  isAuthenticated: (req, res, next) => {
+    // Get session token from cookies
+    const sessionToken = req.cookies?.sessionToken;
     
     if (!sessionToken) {
-      return res.status(401).json({ message: 'No session token' });
+      return res.status(401).json({ message: 'Authentication required' });
     }
     
-    try {
-      // Verify session using database
-      const session = await authDbOperations.findValidSession(sessionToken);
-      
-      if (!session) {
-        return res.status(401).json({ message: 'Invalid or expired session' });
-      }
-      
-      // Attach user to request
-      req.user = {
-        id: session.user_id,
-        // Add other user details as needed
-      };
-      
-      next();
-    } catch (error) {
-      res.status(500).json({ message: 'Authentication error' });
+    // Check if session exists and is valid
+    const session = activeSessions.get(sessionToken);
+    if (!session) {
+      return res.status(401).json({ message: 'Invalid or expired session' });
     }
+    
+    // Check if session has expired
+    if (Date.now() > session.expiresAt) {
+      activeSessions.delete(sessionToken);
+      return res.status(401).json({ message: 'Session expired' });
+    }
+    
+    // Attach user data to request object
+    req.user = session.user;
+    
+    // Extend session expiration if "remember me" was checked
+    if (session.rememberMe) {
+      session.expiresAt = Date.now() + SESSION_EXPIRY;
+      activeSessions.set(sessionToken, session);
+    }
+    
+    next();
+  },
+  
+  // Middleware to check if user has admin role
+  isAdmin: (req, res, next) => {
+    if (!req.user || req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin privileges required' });
+    }
+    next();
   }
 };
 
@@ -118,53 +132,116 @@ const authService = {
     try {
       const { email, password, rememberMe } = req.body;
       
-      // Hash the password for comparison
-      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-      
-      // Verify credentials using new database method
-      const user = await authDbOperations.verifyUserCredentials(email, hashedPassword);
-      
-      if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+      // Validate input
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
       }
       
-      // Generate session token
-      const sessionToken = uuidv4();
-      const expiresAt = new Date(Date.now() + SESSION_EXPIRY);
-      
-      // Create session in database
-      await authDbOperations.createSession(
-        user.id, 
-        sessionToken, 
-        expiresAt
-      );
-      
-      // Set cookie and respond
-      res.cookie('sessionToken', sessionToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        expires: rememberMe ? expiresAt : undefined
+      // Get user by email
+      const user = await new Promise((resolve, reject) => {
+        db.get('SELECT * FROM Users WHERE email = ?', [email], (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        });
       });
       
-      res.json({ user, sessionToken });
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+      
+      // Verify password - handle both bcrypt hashed passwords and sample plaintext passwords
+      let passwordValid = false;
+
+      // First try direct comparison (for sample data)
+      if (password === user.password_hash) {
+        passwordValid = true;
+      } else {
+        // Then try bcrypt comparison (for real hashed passwords)
+        try {
+          passwordValid = await bcrypt.compare(password, user.password_hash);
+        } catch (err) {
+          console.error('Password comparison error:', err);
+        }
+      }
+
+      if (!passwordValid) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+      
+      // Update last login timestamp
+      await new Promise((resolve, reject) => {
+        db.run('UPDATE Users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id], err => {
+          if (err) reject(err);
+          resolve();
+        });
+      });
+      
+      // Create session
+      const sessionToken = uuidv4();
+      const expiresAt = Date.now() + SESSION_EXPIRY;
+      
+      // Store session
+      activeSessions.set(sessionToken, {
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        },
+        expiresAt,
+        rememberMe: !!rememberMe
+      });
+      
+      // Set cookie options
+      const cookieOptions = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // Set to true in production
+        sameSite: 'lax', // Changed from 'strict' to 'lax' for better compatibility
+        maxAge: rememberMe ? SESSION_EXPIRY : undefined // Session cookie if not "remember me"
+      };
+      
+      // Set session cookie
+      res.cookie('sessionToken', sessionToken, cookieOptions);
+      
+      res.status(200).json({
+        message: 'Login successful',
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role
+        }
+      });
+      
     } catch (error) {
-      // Error handling
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Server error during login' });
     }
   },
   
   // Logout user
-  logout: async (req, res) => {
-    const sessionToken = req.cookies.sessionToken;
+  logout: (req, res) => {
+    const sessionToken = req.cookies?.sessionToken;
     
     if (sessionToken) {
-      // Invalidate session in database
-      await authDbOperations.invalidateSession(sessionToken);
+      // Remove session
+      activeSessions.delete(sessionToken);
       
       // Clear cookie
       res.clearCookie('sessionToken');
     }
     
-    res.json({ message: 'Logged out successfully' });
+    res.status(200).json({ message: 'Logout successful' });
+  },
+  
+  // Get current user info
+  getCurrentUser: (req, res) => {
+    // User is added to req by isAuthenticated middleware
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+    
+    res.status(200).json({ user: req.user });
   },
   
   // Request password reset

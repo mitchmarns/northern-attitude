@@ -1,4 +1,5 @@
 const { dbQuery, dbExecute, dbQueryAll } = require('./utils');
+const bcrypt = require('bcrypt');
 
 // SQL queries for authentication
 const SQL = {
@@ -94,13 +95,34 @@ const authDbOperations = {
   },
   
   // Verify user credentials (for login)
-  verifyUserCredentials: (email, hashedPassword) => {
+  verifyUserCredentials: async (email, plainTextPassword) => {
     const query = `
-      SELECT id, username, email, role 
+      SELECT id, username, email, role, password_hash 
       FROM Users 
-      WHERE email = ? AND password_hash = ?
+      WHERE email = ?
     `;
-    return dbQuery(query, [email, hashedPassword]);
+    
+    try {
+      // Find user by email
+      const user = await dbQuery(query, [email]);
+      
+      // No user found
+      if (!user) return null;
+      
+      // Compare passwords
+      const isMatch = await bcrypt.compare(plainTextPassword, user.password_hash);
+      
+      if (isMatch) {
+        // Remove sensitive information
+        const { password_hash, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error verifying credentials:', error);
+      return null;
+    }
   },
   
   // Get user by email
