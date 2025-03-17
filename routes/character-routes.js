@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { characterOperations } = require('../config/db');
+const { contactOperations } = require('../config/db');
 const { authMiddleware } = require('../public/js/auth');
 
 // Cache common middleware for performance

@@ -78,18 +78,20 @@ app.use(async (req, res, next) => {
 // Import route handlers
 const authRoutes = require('./routes/auth');  
 const apiRoutes = require('./routes/api');  
-const characterRoutes = require('./routes/character-routes');  
 const userRoutes = require('./routes/user-routes');  
+const characterRoutes = require('./routes/character-routes');  
 const teamRoutes = require('./routes/team-routes'); 
 const messageRoutes = require('./routes/message-routes'); 
+const searchRoutes = require('./routes/search-routes');
 
 // Set up routes
 app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);  
-app.use('/api', characterRoutes);  
 app.use('/api/users', userRoutes);  
+app.use('/api', characterRoutes);  
 app.use('/api', teamRoutes);  
 app.use('/api/messages', messageRoutes);
+app.use('/api/search', searchRoutes);
 
 // Generate placeholder images
 app.get('/api/placeholder/:width/:height', (req, res) => {
