@@ -5,6 +5,7 @@ const contactOperations = require('./db/contact-db');
 const teamOperations = require('./db/team-db');
 const gameOperations = require('./db/game-db');
 const messageOperations = require('./db/message-db');
+const authDbOperations = require('./db/auth-db');
 
 // Export everything with the same structure
 module.exports = {
@@ -13,5 +14,6 @@ module.exports = {
   contactOperations,
   teamOperations,
   gameOperations,
-  messageOperations
+  messageOperations,
+  authDbOperations
 };

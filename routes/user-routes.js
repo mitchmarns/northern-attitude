@@ -347,4 +347,19 @@ router.get('/profile/:username', (req, res) => {
   });
 });
 
+router.get('/permissions', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const permissions = {
+      canCreateTeam: true,
+      canManageEvents: true,
+      canInviteUsers: true
+    };
+    
+    res.status(200).json(permissions);
+  } catch (error) {
+    console.error('Error checking user permissions:', error);
+    res.status(500).json({ message: 'Server error checking permissions' });
+  }
+});
+
 module.exports = router;

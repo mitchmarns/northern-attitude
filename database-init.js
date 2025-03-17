@@ -126,6 +126,20 @@ const tableSchemas = {
       CONSTRAINT check_role CHECK (role IN ('user', 'admin', 'moderator'))
     )
   `,
+
+  // User Sessions Table
+user_sessions: `
+CREATE TABLE IF NOT EXISTS UserSessions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL,
+  token VARCHAR(255) NOT NULL UNIQUE,
+  is_active INTEGER DEFAULT 1,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  invalidated_at TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+)
+`,
   
   user_profiles: `
     CREATE TABLE IF NOT EXISTS UserProfiles (
@@ -150,6 +164,8 @@ const tableSchemas = {
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
+      CONSTRAINT check_visibility CHECK (
+      visibility IN ('public', 'members', 'team')
     )
   `,
   

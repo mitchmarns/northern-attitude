@@ -1,4 +1,4 @@
-// dash.js - Simplified version without team invitations
+// Modified dash.js to fix permissions errors
 document.addEventListener('DOMContentLoaded', function() {
   // Check if user is authenticated, redirect to login if not
   window.authUtils.checkAuth(true);
@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
     messageBadge: document.getElementById('message-badge'),
     manageTeamLink: document.getElementById('manage-team-link'),
     teamDetailsLink: document.getElementById('team-details-link'),
-    // Remove team invites section references
     createTeamBtn: document.getElementById('create-team-btn')
   };
   
@@ -29,11 +28,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData('upcoming-games?limit=2', updateGamesCard),
     loadData('my-team', updateTeamCard),
     loadData('unread-messages', updateMessagesCard),
-    // Remove loadTeamInvitations()
-    checkTeamCreationPermission()
+    loadRecentActivity() // Replace checkTeamCreationPermission with this
   ]).catch(err => {
     console.error('Error initializing dashboard:', err);
   });
+
+  // Show create team button if it exists (no permission check needed for now)
+  if (elements.createTeamBtn) {
+    elements.createTeamBtn.style.display = 'inline-block';
+  }
   
   // Set up event listeners
   setupEventListeners();
@@ -159,8 +162,11 @@ document.addEventListener('DOMContentLoaded', function() {
       link.id = 'team-details-link';
       link.textContent = 'Team Details →';
       
-      // Check if user can manage this team
-      checkTeamManagementPermission(team.id);
+      // Always show manage team link if we have a team
+      if (elements.manageTeamLink) {
+        elements.manageTeamLink.href = `team-management.html?id=${team.id}`;
+        elements.manageTeamLink.style.display = 'block';
+      }
     } else {
       createAndAppendElement('p', elements.teamCard, 'You\'re not on a team yet.');
       createAndAppendElement('p', elements.teamCard, 'Join a team by selecting one in the character editor!');
@@ -196,53 +202,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Removed all team invitations related functions
-  
-  // Check if user has permission to manage their team
-  async function checkTeamManagementPermission(teamId) {
-    try {
-      const response = await fetch(`/api/teams/${teamId}/permissions`, {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch team permissions');
-      }
-      
-      const permissions = await response.json();
-      
-      // Show manage team link if user can manage the team
-      if (permissions.canManageTeam && elements.manageTeamLink) {
-        elements.manageTeamLink.href = `team-management.html?id=${teamId}`;
-        elements.manageTeamLink.style.display = 'block';
-      }
-    } catch (error) {
-      console.error('Error checking team permissions:', error);
-    }
-  }
-  
-  // Check if user has permission to create teams
-  async function checkTeamCreationPermission() {
-    try {
-      const response = await fetch('/api/user/permissions', {
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch user permissions');
-      }
-      
-      const permissions = await response.json();
-      
-      // Show create team button if user has permission
-      if (permissions.canCreateTeam && elements.createTeamBtn) {
-        elements.createTeamBtn.style.display = 'inline-block';
-      }
-    } catch (error) {
-      console.error('Error checking user permissions:', error);
-    }
-  }
-  
   // Function to display error messages
   function displayError(cardId, message = 'Please try again later') {
     const card = document.getElementById(`${cardId}-card`);
@@ -274,67 +233,9 @@ document.addEventListener('DOMContentLoaded', function() {
     return element;
   }
   
-  // Helper function to show toast messages
-  function showToast(message, duration = 3000) {
-    // Create toast container if it doesn't exist
-    let toastContainer = document.getElementById('toast-container');
-    if (!toastContainer) {
-      toastContainer = document.createElement('div');
-      toastContainer.id = 'toast-container';
-      toastContainer.style.position = 'fixed';
-      toastContainer.style.bottom = '20px';
-      toastContainer.style.right = '20px';
-      toastContainer.style.zIndex = '1000';
-      document.body.appendChild(toastContainer);
-    }
-    
-    // Create toast element
-    const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.textContent = message;
-    toast.style.backgroundColor = 'rgba(50, 50, 50, 0.9)';
-    toast.style.color = 'white';
-    toast.style.padding = '12px 20px';
-    toast.style.borderRadius = '4px';
-    toast.style.marginTop = '10px';
-    toast.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-    toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.3s ease';
-    
-    // Add to container
-    toastContainer.appendChild(toast);
-    
-    // Show toast
-    setTimeout(() => {
-      toast.style.opacity = '1';
-    }, 10);
-    
-    // Hide and remove after duration
-    setTimeout(() => {
-      toast.style.opacity = '0';
-      setTimeout(() => {
-        toast.remove();
-      }, 300);
-    }, duration);
-  }
-  
-  // Set up event listeners for the page
-  function setupEventListeners() {
-    // Add event listener for create team button if it exists
-    if (elements.createTeamBtn) {
-      elements.createTeamBtn.addEventListener('click', () => {
-        window.location.href = 'team-form.html';
-      });
-    }
-    
-    // Add event listener for recent activity refresh
-    loadRecentActivity();
-  }
-  
   // Function to load recent activity
   function loadRecentActivity() {
-    // For this example, this is still static data
-    // In a real app, you would fetch this from an API endpoint
+    // For this example, this is static data
     if (!elements.recentActivityList) return;
     
     // Clear the list
@@ -362,5 +263,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     elements.recentActivityList.appendChild(fragment);
+  }
+  
+  // Set up event listeners for the page
+  function setupEventListeners() {
+    // Add event listener for create team button if it exists
+    if (elements.createTeamBtn) {
+      elements.createTeamBtn.addEventListener('click', () => {
+        window.location.href = 'team-form.html';
+      });
+    }
   }
 });

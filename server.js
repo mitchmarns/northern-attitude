@@ -35,6 +35,7 @@ function tableExists(tableName) {
   });
 }
 
+
 // Create Express app
 const app = express();
 
@@ -149,8 +150,9 @@ app.use((err, req, res, next) => {
 });
 
 // Start server
+const { server } = require('./websocket-server');
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
