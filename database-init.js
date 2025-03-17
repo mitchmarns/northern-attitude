@@ -13,7 +13,7 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const CURRENT_SCHEMA_VERSION = 4; // Increment when schema changes
+const CURRENT_SCHEMA_VERSION = 5; // Increment when schema changes
 
 // Logger function for consistent output
 function log(type, message) {

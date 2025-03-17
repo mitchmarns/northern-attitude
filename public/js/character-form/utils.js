@@ -22,6 +22,9 @@ export async function loadTeams() {
       // Clear existing options
       DOM['team-id'].innerHTML = '<option value="">Not on a team</option>';
       
+      // Sort teams alphabetically for better user experience
+      teams.sort((a, b) => a.name.localeCompare(b.name));
+      
       // Add option for each team
       teams.forEach(team => {
         const option = document.createElement('option');
@@ -34,9 +37,25 @@ export async function loadTeams() {
       if (currentSelection) {
         DOM['team-id'].value = currentSelection;
       }
+      
+      // Add helpful label text
+      const teamLabel = document.querySelector('label[for="team-id"]');
+      if (teamLabel) {
+        teamLabel.textContent = 'Choose Team';
+      }
+      
+      const teamHelpText = document.querySelector('#team-id + .form-text');
+      if (teamHelpText) {
+        teamHelpText.textContent = 'Select a team for your character to join';
+      }
     }
   } catch (error) {
     console.error('Error loading teams:', error);
+    
+    // Show fallback message in dropdown
+    if (DOM['team-id']) {
+      DOM['team-id'].innerHTML = '<option value="">Unable to load teams</option>';
+    }
   }
 }
 

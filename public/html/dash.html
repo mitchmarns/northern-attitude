@@ -82,13 +82,7 @@
                     </div>
                 </section>
                 
-                <!-- Team Invitations Section -->
-                <section id="team-invites-section" class="team-invites-section" style="display: none;" aria-labelledby="invites-title">
-                    <h3 id="invites-title">Team Invitations</h3>
-                    <div id="team-invites-container">
-                        <!-- Will be populated via JavaScript -->
-                    </div>
-                </section>
+                <!-- Removed Team Invitations Section -->
                 
                 <!-- Dashboard Cards with improved layout -->
                 <div class="card-grid" role="region" aria-label="Dashboard Statistics">
@@ -125,58 +119,6 @@
 
     <script src="../js/auth-utils.js"></script>
     <script src="../js/dash.js"></script>
-    <script>
-        // Demo script for team invitations
-        document.addEventListener('DOMContentLoaded', function() {
-            // Handle invitation buttons
-            document.querySelectorAll('.accept-invite').forEach(button => {
-                button.addEventListener('click', function() {
-                    const requestId = this.getAttribute('data-request-id');
-                    // In a real app, this would make an API call
-                    
-                    // Show success feedback
-                    const parent = this.closest('.invite-card');
-                    parent.innerHTML = '<div class="invite-info"><p>Invitation accepted successfully!</p></div>';
-                    
-                    // Fade out after a delay
-                    setTimeout(() => {
-                        parent.style.opacity = '0';
-                        parent.style.transition = 'opacity 0.5s ease';
-                        
-                        setTimeout(() => {
-                            parent.remove();
-                            
-                            // If no more invites, hide the section
-                            if (document.querySelectorAll('.invite-card').length === 0) {
-                                document.getElementById('team-invites-section').style.display = 'none';
-                            }
-                        }, 500);
-                    }, 1500);
-                });
-            });
-            
-            document.querySelectorAll('.decline-invite').forEach(button => {
-                button.addEventListener('click', function() {
-                    const requestId = this.getAttribute('data-request-id');
-                    // In a real app, this would make an API call
-                    
-                    // Remove the invitation card
-                    const parent = this.closest('.invite-card');
-                    parent.style.opacity = '0';
-                    parent.style.transition = 'opacity 0.5s ease';
-                    
-                    setTimeout(() => {
-                        parent.remove();
-                        
-                        // If no more invites, hide the section
-                        if (document.querySelectorAll('.invite-card').length === 0) {
-                            document.getElementById('team-invites-section').style.display = 'none';
-                        }
-                    }, 500);
-                });
-            });
-        });
-    </script>
     <script type="module">
         if (document.querySelector('.dashboard')) {
           import('../js/dash-components.js').then(module => {

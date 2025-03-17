@@ -1,4 +1,4 @@
-// dash.js - Optimized frontend JavaScript for hockey roleplay dashboard
+// dash.js - Simplified version without team invitations
 document.addEventListener('DOMContentLoaded', function() {
   // Check if user is authenticated, redirect to login if not
   window.authUtils.checkAuth(true);
@@ -19,8 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
     messageBadge: document.getElementById('message-badge'),
     manageTeamLink: document.getElementById('manage-team-link'),
     teamDetailsLink: document.getElementById('team-details-link'),
-    teamInvitesSection: document.getElementById('team-invites-section'),
-    teamInvitesContainer: document.getElementById('team-invites-container'),
+    // Remove team invites section references
     createTeamBtn: document.getElementById('create-team-btn')
   };
   
@@ -30,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
     loadData('upcoming-games?limit=2', updateGamesCard),
     loadData('my-team', updateTeamCard),
     loadData('unread-messages', updateMessagesCard),
-    loadTeamInvitations(),
+    // Remove loadTeamInvitations()
     checkTeamCreationPermission()
   ]).catch(err => {
     console.error('Error initializing dashboard:', err);
@@ -164,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
       checkTeamManagementPermission(team.id);
     } else {
       createAndAppendElement('p', elements.teamCard, 'You\'re not on a team yet.');
-      createAndAppendElement('p', elements.teamCard, 'Join a team or create your own!');
+      createAndAppendElement('p', elements.teamCard, 'Join a team by selecting one in the character editor!');
       
       const link = createAndAppendElement('a', elements.teamCard);
       link.href = 'teams.html';
@@ -197,145 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Function to load team invitations
-  async function loadTeamInvitations() {
-    try {
-      const response = await fetch('/api/user/team-invitations', {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      const invitations = data.invitations || [];
-      
-      updateTeamInvitations(invitations);
-      
-    } catch (error) {
-      console.error('Error loading team invitations:', error);
-      
-      if (elements.teamInvitesSection) {
-        elements.teamInvitesSection.style.display = 'none';
-      }
-    }
-  }
-  
-  // Function to update team invitations UI
-  function updateTeamInvitations(invitations) {
-    if (!elements.teamInvitesSection || !elements.teamInvitesContainer) return;
-    
-    // Show/hide section based on if there are invitations
-    elements.teamInvitesSection.style.display = invitations.length > 0 ? 'block' : 'none';
-    
-    if (invitations.length === 0) return;
-    
-    // Clear container
-    elements.teamInvitesContainer.innerHTML = '';
-    
-    // Create invitation cards using document fragment for better performance
-    const fragment = document.createDocumentFragment();
-    
-    invitations.forEach(invitation => {
-      const inviteCard = document.createElement('div');
-      inviteCard.className = 'invite-card';
-      inviteCard.dataset.invitationId = invitation.id;
-      
-      inviteCard.innerHTML = `
-        <div class="invite-info">
-          <h4>Invitation to join ${invitation.team_name}</h4>
-          <p>You've been invited to join this team for character ${invitation.character_name}.</p>
-        </div>
-        <div class="invite-actions">
-          <button class="btn btn-primary accept-invite">Accept</button>
-          <button class="btn btn-secondary decline-invite">Decline</button>
-        </div>
-      `;
-      
-      fragment.appendChild(inviteCard);
-    });
-    
-    elements.teamInvitesContainer.appendChild(fragment);
-    
-    // Add event listeners to new buttons
-    elements.teamInvitesContainer.querySelectorAll('.accept-invite').forEach(button => {
-      button.addEventListener('click', handleAcceptInvitation);
-    });
-    
-    elements.teamInvitesContainer.querySelectorAll('.decline-invite').forEach(button => {
-      button.addEventListener('click', handleDeclineInvitation);
-    });
-  }
-  
-  // Handler for accepting invitations
-  function handleAcceptInvitation() {
-    const inviteCard = this.closest('.invite-card');
-    const requestId = inviteCard.dataset.invitationId;
-    
-    acceptTeamInvitation(requestId, inviteCard);
-  }
-  
-  // Handler for declining invitations
-  function handleDeclineInvitation() {
-    const inviteCard = this.closest('.invite-card');
-    const requestId = inviteCard.dataset.invitationId;
-    
-    declineTeamInvitation(requestId, inviteCard);
-  }
-  
-  // Function to accept a team invitation
-  async function acceptTeamInvitation(requestId, inviteCard) {
-    try {
-      const response = await fetch(`/api/teams/join-requests/${requestId}/approve`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to accept invitation');
-      }
-      
-      // Show success feedback directly in the card
-      inviteCard.innerHTML = '<div class="invite-info"><p>Invitation accepted successfully!</p></div>';
-      
-      // Fade out and remove after delay
-      fadeOutAndRemove(inviteCard);
-      
-      // Reload dashboard data
-      loadData('my-characters', updateCharactersCard);
-      loadData('my-team', updateTeamCard);
-      
-    } catch (error) {
-      console.error('Error accepting invitation:', error);
-      showToast('Failed to accept invitation. Please try again.');
-    }
-  }
-  
-  // Function to decline a team invitation
-  async function declineTeamInvitation(requestId, inviteCard) {
-    try {
-      const response = await fetch(`/api/teams/join-requests/${requestId}/reject`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to decline invitation');
-      }
-      
-      // Fade out and remove
-      fadeOutAndRemove(inviteCard);
-      
-    } catch (error) {
-      console.error('Error declining invitation:', error);
-      showToast('Failed to decline invitation. Please try again.');
-    }
-  }
+  // Removed all team invitations related functions
   
   // Check if user has permission to manage their team
   async function checkTeamManagementPermission(teamId) {
@@ -413,23 +274,6 @@ document.addEventListener('DOMContentLoaded', function() {
     return element;
   }
   
-  // Helper function to fade out and remove an element
-  function fadeOutAndRemove(element, delay = 1500, duration = 500) {
-    setTimeout(() => {
-      element.style.opacity = '0';
-      element.style.transition = `opacity ${duration}ms ease`;
-      
-      setTimeout(() => {
-        element.remove();
-        
-        // Check if there are any invitation cards left
-        if (elements.teamInvitesContainer && !elements.teamInvitesContainer.querySelector('.invite-card')) {
-          elements.teamInvitesSection.style.display = 'none';
-        }
-      }, duration);
-    }, delay);
-  }
-  
   // Helper function to show toast messages
   function showToast(message, duration = 3000) {
     // Create toast container if it doesn't exist
@@ -437,6 +281,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (!toastContainer) {
       toastContainer = document.createElement('div');
       toastContainer.id = 'toast-container';
+      toastContainer.style.position = 'fixed';
+      toastContainer.style.bottom = '20px';
+      toastContainer.style.right = '20px';
+      toastContainer.style.zIndex = '1000';
       document.body.appendChild(toastContainer);
     }
     
@@ -444,18 +292,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;
+    toast.style.backgroundColor = 'rgba(50, 50, 50, 0.9)';
+    toast.style.color = 'white';
+    toast.style.padding = '12px 20px';
+    toast.style.borderRadius = '4px';
+    toast.style.marginTop = '10px';
+    toast.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s ease';
     
     // Add to container
     toastContainer.appendChild(toast);
     
     // Show toast
     setTimeout(() => {
-      toast.classList.add('show');
+      toast.style.opacity = '1';
     }, 10);
     
     // Hide and remove after duration
     setTimeout(() => {
-      toast.classList.remove('show');
+      toast.style.opacity = '0';
       setTimeout(() => {
         toast.remove();
       }, 300);
@@ -507,9 +363,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     elements.recentActivityList.appendChild(fragment);
   }
-  
-  // Add CSS styles for new features like toasts
-  
-    
-    document.head.appendChild(style);
-  });
+});
