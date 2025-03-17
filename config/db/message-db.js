@@ -97,8 +97,24 @@ const SQL = {
 
 const messageOperations = {
   // Get character's conversations
-  getConversationMessages: async (conversationId, viewerCharacterId) => {
-    return dbQueryAll(SQL.getConversationMessages, [viewerCharacterId, conversationId]);
+  getCharacterConversations: (characterId) => {
+    return dbQueryAll(`
+      SELECT c.id, c.title, c.is_group, c.created_at, c.updated_at,
+             (SELECT COUNT(*) FROM CharacterMessages m 
+              WHERE m.conversation_id = c.id 
+              AND m.is_read = 0 
+              AND m.sender_character_id != ?) as unread_count,
+             (SELECT m.content FROM CharacterMessages m 
+              WHERE m.conversation_id = c.id 
+              ORDER BY m.created_at DESC LIMIT 1) as last_message,
+             (SELECT m.created_at FROM CharacterMessages m 
+              WHERE m.conversation_id = c.id 
+              ORDER BY m.created_at DESC LIMIT 1) as last_message_at
+      FROM CharacterConversations c
+      JOIN CharacterConversationParticipants cp ON c.id = cp.conversation_id
+      WHERE cp.character_id = ?
+      ORDER BY last_message_at DESC
+    `, [characterId, characterId]);
   },
   
   // Get messages for a conversation

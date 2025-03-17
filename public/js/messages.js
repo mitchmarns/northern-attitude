@@ -1,45 +1,4 @@
 // character-phone.js - Client-side functionality for character messaging
-// Check for URL parameters to start a new conversation
-const urlParams = new URLSearchParams(window.location.search);
-const newMessage = urlParams.get('new') === '1';
-const senderId = urlParams.get('sender');
-const recipientId = urlParams.get('recipient');
-const recipientName = urlParams.get('name');
-
-// If parameters found, prepare to open new message modal
-if (newMessage && senderId && recipientId && recipientName) {
-  // Store in global variables to use after page load
-  let directMessageParams = {
-    senderId,
-    recipientId,
-    recipientName
-  };
-
-  // Wait for page to load and character to be selected
-  window.addEventListener('DOMContentLoaded', () => {
-    // If character selector is available, set it to the sender
-    if (elements.characterSelector) {
-      elements.characterSelector.value = directMessageParams.senderId;
-      currentCharacterId = directMessageParams.senderId;
-      
-      // Load conversations for this character
-      loadCharacterConversations(directMessageParams.senderId).then(() => {
-        // Open new message modal after loading conversations
-        openNewMessageModal();
-        
-        // Pre-populate recipient
-        elements.searchCharacters.value = directMessageParams.recipientName;
-        selectedRecipientId = directMessageParams.recipientId;
-        selectedRecipientName = directMessageParams.recipientName;
-        
-        // Focus on message content
-        setTimeout(() => {
-          elements.newMessageContent.focus();
-        }, 200);
-      });
-    }
-  });
-}
 
 document.addEventListener('DOMContentLoaded', function() {
   // Check if user is authenticated
@@ -87,6 +46,14 @@ document.addEventListener('DOMContentLoaded', function() {
     phoneSuccess: document.getElementById('phone-success')
   };
   
+  // Ensure modals are hidden initially
+  if (elements.newMessageModal) {
+    elements.newMessageModal.style.display = 'none';
+  }
+  if (elements.conversationInfoModal) {
+    elements.conversationInfoModal.style.display = 'none';
+  }
+  
   // Load user's characters
   loadUserCharacters();
   
@@ -96,6 +63,16 @@ document.addEventListener('DOMContentLoaded', function() {
   // Update phone time
   updatePhoneTime();
   setInterval(updatePhoneTime, 60000); // Update every minute
+  
+  // If URL has parameters for a new message, handle them only after user clicks "New Message"
+  const urlParams = new URLSearchParams(window.location.search);
+  const newMessage = urlParams.get('new') === '1';
+  const senderId = urlParams.get('sender');
+  const recipientId = urlParams.get('recipient');
+  const recipientName = urlParams.get('name');
+  
+  // Flag to indicate if the user wants to create a new message based on URL params
+  let hasDirectMessageParams = newMessage && senderId && recipientId && recipientName;
   
   // Functions
   
@@ -151,7 +128,9 @@ document.addEventListener('DOMContentLoaded', function() {
   async function loadCharacterConversations(characterId) {
     try {
       // Show loading indicator
-      elements.conversationList.innerHTML = '<div class="loading-indicator">Loading conversations...</div>';
+      if (elements.conversationList) {
+        elements.conversationList.innerHTML = '<div class="loading-indicator">Loading conversations...</div>';
+      }
       
       const response = await fetch(`/api/messages/characters/${characterId}/conversations`, {
         method: 'GET',
@@ -186,7 +165,9 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (error) {
       console.error('Error loading conversations:', error);
-      elements.conversationList.innerHTML = '<div class="no-conversations">Failed to load conversations. Please try again.</div>';
+      if (elements.conversationList) {
+        elements.conversationList.innerHTML = '<div class="no-conversations">Failed to load conversations. Please try again.</div>';
+      }
     }
   }
   
@@ -256,11 +237,13 @@ document.addEventListener('DOMContentLoaded', function() {
       currentConversationId = conversationId;
       
       // Show conversation app, hide messages app
-      elements.messagesApp.style.display = 'none';
-      elements.conversationApp.style.display = 'flex';
+      if (elements.messagesApp) elements.messagesApp.style.display = 'none';
+      if (elements.conversationApp) elements.conversationApp.style.display = 'flex';
       
       // Show loading indicator
-      elements.messagesContainer.innerHTML = '<div class="loading-indicator">Loading messages...</div>';
+      if (elements.messagesContainer) {
+        elements.messagesContainer.innerHTML = '<div class="loading-indicator">Loading messages...</div>';
+      }
       
       // Get conversation messages
       const response = await fetch(`/api/messages/conversations/${conversationId}/messages?characterId=${characterId}`, {
@@ -290,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
       activeConversation = conversations.find(c => c.id === conversationId);
       
       // Update conversation title
-      if (activeConversation) {
+      if (activeConversation && elements.conversationTitle) {
         if (activeConversation.is_group) {
           elements.conversationTitle.textContent = activeConversation.title || 'Group Conversation';
         } else {
@@ -301,17 +284,23 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Store participants for the info modal
-      activeConversation.participants = participants;
+      if (activeConversation) {
+        activeConversation.participants = participants;
+      }
       
       // Display messages
       displayMessages(messages, characterId);
       
       // Focus on input
-      elements.messageInput.focus();
+      if (elements.messageInput) {
+        elements.messageInput.focus();
+      }
       
     } catch (error) {
       console.error('Error opening conversation:', error);
-      elements.messagesContainer.innerHTML = '<div class="no-messages">Failed to load messages. Please try again.</div>';
+      if (elements.messagesContainer) {
+        elements.messagesContainer.innerHTML = '<div class="no-messages">Failed to load messages. Please try again.</div>';
+      }
     }
   }
   
@@ -348,10 +337,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const formattedTime = messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
         // Show sender info for group conversations or messages from others
-        const showSender = activeConversation.is_group || message.sender_character_id != characterId;
-        
         let senderHtml = '';
-        if (showSender) {
+        if (activeConversation && (activeConversation.is_group || message.sender_character_id != characterId)) {
           senderHtml = `
             <div class="message-character-info">
               <div class="message-sender">${message.custom_name || message.sender_name}</div>
@@ -395,7 +382,9 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Clear message input
-      elements.messageInput.value = '';
+      if (elements.messageInput) {
+        elements.messageInput.value = '';
+      }
       
       // Reload conversation to show the new message
       openConversation(conversationId, characterId);
@@ -451,23 +440,75 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   // Function to search for characters
-  async function searchCharacters(query) {
+  async function searchCharacters(query, excludeId) {
+    if (!elements.searchResults) return;
+  
+    // Show loading indicator
+    elements.searchResults.innerHTML =
+      '<p class="loading-text">Searching...</p>';
+  
     try {
-      const response = await fetch(`/api/characters/search?q=${encodeURIComponent(query)}&excludeUserId=${currentCharacterId}`, {
-        method: 'GET',
-        credentials: 'include'
-      });
-      
+      // Fix the API endpoint to match what's defined in search-routes.js
+      const response = await fetch(
+        `/api/characters/search?q=${encodeURIComponent(query)}&excludeUserId=${excludeId}`,
+        {
+          method: 'GET',
+          credentials: 'include',
+        }
+      );
+  
       if (!response.ok) {
         throw new Error('Failed to search characters');
       }
-      
+  
       const characters = await response.json();
-      displaySearchResults(characters);
-      
+  
+      if (characters.length === 0) {
+        elements.searchResults.innerHTML =
+          '<p class="empty-text">No characters found matching your search.</p>';
+        return;
+      }
+  
+      // Build search results
+      elements.searchResults.innerHTML = "";
+  
+      characters.forEach((character) => {
+        const resultItem = document.createElement("div");
+        resultItem.className = "character-result";
+        resultItem.innerHTML = `
+          <div class="character-avatar">
+            <img src="${
+              character.avatar_url || "/api/placeholder/60/60"
+            }" alt="${character.name}">
+          </div>
+          <div class="character-info">
+            <div class="character-name">${character.name}</div>
+            <div class="character-details">
+              <span>${getFullPosition(character.position) || "Unknown"}</span>
+              <span>${character.team_name || "No Team"}</span>
+            </div>
+          </div>
+        `;
+  
+        // Add click event to open edit modal
+        resultItem.addEventListener("click", () => {
+          selectedRecipientId = character.id;
+          selectedRecipientName = character.name;
+          
+          // Update search input and clear results
+          elements.searchCharacters.value = character.name;
+          elements.searchResults.innerHTML = '';
+          
+          // Focus on message content
+          elements.newMessageContent.focus();
+        });
+  
+        elements.searchResults.appendChild(resultItem);
+      });
     } catch (error) {
-      console.error('Error searching characters:', error);
-      elements.searchResults.innerHTML = '<div class="error-message">Failed to search characters. Please try again.</div>';
+      console.error("Error searching characters:", error);
+      elements.searchResults.innerHTML =
+        '<p class="error-text">Failed to search characters. Please try again.</p>';
     }
   }
   
@@ -508,11 +549,15 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedRecipientName = character.name;
         
         // Update search input and clear results
-        elements.searchCharacters.value = character.name;
+        if (elements.searchCharacters) {
+          elements.searchCharacters.value = character.name;
+        }
         elements.searchResults.innerHTML = '';
         
         // Focus on message content
-        elements.newMessageContent.focus();
+        if (elements.newMessageContent) {
+          elements.newMessageContent.focus();
+        }
       });
       
       elements.searchResults.appendChild(characterItem);
@@ -527,9 +572,11 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.participantsList.innerHTML = '';
     
     // Set modal title
-    elements.conversationInfoTitle.textContent = activeConversation.is_group ? 
-      activeConversation.title || 'Group Conversation' : 
-      'Conversation Info';
+    if (elements.conversationInfoTitle) {
+      elements.conversationInfoTitle.textContent = activeConversation.is_group ? 
+        activeConversation.title || 'Group Conversation' : 
+        'Conversation Info';
+    }
     
     // Add participants
     activeConversation.participants.forEach(participant => {
@@ -552,36 +599,64 @@ document.addEventListener('DOMContentLoaded', function() {
       elements.participantsList.appendChild(participantItem);
     });
     
-    // Show modal
-    elements.conversationInfoModal.style.display = 'flex';
+    // Show modal only if it exists
+    if (elements.conversationInfoModal) {
+      elements.conversationInfoModal.style.display = 'flex';
+    }
   }
   
   // Function to open new message modal
   function openNewMessageModal() {
-    // Reset modal
-    elements.searchCharacters.value = '';
-    elements.newMessageContent.value = '';
-    elements.searchResults.innerHTML = '';
+    // Make sure the modal exists
+    if (!elements.newMessageModal) return;
+    
+    // Reset modal fields
+    if (elements.searchCharacters) elements.searchCharacters.value = '';
+    if (elements.newMessageContent) elements.newMessageContent.value = '';
+    if (elements.searchResults) elements.searchResults.innerHTML = '';
     selectedRecipientId = null;
     selectedRecipientName = null;
+    
+    // If we have direct message parameters from URL, use them
+    if (hasDirectMessageParams && elements.characterSelector) {
+      elements.characterSelector.value = senderId;
+      currentCharacterId = senderId;
+      
+      if (elements.searchCharacters) {
+        elements.searchCharacters.value = recipientName;
+      }
+      selectedRecipientId = recipientId;
+      selectedRecipientName = recipientName;
+      
+      // Clear the flag so we don't do this again
+      hasDirectMessageParams = false;
+    }
     
     // Show modal
     elements.newMessageModal.style.display = 'flex';
     
-    // Focus search input
+    // Focus search input or message content
     setTimeout(() => {
-      elements.searchCharacters.focus();
+      if (selectedRecipientId && elements.newMessageContent) {
+        elements.newMessageContent.focus();
+      } else if (elements.searchCharacters) {
+        elements.searchCharacters.focus();
+      }
     }, 100);
   }
   
   // Function to close new message modal
   function closeNewMessageModal() {
-    elements.newMessageModal.style.display = 'none';
+    if (elements.newMessageModal) {
+      elements.newMessageModal.style.display = 'none';
+    }
   }
   
   // Function to close conversation info modal
   function closeConversationInfoModal() {
-    elements.conversationInfoModal.style.display = 'none';
+    if (elements.conversationInfoModal) {
+      elements.conversationInfoModal.style.display = 'none';
+    }
   }
   
   // Function to show error message
@@ -680,7 +755,9 @@ document.addEventListener('DOMContentLoaded', function() {
           loadCharacterConversations(characterId);
         } else {
           // No character selected
-          elements.conversationList.innerHTML = '<div class="loading-indicator">Select a character to view messages</div>';
+          if (elements.conversationList) {
+            elements.conversationList.innerHTML = '<div class="loading-indicator">Select a character to view messages</div>';
+          }
         }
       });
     }
@@ -689,8 +766,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (elements.backToMessages) {
       elements.backToMessages.addEventListener('click', () => {
         // Hide conversation view, show messages list
-        elements.conversationApp.style.display = 'none';
-        elements.messagesApp.style.display = 'flex';
+        if (elements.conversationApp) elements.conversationApp.style.display = 'none';
+        if (elements.messagesApp) elements.messagesApp.style.display = 'flex';
         
         // Clear current conversation
         currentConversationId = null;
@@ -705,16 +782,18 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (!currentCharacterId || !currentConversationId) return;
         
-        const content = elements.messageInput.value.trim();
+        const content = elements.messageInput ? elements.messageInput.value.trim() : '';
         if (!content) return;
         
         sendMessage(currentConversationId, currentCharacterId, content);
       });
     }
     
-    // New message button
+    // New message button - handle both the new message and URL params case
     if (elements.newMessageBtn) {
-      elements.newMessageBtn.addEventListener('click', () => {
+      elements.newMessageBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        
         if (!currentCharacterId) {
           showError('Please select a character first');
           return;
@@ -726,7 +805,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Conversation info button
     if (elements.conversationInfo) {
-      elements.conversationInfo.addEventListener('click', () => {
+      elements.conversationInfo.addEventListener('click', (e) => {
+        e.preventDefault();
         showConversationParticipants();
       });
     }
@@ -755,7 +835,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (query.length >= 2) {
           searchCharacters(query);
-        } else {
+        } else if (elements.searchResults) {
           elements.searchResults.innerHTML = '';
         }
       }, 300));
@@ -774,7 +854,7 @@ document.addEventListener('DOMContentLoaded', function() {
           return;
         }
         
-        const content = elements.newMessageContent.value.trim();
+        const content = elements.newMessageContent ? elements.newMessageContent.value.trim() : '';
         if (!content) {
           showError('Please enter a message');
           return;
@@ -786,11 +866,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Close modals when clicking outside
     window.addEventListener('click', (e) => {
-      if (e.target === elements.newMessageModal) {
+      if (elements.newMessageModal && e.target === elements.newMessageModal) {
         closeNewMessageModal();
       }
       
-      if (e.target === elements.conversationInfoModal) {
+      if (elements.conversationInfoModal && e.target === elements.conversationInfoModal) {
         closeConversationInfoModal();
       }
     });
@@ -800,8 +880,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (phoneHomeButton) {
       phoneHomeButton.addEventListener('click', () => {
         // Hide conversation view, show messages list
-        elements.conversationApp.style.display = 'none';
-        elements.messagesApp.style.display = 'flex';
+        if (elements.conversationApp) elements.conversationApp.style.display = 'none';
+        if (elements.messagesApp) elements.messagesApp.style.display = 'flex';
         
         // Clear current conversation
         currentConversationId = null;
