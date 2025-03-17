@@ -25,7 +25,7 @@ router.get('/teams/:id', authMiddleware.isAuthenticated, async (req, res) => {
     const team = await new Promise((resolve, reject) => {
       db.get(`
         SELECT id, name, logo_url, description, record, 
-               primary_color, secondary_color
+               primary_color, secondary_color, tertiary_color
         FROM Teams 
         WHERE id = ?
       `, [teamId], (err, row) => {
@@ -91,7 +91,7 @@ router.get('/teams/:id', authMiddleware.isAuthenticated, async (req, res) => {
             ties, 
             goals_for, 
             goals_against
-          FROM TeamStats 
+          FROM TeamsStats 
           WHERE team_id = ?
         `, [teamId], (err, row) => {
           if (err) reject(err);

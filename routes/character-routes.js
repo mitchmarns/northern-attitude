@@ -4,6 +4,7 @@ const router = express.Router();
 const { characterOperations } = require('../config/db');
 const { contactOperations } = require('../config/db');
 const { authMiddleware } = require('../public/js/auth');
+const { dbQueryAll } = require('../config/db/utils');
 
 // Cache common middleware for performance
 const authRequired = authMiddleware.isAuthenticated;

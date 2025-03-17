@@ -1,5 +1,6 @@
 // config/db/contact-db.js
-const { db } = require('../db');
+const { db } = require('./connection');
+const { dbQuery, dbQueryAll, dbExecute } = require('./utils');
 
 /**
  * Operations for character contacts
@@ -21,7 +22,7 @@ const contactOperations = {
           c.avatar_url as original_avatar
         FROM CharacterContacts cc
         JOIN Characters c ON cc.target_character_id = c.id
-        WHERE cc.character_id = ?
+        WHERE cc.owner_character_id = ?
         ORDER BY cc.custom_name, c.name
       `, [characterId], (err, rows) => {
         if (err) {
@@ -51,7 +52,7 @@ const contactOperations = {
           c.avatar_url as original_avatar
         FROM CharacterContacts cc
         JOIN Characters c ON cc.target_character_id = c.id
-        WHERE cc.character_id = ? AND cc.target_character_id = ?
+        WHERE cc.owner_character_id = ? AND cc.target_character_id = ?
       `, [characterId, targetId], (err, row) => {
         if (err) {
           console.error('Error getting character contact:', err);
@@ -75,7 +76,7 @@ const contactOperations = {
     return new Promise((resolve, reject) => {
       // Check if contact already exists
       db.get(
-        'SELECT * FROM CharacterContacts WHERE character_id = ? AND target_character_id = ?',
+        'SELECT * FROM CharacterContacts WHERE owner_character_id = ? AND target_character_id = ?',
         [characterId, targetId],
         (err, existingContact) => {
           if (err) {
@@ -86,7 +87,7 @@ const contactOperations = {
           if (existingContact) {
             // Update existing contact
             db.run(
-              'UPDATE CharacterContacts SET custom_name = ?, custom_image = ? WHERE character_id = ? AND target_character_id = ?',
+              'UPDATE CharacterContacts SET custom_name = ?, custom_image = ? WHERE owner_character_id = ? AND target_character_id = ?',
               [customName, customImage, characterId, targetId],
               function(err) {
                 if (err) {
@@ -104,7 +105,7 @@ const contactOperations = {
           } else {
             // Create new contact
             db.run(
-              'INSERT INTO CharacterContacts (character_id, target_character_id, custom_name, custom_image) VALUES (?, ?, ?, ?)',
+              'INSERT INTO CharacterContacts (owner_character_id, target_character_id, custom_name, custom_image) VALUES (?, ?, ?, ?)',
               [characterId, targetId, customName, customImage],
               function(err) {
                 if (err) {
@@ -134,7 +135,7 @@ const contactOperations = {
   deleteCharacterContact: async (characterId, targetId) => {
     return new Promise((resolve, reject) => {
       db.run(
-        'DELETE FROM CharacterContacts WHERE character_id = ? AND target_character_id = ?',
+        'DELETE FROM CharacterContacts WHERE owner_character_id = ? AND target_character_id = ?',
         [characterId, targetId],
         function(err) {
           if (err) {

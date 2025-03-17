@@ -108,7 +108,29 @@ const characterOperations = {
   deleteCharacter: (characterId) => {
     return dbExecute(SQL.deleteCharacter, [characterId])
       .then(result => result.changes);
-  }
+  },
+
+    // Get recent games for a character
+    getCharacterGames: (characterId, limit = 5) => {
+      const query = `
+        SELECT g.*, 
+               ht.name as home_team_name, 
+               at.name as away_team_name,
+               gs.goals, 
+               gs.assists
+        FROM Games g
+        JOIN Teams ht ON g.home_team_id = ht.id
+        JOIN Teams at ON g.away_team_id = at.id
+        LEFT JOIN GameStatistics gs ON g.id = gs.game_id AND gs.character_id = ?
+        WHERE g.date < DATETIME('now')
+        AND (g.home_team_id = (SELECT team_id FROM Characters WHERE id = ?) 
+             OR g.away_team_id = (SELECT team_id FROM Characters WHERE id = ?))
+        ORDER BY g.date DESC
+        LIMIT ?
+      `;
+      
+      return dbQueryAll(query, [characterId, characterId, characterId, limit]);
+    }
 };
 
 module.exports = characterOperations;

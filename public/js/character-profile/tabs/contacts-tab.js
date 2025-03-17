@@ -145,7 +145,7 @@ export async function setupContactsTab(character) {
 
     try {
       const response = await fetch(
-        `/api/characters/search?q=${encodeURIComponent(
+        `/api/search?q=${encodeURIComponent(
           query
         )}&excludeUserId=${excludeId}`,
         {

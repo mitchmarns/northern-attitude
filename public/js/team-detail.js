@@ -177,17 +177,28 @@ async function loadTeamRoster(teamId) {
       credentials: 'include'
     });
     
+    console.log('Roster Response Status:', response.status);
+    
     if (!response.ok) {
       throw new Error('Failed to fetch team roster');
     }
     
     const roster = await response.json();
+    
+    // Add detailed logging
+    console.log('Roster Raw Data:', roster);
+    console.log('Roster Length:', roster.length);
+    
+    if (roster.length === 0) {
+      console.log('Roster is empty');
+    }
+    
     displayTeamRoster(roster);
   } catch (error) {
     console.error('Error loading team roster:', error);
     const rosterContainer = document.getElementById('team-roster');
     if (rosterContainer) {
-      rosterContainer.innerHTML = '<p>Failed to load team roster. Please try again later.</p>';
+      rosterContainer.innerHTML = `<p>Failed to load team roster: ${error.message}</p>`;
     }
   }
 }
@@ -204,21 +215,6 @@ function displayTeamRoster(roster) {
     rosterContainer.innerHTML = '<p>No players on this team yet.</p>';
     return;
   }
-  
-  // Group players by position
-  const positionGroups = {
-    'C': [],
-    'LW': [],
-    'RW': [],
-    'D': [],
-    'G': []
-  };
-  
-  roster.forEach(player => {
-    if (positionGroups[player.position]) {
-      positionGroups[player.position].push(player);
-    }
-  });
   
   // Create roster table
   const table = document.createElement('table');
@@ -242,45 +238,36 @@ function displayTeamRoster(roster) {
   // Create table body
   const tbody = document.createElement('tbody');
   
-  // Add position headers and players
-  const positions = [
-    { code: 'C', name: 'Centers' },
-    { code: 'LW', name: 'Left Wings' },
-    { code: 'RW', name: 'Right Wings' },
-    { code: 'D', name: 'Defensemen' },
-    { code: 'G', name: 'Goalies' }
-  ];
-  
-  positions.forEach(position => {
-    const players = positionGroups[position.code];
-    
-    if (players.length > 0) {
-      // Add position header
-      const headerRow = document.createElement('tr');
-      headerRow.className = 'position-header';
-      headerRow.innerHTML = `<td colspan="7">${position.name}</td>`;
-      tbody.appendChild(headerRow);
-      
-      // Add players
-      players.forEach(player => {
-        const stats = JSON.parse(player.stats_json);
-        const points = (stats.goals || 0) + (stats.assists || 0);
-        
-        const playerRow = document.createElement('tr');
-        playerRow.innerHTML = `
-          <td>
-            <a href="character-profile.html?id=${player.id}" class="player-name">${player.name}</a>
-          </td>
-          <td>${position.code}</td>
-          <td>${stats.games || 0}</td>
-          <td>${stats.goals || 0}</td>
-          <td>${stats.assists || 0}</td>
-          <td>${points}</td>
-          <td>${stats.plus_minus || 0}</td>
-        `;
-        tbody.appendChild(playerRow);
-      });
+  roster.forEach(player => {
+    // Safely parse stats
+    let stats = {};
+    try {
+      stats = JSON.parse(player.stats_json);
+    } catch (error) {
+      console.error('Error parsing stats for player:', player.character_name, error);
+      stats = {};
     }
+    
+    // Calculate points
+    const points = (stats.goals || 0) + (stats.assists || 0);
+    
+    const playerRow = document.createElement('tr');
+    playerRow.innerHTML = `
+      <td>
+        <div class="player-info">
+          <img src="${player.avatar_url || '/api/placeholder/50/50'}" alt="${player.character_name}" class="player-avatar">
+          <a href="character-profile.html?id=${player.character_id}" class="player-name">${player.character_name}</a>
+        </div>
+      </td>
+      <td>${player.position}</td>
+      <td>${stats.games || 0}</td>
+      <td>${stats.goals || 0}</td>
+      <td>${stats.assists || 0}</td>
+      <td>${points}</td>
+      <td>${stats.plus_minus || 0}</td>
+    `;
+    
+    tbody.appendChild(playerRow);
   });
   
   table.appendChild(tbody);
