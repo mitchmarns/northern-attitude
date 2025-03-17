@@ -20,33 +20,107 @@ router.get('/teams', async (req, res) => {
 router.get('/teams/:id', authMiddleware.isAuthenticated, async (req, res) => {
   try {
     const teamId = req.params.id;
-    const team = await teamOperations.getTeamById(teamId);
     
+    // Fetch team details directly from database
+    const team = await new Promise((resolve, reject) => {
+      db.get(`
+        SELECT id, name, logo_url, description, record, 
+               primary_color, secondary_color
+        FROM Teams 
+        WHERE id = ?
+      `, [teamId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row); // Just resolve with the row, even if it's null
+      });
+    });
+    
+    // Check if team exists
     if (!team) {
       return res.status(404).json({ message: 'Team not found' });
     }
     
-    // Get team owner info
-    const owner = await teamOperations.getTeamOwner(teamId);
-    if (owner) {
-      team.owner = {
-        id: owner.id,
-        username: owner.username
-      };
+    // Initialize these with default values in case queries fail
+    let owner = null;
+    let staff = [];
+    let stats = {};
+    
+    try {
+      // Get team owner
+      owner = await new Promise((resolve, reject) => {
+        db.get(`
+          SELECT u.id, u.username 
+          FROM Users u
+          JOIN Teams t ON u.id = t.owner_id
+          WHERE t.id = ?
+        `, [teamId], (err, row) => {
+          if (err) reject(err);
+          else resolve(row || null);
+        });
+      });
+    } catch (ownerError) {
+      console.error('Error fetching team owner:', ownerError);
+      // Continue with owner as null
     }
     
-    // Get team staff
-    const staff = await teamOperations.getTeamStaff(teamId);
-    team.staff = staff;
+    try {
+      // Get team staff
+      staff = await new Promise((resolve, reject) => {
+        db.all(`
+          SELECT u.id, u.username, ts.role
+          FROM TeamStaff ts
+          JOIN Users u ON ts.user_id = u.id
+          WHERE ts.team_id = ?
+        `, [teamId], (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        });
+      });
+    } catch (staffError) {
+      console.error('Error fetching team staff:', staffError);
+      // Continue with staff as empty array
+    }
     
-    // Get team stats
-    const stats = await teamOperations.getTeamStats(teamId);
-    team.stats = stats;
+    try {
+      // Get team stats
+      stats = await new Promise((resolve, reject) => {
+        db.get(`
+          SELECT 
+            games_played, 
+            wins, 
+            losses, 
+            ties, 
+            goals_for, 
+            goals_against
+          FROM TeamStats 
+          WHERE team_id = ?
+        `, [teamId], (err, row) => {
+          if (err) reject(err);
+          else resolve(row || {});
+        });
+      });
+    } catch (statsError) {
+      console.error('Error fetching team stats:', statsError);
+      // Continue with stats as empty object
+    }
     
-    res.status(200).json(team);
+    // Construct full team object
+    const fullTeam = {
+      ...team,
+      owner: owner ? {
+        id: owner.id,
+        username: owner.username
+      } : null,
+      staff: staff,
+      stats: stats || {}
+    };
+    
+    res.status(200).json(fullTeam);
   } catch (error) {
     console.error('Error fetching team:', error);
-    res.status(500).json({ message: 'Failed to fetch team' });
+    res.status(500).json({ 
+      message: 'Failed to fetch team', 
+      error: error.toString() 
+    });
   }
 });
 
@@ -138,6 +212,58 @@ router.get('/user/permissions', authMiddleware.isAuthenticated, async (req, res)
   } catch (error) {
     console.error('Error checking user permissions:', error);
     res.status(500).json({ message: 'Failed to check user permissions' });
+  }
+});
+
+// Get team invitations for the current user
+router.get('/user/team-invitations', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    // Get the user's characters
+    const characters = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT id, name 
+        FROM Characters 
+        WHERE user_id = ?
+      `, [req.user.id], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
+    
+    // Find pending join requests for these characters
+    const invitations = [];
+    
+    for (const character of characters) {
+      const teamRequests = await new Promise((resolve, reject) => {
+        db.all(`
+          SELECT tr.id, tr.team_id, t.name as team_name
+          FROM TeamJoinRequests tr
+          JOIN Teams t ON tr.team_id = t.id
+          WHERE tr.is_invitation = 1 
+          AND tr.user_id = (
+            SELECT user_id FROM Characters 
+            WHERE id = ?
+          )
+        `, [character.id], (err, rows) => {
+          if (err) reject(err);
+          else resolve(rows || []);
+        });
+      });
+      
+      // Add team details to each invitation
+      invitations.push(...teamRequests.map(request => ({
+        id: request.id,
+        team_name: request.team_name,
+        team_id: request.team_id,
+        character_id: character.id,
+        character_name: character.name
+      })));
+    }
+    
+    res.status(200).json({ invitations });
+  } catch (error) {
+    console.error('Error fetching team invitations:', error);
+    res.status(500).json({ message: 'Failed to fetch team invitations', error: error.toString() });
   }
 });
 

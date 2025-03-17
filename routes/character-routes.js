@@ -239,7 +239,7 @@ router.put('/characters/:id/contacts/:targetId', authRequired, checkCharacterOwn
     const targetId = req.params.targetId;
     const { custom_name, custom_image } = req.body;
     
-    const contact = await characterOperations.setCharacterContact(
+    const contact = await contactOperations.setCharacterContact(
       characterId, 
       targetId, 
       custom_name, 
@@ -269,7 +269,7 @@ router.put('/characters/:id/set-active', authRequired, checkCharacterOwnership, 
 router.get('/characters/:id/contacts', authRequired, checkCharacterOwnership, async (req, res) => {
   try {
     const characterId = req.params.id;
-    const contacts = await characterOperations.getCharacterContacts(characterId);
+    const contacts = await contactOperations.getCharacterContacts(characterId);
     res.status(200).json(contacts);
   } catch (error) {
     handleApiError(res, error, 'Failed to fetch character contacts');
@@ -281,7 +281,7 @@ router.get('/characters/:id/contacts/:targetId', authRequired, checkCharacterOwn
   try {
     const characterId = req.params.id;
     const targetId = req.params.targetId;
-    const contact = await characterOperations.getCharacterContact(characterId, targetId);
+    const contact = await contactOperations.getCharacterContact(characterId, targetId);
     res.status(200).json(contact || { target_character_id: targetId });
   } catch (error) {
     handleApiError(res, error, 'Failed to fetch character contact');
@@ -333,7 +333,7 @@ router.delete('/characters/:id/contacts/:targetId', authRequired, checkCharacter
     const characterId = req.params.id;
     const targetId = req.params.targetId;
     
-    await characterOperations.deleteCharacterContact(characterId, targetId);
+    await contactOperations.deleteCharacterContact(characterId, targetId);
     
     res.status(200).json({ 
       message: 'Contact deleted successfully'

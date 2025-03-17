@@ -1,3 +1,5 @@
+import { getFullPosition } from "../utils.js";
+
 export async function loadRecentGames(characterId) {
   const gamesContainer = document.getElementById("recent-games");
   if (!gamesContainer) return;

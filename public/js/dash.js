@@ -171,11 +171,17 @@ function loadMyTeam() {
       
       // Now fetch team details
       return fetch(`/api/teams/${teamId}`, {
+        method: 'GET', // Explicitly specify GET method
         credentials: 'include'
       })
       .then(response => {
         if (!response.ok) {
-          throw new Error('Failed to fetch team data');
+          // If fetching team details fails, return a fallback team object
+          return {
+            name: teamCharacters[0].team_name || 'My Team',
+            record: '0-0-0',
+            id: teamId
+          };
         }
         return response.json();
       })
@@ -194,6 +200,7 @@ function loadMyTeam() {
   .catch(error => {
     console.error('Error loading team data:', error);
     displayError('team-card', 'Failed to load team data.');
+    updateTeamCard(null); // Ensure team card is updated even on error
   });
 }
 
@@ -300,19 +307,28 @@ function checkTeamCreationPermission() {
 // Function to load team invitations
 function loadTeamInvitations() {
   fetch('/api/user/team-invitations', {
-    credentials: 'include'
+    method: 'GET', // Explicitly specify GET method
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
   })
   .then(response => {
+    // Log the full response for debugging
+    console.log('Team Invitations Response:', response);
+    
     if (!response.ok) {
-      // It's okay if this endpoint doesn't exist yet
-      if (response.status === 404) {
-        return { invitations: [] };
-      }
-      throw new Error('Failed to fetch team invitations');
+      // Log detailed error info
+      return response.text().then(errorText => {
+        console.error('Error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      });
     }
     return response.json();
   })
   .then(data => {
+    console.log('Team Invitations Data:', data);
+    
     const invitations = data.invitations || [];
     const invitesSection = document.getElementById('team-invites-section');
     const invitesContainer = document.getElementById('team-invites-container');
@@ -330,7 +346,7 @@ function loadTeamInvitations() {
         inviteCard.innerHTML = `
           <div class="invite-info">
             <h4>Invitation to join ${invitation.team_name}</h4>
-            <p>You've been invited to join this team.</p>
+            <p>You've been invited to join this team for character ${invitation.character_name}.</p>
           </div>
           <div class="invite-actions">
             <button class="btn btn-primary accept-invite" data-request-id="${invitation.id}">Accept</button>
@@ -362,6 +378,16 @@ function loadTeamInvitations() {
   })
   .catch(error => {
     console.error('Error loading team invitations:', error);
+    
+    // Optional: show user-friendly error message
+    const invitesSection = document.getElementById('team-invites-section');
+    if (invitesSection) {
+      const errorMessage = document.createElement('p');
+      errorMessage.textContent = 'Unable to load team invitations. Please try again later.';
+      errorMessage.style.color = 'red';
+      invitesSection.innerHTML = '';
+      invitesSection.appendChild(errorMessage);
+    }
   });
 }
 

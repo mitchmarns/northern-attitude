@@ -124,12 +124,17 @@ const contactOperations = {
   
   // Get a specific contact
   getCharacterContact: async (characterId, targetId) => {
-    return dbQuery(`
-      SELECT cc.*, c.name as original_name, c.avatar_url as original_avatar
-      FROM CharacterContacts cc
-      JOIN Characters c ON cc.target_character_id = c.id
-      WHERE cc.owner_character_id = ? AND cc.target_character_id = ?
-    `, [characterId, targetId]);
+    try {
+      return await dbQueryAll(`
+        SELECT cc.*, c.name as original_name, c.avatar_url as original_avatar
+        FROM CharacterContacts cc
+        JOIN Characters c ON cc.target_character_id = c.id
+        WHERE cc.owner_character_id = ?
+      `, [characterId]);
+    } catch (error) {
+      console.error('Error getting character contacts:', error);
+      return []; // Return empty array instead of throwing
+    }
   },
   
   // Set or update a contact

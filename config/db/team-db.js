@@ -82,6 +82,23 @@ const teamOperations = {
   isUserOnTeam: (userId, teamId) => {
     return dbQuery(SQL.isUserOnTeam, [userId, teamId])
       .then(row => !!row);
+  },
+
+  //Pending team invitations
+  getPendingTeamInvitations: async (characterId) => {
+    return new Promise((resolve, reject) => {
+      db.all(`
+        SELECT * FROM TeamJoinRequests 
+        WHERE is_invitation = 1 
+        AND user_id = (
+          SELECT user_id FROM Characters 
+          WHERE id = ?
+        )
+      `, [characterId], (err, rows) => {
+        if (err) reject(err);
+        else resolve(rows || []);
+      });
+    });
   }
 };
 

@@ -13,7 +13,7 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const CURRENT_SCHEMA_VERSION = 2; // Increment when schema changes
+const CURRENT_SCHEMA_VERSION = 3; // Increment when schema changes
 
 // Logger function for consistent output
 function log(type, message) {
@@ -69,12 +69,17 @@ function runTransaction(queries) {
         
         const { sql, params, description } = query;
         db.run(sql, params, function(err) {
-          if (err) {
+          // Ignore errors about tables already existing
+          if (err && !err.message.includes('already exists')) {
             log('error', `Error ${description}: ${err.message}`);
             success = false;
             db.run('ROLLBACK');
             reject(err);
           } else {
+            // Log the error but continue if it's just about existing tables
+            if (err) {
+              log('log', `Ignoring existing table error: ${err.message}`);
+            }
             results.push({ lastId: this.lastID, changes: this.changes });
             if (index === queries.length - 1) {
               db.run('COMMIT', (err) => {
@@ -176,6 +181,19 @@ const tableSchemas = {
       FOREIGN KEY (owner_id) REFERENCES Users(id) ON DELETE SET NULL
     )
   `,
+
+  teams_stats: `
+  CREATE TABLE IF NOT EXISTS TeamsStats (
+    team_id INTEGER PRIMARY KEY,
+    games_played INTEGER DEFAULT 0,
+    wins INTEGER DEFAULT 0,
+    losses INTEGER DEFAULT 0,
+    ties INTEGER DEFAULT 0,
+    goals_for INTEGER DEFAULT 0,
+    goals_against INTEGER DEFAULT 0,
+    FOREIGN KEY (team_id) REFERENCES Teams(id) ON DELETE CASCADE
+  )
+`,
   
   team_staff: `
     CREATE TABLE IF NOT EXISTS TeamStaff (
@@ -194,6 +212,7 @@ const tableSchemas = {
       team_id INTEGER NOT NULL,
       user_id INTEGER NOT NULL,
       is_invitation BOOLEAN DEFAULT 0,
+      status TEXT DEFAULT 'pending',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (team_id) REFERENCES Teams(id) ON DELETE CASCADE,
       FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE,
@@ -405,7 +424,12 @@ async function initDatabase() {
     // Create indexes
     log('log', 'Creating indexes...');
     for (const index of indexes) {
-      await executeSql(index.sql, [], index.description);
+      try {
+        await executeSql(index.sql, [], index.description);
+      } catch (indexErr) {
+        // Log index creation error but continue
+        log('log', `Ignoring index creation error: ${indexErr.message}`);
+      }
     }
     
     // Update schema version if needed

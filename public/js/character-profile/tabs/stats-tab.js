@@ -1,3 +1,5 @@
+import { getFullPosition } from "../utils.js";
+
 export async function updateCharacterStats(elements, character, stats = {}) {
   // Skip if main stats element doesn't exist
   if (!elements.mainStats) return;
@@ -185,7 +187,7 @@ export async function updateStatsTab(character, stats) {
   }
 }
 
-export async function getPositionTitle(position) {
+export function getPositionTitle(position) {
   const titles = {
     C: "Center Stats",
     LW: "Wing Stats",
@@ -198,9 +200,11 @@ export async function getPositionTitle(position) {
 }
 
 export async function updatePositionSpecificStats(elements, position, stats) {
+  const positionTitle = getPositionTitle(position);
+
   if (!elements.positionStatsTitle || !elements.positionStats) return;
 
-  elements.positionStatsTitle.textContent = getPositionTitle(position);
+  elements.positionStatsTitle.textContent = positionTitle;
 
   // Create position stats content
   let statsHTML = "";
@@ -270,4 +274,13 @@ export async function updatePositionSpecificStats(elements, position, stats) {
   }
 
   elements.positionStats.innerHTML = statsHTML;
+}
+
+export function formatIceTime(minutes) {
+  if (!minutes) return "00:00";
+
+  const mins = Math.floor(minutes);
+  const secs = Math.round((minutes - mins) * 60);
+
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 }
