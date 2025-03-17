@@ -398,6 +398,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Function to start a new conversation
   async function startNewConversation(senderCharacterId, recipientCharacterId, content) {
     try {
+      console.log('Starting new conversation between characters:', senderCharacterId, recipientCharacterId);
+      
       // Create or find conversation
       const response = await fetch('/api/messages/conversations/one-to-one', {
         method: 'POST',
@@ -412,15 +414,38 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to create conversation');
+        console.error('Failed to create conversation. Response:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('Error details:', errorText);
+        throw new Error('Failed to create conversation: ' + response.statusText);
       }
       
       const data = await response.json();
       const conversationId = data.conversation_id;
       
+      console.log('Created/found conversation with ID:', conversationId);
+      
       // Send message if content provided
       if (content) {
-        await sendMessage(conversationId, senderCharacterId, content);
+        console.log('Sending message to conversation:', conversationId);
+        const msgResponse = await fetch(`/api/messages/conversations/${conversationId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            content,
+            sender_character_id: senderCharacterId
+          }),
+          credentials: 'include'
+        });
+        
+        if (!msgResponse.ok) {
+          console.error('Failed to send message. Response:', msgResponse.status, msgResponse.statusText);
+          throw new Error('Failed to send message');
+        }
+        
+        console.log('Message sent successfully');
       }
       
       // Close modal
@@ -435,8 +460,20 @@ document.addEventListener('DOMContentLoaded', function() {
       
     } catch (error) {
       console.error('Error starting conversation:', error);
-      showError('Failed to start conversation. Please try again.');
+      showError('Failed to start conversation. Please try again. Error: ' + error.message);
     }
+  }
+
+  function getFullPosition(positionCode) {
+    const positions = {
+      C: "Center",
+      LW: "Left Wing",
+      RW: "Right Wing",
+      D: "Defense",
+      G: "Goalie",
+    };
+  
+    return positions[positionCode] || positionCode;
   }
   
   // Function to search for characters
@@ -447,15 +484,17 @@ document.addEventListener('DOMContentLoaded', function() {
     elements.searchResults.innerHTML =
       '<p class="loading-text">Searching...</p>';
   
-    try {
-      // Fix the API endpoint to match what's defined in search-routes.js
-      const response = await fetch(
-        `/api/characters/search?q=${encodeURIComponent(query)}&excludeUserId=${excludeId}`,
-        {
+      try {
+        // Build the URL, only adding excludeUserId if it's actually defined
+        let searchUrl = `/api/search?q=${encodeURIComponent(query)}`;
+        if (excludeId && excludeId !== "undefined") {
+          searchUrl += `&excludeUserId=${excludeId}`;
+        }
+      
+        const response = await fetch(searchUrl, {
           method: 'GET',
           credentials: 'include',
-        }
-      );
+        });
   
       if (!response.ok) {
         throw new Error('Failed to search characters');

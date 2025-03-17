@@ -1,3 +1,4 @@
+// config/db/message-db.js
 const { dbQuery, dbQueryAll, dbExecute, dbTransaction } = require('./utils');
 
 // SQL queries for character messages
@@ -17,7 +18,7 @@ const SQL = {
     FROM CharacterConversations c
     JOIN CharacterConversationParticipants cp ON c.id = cp.conversation_id
     WHERE cp.character_id = ?
-    ORDER BY last_message_at DESC
+    ORDER BY last_message_at DESC NULLS LAST
   `,
   
   getConversationMessages: `
@@ -28,7 +29,6 @@ const SQL = {
     FROM CharacterMessages m
     JOIN Characters ch ON m.sender_character_id = ch.id
     LEFT JOIN Teams t ON ch.team_id = t.id
-    LEFT JOIN CharacterConversationParticipants cp ON m.conversation_id = cp.conversation_id
     LEFT JOIN CharacterContacts cc ON cc.owner_character_id = ? AND cc.target_character_id = m.sender_character_id
     WHERE m.conversation_id = ?
     ORDER BY m.created_at ASC
@@ -55,8 +55,8 @@ const SQL = {
   `,
   
   createMessage: `
-    INSERT INTO CharacterMessages (conversation_id, sender_character_id, content)
-    VALUES (?, ?, ?)
+    INSERT INTO CharacterMessages (conversation_id, sender_character_id, content, created_at)
+    VALUES (?, ?, ?, CURRENT_TIMESTAMP)
   `,
   
   markMessagesAsRead: `
@@ -78,7 +78,7 @@ const SQL = {
     JOIN CharacterConversations c ON cp1.conversation_id = c.id
     WHERE cp1.character_id = ? AND cp2.character_id = ? AND c.is_group = 0
     GROUP BY cp1.conversation_id
-    HAVING COUNT(DISTINCT cp1.character_id, cp2.character_id) = 2
+    HAVING COUNT(DISTINCT cp1.character_id) + COUNT(DISTINCT cp2.character_id) = 2
   `,
   
   getUnreadMessageCount: `
@@ -92,45 +92,29 @@ const SQL = {
     SELECT id, name, avatar_url, position, team_id, is_active
     FROM Characters
     WHERE user_id = ?
+    ORDER BY is_active DESC, name ASC
   `
 };
 
 const messageOperations = {
   // Get character's conversations
   getCharacterConversations: (characterId) => {
-    return dbQueryAll(`
-      SELECT c.id, c.title, c.is_group, c.created_at, c.updated_at,
-             (SELECT COUNT(*) FROM CharacterMessages m 
-              WHERE m.conversation_id = c.id 
-              AND m.is_read = 0 
-              AND m.sender_character_id != ?) as unread_count,
-             (SELECT m.content FROM CharacterMessages m 
-              WHERE m.conversation_id = c.id 
-              ORDER BY m.created_at DESC LIMIT 1) as last_message,
-             (SELECT m.created_at FROM CharacterMessages m 
-              WHERE m.conversation_id = c.id 
-              ORDER BY m.created_at DESC LIMIT 1) as last_message_at
-      FROM CharacterConversations c
-      JOIN CharacterConversationParticipants cp ON c.id = cp.conversation_id
-      WHERE cp.character_id = ?
-      ORDER BY last_message_at DESC
-    `, [characterId, characterId]);
+    return dbQueryAll(SQL.getCharacterConversations, [characterId, characterId]);
   },
   
   // Get messages for a conversation
-  getConversationMessages: (conversationId) => {
-    return dbQueryAll(SQL.getConversationMessages, [conversationId]);
+  getConversationMessages: (conversationId, viewerCharacterId) => {
+    return dbQueryAll(SQL.getConversationMessages, [viewerCharacterId, conversationId]);
   },
   
   // Get participants in a conversation
-  getConversationParticipants: async (conversationId, viewerCharacterId) => {
+  getConversationParticipants: (conversationId, viewerCharacterId) => {
     return dbQueryAll(SQL.getConversationParticipants, [viewerCharacterId, conversationId]);
   },
   
   // Create a new conversation
   createConversation: async (title, isGroup, participantCharacterIds) => {
-    // Use transaction to ensure atomicity
-    return dbTransaction(async () => {
+    try {
       // Create conversation
       const result = await dbExecute(SQL.createConversation, [title, isGroup ? 1 : 0]);
       const conversationId = result.lastId;
@@ -141,39 +125,69 @@ const messageOperations = {
       }
       
       return conversationId;
-    });
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      throw error;
+    }
   },
   
   // Send a message
   sendMessage: async (conversationId, senderCharacterId, content) => {
-    const result = await dbExecute(SQL.createMessage, [conversationId, senderCharacterId, content]);
-    return result.lastId;
+    try {
+      const result = await dbExecute(SQL.createMessage, [conversationId, senderCharacterId, content]);
+      return result.lastId;
+    } catch (error) {
+      console.error('Error sending message:', error);
+      throw error;
+    }
   },
   
   // Mark messages as read
   markConversationAsRead: async (conversationId, characterId) => {
-    await dbExecute(SQL.markMessagesAsRead, [conversationId, characterId]);
-    await dbExecute(SQL.updateConversationParticipant, [conversationId, characterId]);
-    return true;
+    try {
+      await dbExecute(SQL.markMessagesAsRead, [conversationId, characterId]);
+      await dbExecute(SQL.updateConversationParticipant, [conversationId, characterId]);
+      return true;
+    } catch (error) {
+      console.error('Error marking conversation as read:', error);
+      throw error;
+    }
   },
   
   // Find or create conversation between two characters
   findOrCreateOneToOneConversation: async (characterId1, characterId2) => {
-    // Check if conversation already exists
-    const existingConversation = await dbQuery(SQL.getConversationBetweenCharacters, [characterId1, characterId2]);
-    
-    if (existingConversation) {
-      return existingConversation.conversation_id;
+    try {
+      // Check if conversation already exists
+      const existingConversation = await dbQuery(SQL.getConversationBetweenCharacters, [characterId1, characterId2]);
+      
+      if (existingConversation) {
+        return existingConversation.conversation_id;
+      }
+      
+      // No existing conversation found, check the opposite direction
+      const reverseConversation = await dbQuery(SQL.getConversationBetweenCharacters, [characterId2, characterId1]);
+      
+      if (reverseConversation) {
+        return reverseConversation.conversation_id;
+      }
+      
+      // Create new conversation
+      return await messageOperations.createConversation(null, false, [characterId1, characterId2]);
+    } catch (error) {
+      console.error('Error finding or creating conversation:', error);
+      throw error;
     }
-    
-    // Create new conversation
-    return messageOperations.createConversation(null, false, [characterId1, characterId2]);
   },
   
   // Get unread message count
   getUnreadMessageCount: async (characterId) => {
-    const result = await dbQuery(SQL.getUnreadMessageCount, [characterId, characterId]);
-    return result ? result.count : 0;
+    try {
+      const result = await dbQuery(SQL.getUnreadMessageCount, [characterId, characterId]);
+      return result ? result.count : 0;
+    } catch (error) {
+      console.error('Error getting unread message count:', error);
+      throw error;
+    }
   },
   
   // Get basic info about a user's characters (for character selection)

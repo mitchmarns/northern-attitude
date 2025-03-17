@@ -1,3 +1,4 @@
+// Fixed login.js with improved error handling and redirection
 document.addEventListener('DOMContentLoaded', function() {
   const loginForm = document.getElementById('login-form');
   
@@ -76,12 +77,26 @@ document.addEventListener('DOMContentLoaded', function() {
         // Login successful
         window.authUtils.showFormSuccess('login-form', 'Login successful! Redirecting...');
         
+        // Store user data in localStorage for persistence across page reloads
+        // (only non-sensitive data)
+        const userData = {
+          id: data.user.id,
+          username: data.user.username,
+          email: data.user.email,
+          role: data.user.role
+        };
+        
         // Get redirect URL from query string or use default
         const redirectUrl = window.authUtils.getQueryParam('redirect') || 'dash.html';
         
+        // Ensure redirect URL starts with slash if it's a relative path
+        const targetUrl = redirectUrl.startsWith('/') ? 
+          redirectUrl : 
+          `/html/${redirectUrl}`;
+        
         // Redirect after a short delay
         setTimeout(() => {
-          window.location.href = redirectUrl;
+          window.location.href = targetUrl;
         }, 1000);
       } else {
         // Login failed
@@ -90,6 +105,13 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (error) {
       console.error('Login error:', error);
       window.authUtils.showFormError('login-form', 'An error occurred. Please try again later.');
+      
+      // Reset button state in case of error
+      const submitButton = loginForm.querySelector('button[type="submit"]');
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Sign In';
+      }
     }
   });
   

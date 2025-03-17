@@ -1,4 +1,4 @@
-// Optimized auth-service.js file
+// public/js/auth.js - Fixed implementation
 const bcrypt = require('bcrypt');
 const { v4: uuidv4 } = require('uuid');
 const { db } = require('../../config/db');
@@ -12,45 +12,12 @@ const SALT_ROUNDS = 10;
 // Session expiration time (24 hours in milliseconds)
 const SESSION_EXPIRY = 24 * 60 * 60 * 1000; 
 
-// Reusable SQL queries
-const SQL = {
-  getUserByEmail: 'SELECT id FROM Users WHERE email = ?',
-  getUserByUsername: 'SELECT id FROM Users WHERE username = ?',
-  getUserById: 'SELECT * FROM Users WHERE id = ?',
-  insertUser: 'INSERT INTO Users (username, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-  updateLastLogin: 'UPDATE Users SET last_login = CURRENT_TIMESTAMP WHERE id = ?',
-  selectUserByEmail: 'SELECT * FROM Users WHERE email = ?',
-  resetTokenLookup: 'SELECT user_id FROM PasswordResets WHERE token = ? AND expires_at > CURRENT_TIMESTAMP AND used = 0',
-  updateUserPassword: 'UPDATE Users SET password_hash = ? WHERE id = ?',
-  markTokenUsed: 'UPDATE PasswordResets SET used = 1 WHERE token = ?',
-  insertPasswordReset: 'INSERT INTO PasswordResets (user_id, token, expires_at) VALUES (?, ?, ?)'
-};
-
-// Helper function for database queries (Promise-based)
-function dbQuery(query, params = []) {
-  return new Promise((resolve, reject) => {
-    db.get(query, params, (err, row) => {
-      if (err) reject(err);
-      resolve(row);
-    });
-  });
-}
-
-// Helper function for database execute (Promise-based)
-function dbExecute(query, params = []) {
-  return new Promise((resolve, reject) => {
-    db.run(query, params, function(err) {
-      if (err) reject(err);
-      resolve({ lastId: this.lastID, changes: this.changes });
-    });
-  });
-}
-
+// Authentication middleware
 const authMiddleware = {
   // Middleware to check if user is authenticated
   isAuthenticated: (req, res, next) => {
     // Get session token from cookies
-    const sessionToken = req.cookies.sessionToken;
+    const sessionToken = req.cookies?.sessionToken;
     
     if (!sessionToken) {
       return res.status(401).json({ message: 'Authentication required' });
@@ -89,6 +56,7 @@ const authMiddleware = {
   }
 };
 
+// Authentication service
 const authService = {
   // Register a new user
   register: async (req, res) => {
@@ -109,13 +77,25 @@ const authService = {
       }
       
       // Check if email already exists
-      const emailExists = await dbQuery(SQL.getUserByEmail, [email]);
+      const emailExists = await new Promise((resolve, reject) => {
+        db.get('SELECT id FROM Users WHERE email = ?', [email], (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        });
+      });
+      
       if (emailExists) {
         return res.status(400).json({ message: 'Email already registered' });
       }
       
       // Check if username already exists
-      const usernameExists = await dbQuery(SQL.getUserByUsername, [username]);
+      const usernameExists = await new Promise((resolve, reject) => {
+        db.get('SELECT id FROM Users WHERE username = ?', [username], (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        });
+      });
+      
       if (usernameExists) {
         return res.status(400).json({ message: 'Username already taken' });
       }
@@ -124,14 +104,20 @@ const authService = {
       const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
       
       // Create user
-      const result = await dbExecute(
-        SQL.insertUser, 
-        [username, email, passwordHash, 'user']
-      );
+      const userId = await new Promise((resolve, reject) => {
+        db.run(
+          'INSERT INTO Users (username, email, password_hash, role, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
+          [username, email, passwordHash, 'user'],
+          function(err) {
+            if (err) reject(err);
+            resolve(this.lastID);
+          }
+        );
+      });
       
       res.status(201).json({ 
         message: 'Registration successful',
-        userId: result.lastId
+        userId: userId
       });
       
     } catch (error) {
@@ -151,7 +137,12 @@ const authService = {
       }
       
       // Get user by email
-      const user = await dbQuery(SQL.selectUserByEmail, [email]);
+      const user = await new Promise((resolve, reject) => {
+        db.get('SELECT * FROM Users WHERE email = ?', [email], (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        });
+      });
       
       if (!user) {
         return res.status(401).json({ message: 'Invalid email or password' });
@@ -177,7 +168,12 @@ const authService = {
       }
       
       // Update last login timestamp
-      await dbExecute(SQL.updateLastLogin, [user.id]);
+      await new Promise((resolve, reject) => {
+        db.run('UPDATE Users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id], err => {
+          if (err) reject(err);
+          resolve();
+        });
+      });
       
       // Create session
       const sessionToken = uuidv4();
@@ -199,8 +195,8 @@ const authService = {
       const cookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production', // Set to true in production
-        sameSite: 'strict',
-        maxAge: rememberMe ? SESSION_EXPIRY : null // Session cookie if not "remember me"
+        sameSite: 'lax', // Changed from 'strict' to 'lax' for better compatibility
+        maxAge: rememberMe ? SESSION_EXPIRY : undefined // Session cookie if not "remember me"
       };
       
       // Set session cookie
@@ -224,7 +220,7 @@ const authService = {
   
   // Logout user
   logout: (req, res) => {
-    const sessionToken = req.cookies.sessionToken;
+    const sessionToken = req.cookies?.sessionToken;
     
     if (sessionToken) {
       // Remove session
@@ -257,13 +253,14 @@ const authService = {
       }
       
       // Check if user exists
-      const user = await dbQuery(
-        'SELECT id, username FROM Users WHERE email = ?', 
-        [email]
-      );
+      const user = await new Promise((resolve, reject) => {
+        db.get('SELECT id, username FROM Users WHERE email = ?', [email], (err, row) => {
+          if (err) reject(err);
+          resolve(row);
+        });
+      });
       
       // Don't reveal whether the email exists or not for security
-      // But still provide a token for dev purposes if user exists
       const responseData = {
         message: 'If your email is registered, you will receive reset instructions'
       };
@@ -274,10 +271,16 @@ const authService = {
         const resetExpiry = new Date(Date.now() + (60 * 60 * 1000)); // 1 hour
         
         // Store reset token in database
-        await dbExecute(
-          SQL.insertPasswordReset,
-          [user.id, resetToken, resetExpiry.toISOString()]
-        );
+        await new Promise((resolve, reject) => {
+          db.run(
+            'INSERT INTO PasswordResets (user_id, token, expires_at) VALUES (?, ?, ?)',
+            [user.id, resetToken, resetExpiry.toISOString()],
+            err => {
+              if (err) reject(err);
+              resolve();
+            }
+          );
+        });
         
         // In a real app, you would send an email with the reset link
         // For this example, include token in response for dev environment
@@ -311,7 +314,16 @@ const authService = {
       }
       
       // Get valid reset token
-      const resetRequest = await dbQuery(SQL.resetTokenLookup, [token]);
+      const resetRequest = await new Promise((resolve, reject) => {
+        db.get(
+          'SELECT user_id FROM PasswordResets WHERE token = ? AND expires_at > CURRENT_TIMESTAMP AND used = 0',
+          [token],
+          (err, row) => {
+            if (err) reject(err);
+            resolve(row);
+          }
+        );
+      });
       
       if (!resetRequest) {
         return res.status(400).json({ message: 'Invalid or expired reset token' });
@@ -321,10 +333,24 @@ const authService = {
       const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
       
       // Update user password
-      await dbExecute(SQL.updateUserPassword, [passwordHash, resetRequest.user_id]);
+      await new Promise((resolve, reject) => {
+        db.run(
+          'UPDATE Users SET password_hash = ? WHERE id = ?',
+          [passwordHash, resetRequest.user_id],
+          err => {
+            if (err) reject(err);
+            resolve();
+          }
+        );
+      });
       
       // Mark token as used
-      await dbExecute(SQL.markTokenUsed, [token]);
+      await new Promise((resolve, reject) => {
+        db.run('UPDATE PasswordResets SET used = 1 WHERE token = ?', [token], err => {
+          if (err) reject(err);
+          resolve();
+        });
+      });
       
       res.status(200).json({ message: 'Password reset successful' });
       

@@ -13,7 +13,7 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const CURRENT_SCHEMA_VERSION = 3; // Increment when schema changes
+const CURRENT_SCHEMA_VERSION = 4; // Increment when schema changes
 
 // Logger function for consistent output
 function log(type, message) {
@@ -315,9 +315,11 @@ const tableSchemas = {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       conversation_id INTEGER NOT NULL,
       character_id INTEGER NOT NULL,
+      joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       last_read_at TIMESTAMP,
       FOREIGN KEY (conversation_id) REFERENCES CharacterConversations(id) ON DELETE CASCADE,
-      FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE
+      FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+      UNIQUE(conversation_id, character_id)
     )
   `,
 

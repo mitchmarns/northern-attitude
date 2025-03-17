@@ -1,3 +1,4 @@
+// Fixed signup.js with improved error handling and redirection
 document.addEventListener('DOMContentLoaded', function() {
   const signupForm = document.getElementById('signup-form');
   
@@ -83,7 +84,8 @@ document.addEventListener('DOMContentLoaded', function() {
           email, 
           password,
           confirmPassword
-        })
+        }),
+        credentials: 'include'
       });
       
       // Parse response

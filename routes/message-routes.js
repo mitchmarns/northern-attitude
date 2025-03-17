@@ -1,3 +1,5 @@
+// Add this to your routes/message-routes.js file or create it if it doesn't exist
+
 const express = require('express');
 const router = express.Router();
 const { messageOperations, characterOperations } = require('../config/db');
@@ -38,7 +40,7 @@ router.get('/conversations/:id/messages', authMiddleware.isAuthenticated, async 
       return res.status(403).json({ message: 'You do not have permission to access this character' });
     }
     
-    // Pass the viewer character ID
+    // Get the messages
     const messages = await messageOperations.getConversationMessages(conversationId, characterId);
     
     // Mark conversation as read
@@ -67,7 +69,7 @@ router.get('/conversations/:id/participants', authMiddleware.isAuthenticated, as
       return res.status(403).json({ message: 'You do not have permission to access this character' });
     }
     
-    // Pass the viewer character ID
+    // Get the participants
     const participants = await messageOperations.getConversationParticipants(conversationId, characterId);
     
     res.status(200).json(participants);

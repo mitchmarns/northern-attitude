@@ -1,9 +1,11 @@
-// Updated server.js with proper database initialization checks
+// Updated server.js with proper database initialization checks and cors setup
 
 const express = require('express');
-const cookieParser = require('cookie-parser');
 const path = require('path');
+const cookieParser = require('cookie-parser');
+const morgan = require('morgan');
 const fs = require('fs');
+const cors = require('cors'); // Import cors at the top
 
 let dbPath = path.resolve(__dirname, 'config/hockey_roleplay.db');
 console.log('Checking for database at:', dbPath);
@@ -16,7 +18,6 @@ if (!fs.existsSync(dbPath)) {
 
 // Import database operations after confirming database exists
 const { characterOperations, db } = require('./config/db');
-
 
 function tableExists(tableName) {
   return new Promise((resolve, reject) => {
@@ -37,14 +38,23 @@ function tableExists(tableName) {
 // Create Express app
 const app = express();
 
-// Middleware setup
+// Configure CORS with credentials support
+const corsOptions = {
+  origin: true, // Allow any origin in development, restrict in production
+  credentials: true, // Allow cookies to be sent with requests
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+// Middleware setup - now cors is defined before being used
+app.use(cors(corsOptions));
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 // Middleware to check if the database is properly initialized
 app.use(async (req, res, next) => {
