@@ -114,26 +114,74 @@ export function previewImage(imageUrl) {
 }
 
 // Format timestamp for display
-export function formatTimestamp(date) {
+export function formatTimestamp(dateInput) {
+  // Make sure we have a valid date object
+  let dateObj;
+  
+  try {
+    if (typeof dateInput === 'string') {
+      // Try to parse it as a date string
+      
+      // If it's all digits, treat as milliseconds
+      if (/^\d+$/.test(dateInput)) {
+        dateObj = new Date(parseInt(dateInput));
+      } else {
+        dateObj = new Date(dateInput);
+      }
+    } else if (dateInput instanceof Date) {
+      dateObj = dateInput;
+    } else {
+      console.warn("Invalid date input:", dateInput);
+      return "Unknown time";
+    }
+  } catch (e) {
+    console.error("Error parsing date:", e);
+    return "Unknown time";
+  }
+  
+  // Validate the date
+  if (!dateObj || isNaN(dateObj.getTime())) {
+    console.warn("Invalid date object after parsing:", dateObj);
+    return "Unknown time";
+  }
+  
+  // Get current date for comparison
   const now = new Date();
-  const diffMs = now - date;
+  const diffMs = now - dateObj;
   const diffSec = Math.floor(diffMs / 1000);
+  
+  // Handle future dates (or small clock inconsistencies)
+  if (diffSec < -300) { // More than 5 minutes in the future - display actual date
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return dateObj.toLocaleDateString(undefined, options);
+  } else if (diffSec < 0) { // Less than 5 minutes in the future - treat as "just now"
+    return 'Just now';
+  }
+  
+  // Calculate time units for past dates
   const diffMin = Math.floor(diffSec / 60);
   const diffHours = Math.floor(diffMin / 60);
   const diffDays = Math.floor(diffHours / 24);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
   
-  if (diffSec < 60) {
+  // Format based on how much time has passed
+  if (diffSec < 30) {
     return 'Just now';
+  } else if (diffSec < 60) {
+    return `${diffSec} seconds ago`;
   } else if (diffMin < 60) {
-    return `${diffMin}m ago`;
+    return diffMin === 1 ? '1 minute ago' : `${diffMin} minutes ago`;
   } else if (diffHours < 24) {
-    return `${diffHours}h ago`;
-  } else if (diffDays === 1) {
-    return 'Yesterday';
+    return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
   } else if (diffDays < 7) {
-    return `${diffDays}d ago`;
+    return diffDays === 1 ? 'Yesterday' : `${diffDays} days ago`;
+  } else if (diffMonths < 12) {
+    return diffMonths === 1 ? '1 month ago' : `${diffMonths} months ago`;
   } else {
-    return date.toLocaleDateString();
+    // More than a year ago, use the date
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return dateObj.toLocaleDateString(undefined, options);
   }
 }
 

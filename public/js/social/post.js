@@ -19,6 +19,9 @@ const elements = {
   templatesDropdown: document.getElementById('templates-dropdown')
 };
 
+// Flag to prevent double submissions
+let isSubmitting = false;
+
 // Initialize the post module
 export function init(state) {
   // Set up event listeners
@@ -42,10 +45,17 @@ function setupEventListeners(state) {
     });
   }
   
-  // Post form submission
-  if (elements.postForm) {
-    elements.postForm.addEventListener('submit', (e) => {
+  // Attach click handler directly to the submit button instead of form submission
+  if (elements.postSubmitBtn) {
+    elements.postSubmitBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      
+      // Prevent double submission
+      if (isSubmitting) {
+        return;
+      }
+      
+      // Submit the post
       submitPost(state);
     });
   }
@@ -74,17 +84,19 @@ function setupEventListeners(state) {
   }
   
   // Template buttons
-  elements.templateButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      const templateType = button.dataset.template;
-      applyTemplate(templateType, state);
-      
-      // Hide dropdown
-      if (elements.templatesDropdown) {
-        elements.templatesDropdown.style.display = 'none';
-      }
+  if (elements.templateButtons) {
+    elements.templateButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const templateType = button.dataset.template;
+        applyTemplate(templateType, state);
+        
+        // Hide dropdown
+        if (elements.templatesDropdown) {
+          elements.templatesDropdown.style.display = 'none';
+        }
+      });
     });
-  });
+  }
   
   // Templates dropdown toggle
   if (elements.templatesBtn) {
@@ -164,6 +176,8 @@ export function formatPostContent(content) {
 
 // Submit a new post
 async function submitPost(state) {
+  console.log("Submit post function called");
+  
   // Ensure we have a selected character and some content
   if (!state.selectedCharacterId) {
     ui.showMessage('Please select a character to post as', 'error');
@@ -176,6 +190,9 @@ async function submitPost(state) {
   }
 
   try {
+    // Set submitting flag to prevent double submissions
+    isSubmitting = true;
+    
     // Disable submit button and show loading state
     if (elements.postSubmitBtn) {
       elements.postSubmitBtn.disabled = true;
@@ -213,6 +230,9 @@ async function submitPost(state) {
     console.error('Error creating post:', error);
     ui.showMessage('Failed to create post. Please try again.', 'error');
   } finally {
+    // Reset submitting flag
+    isSubmitting = false;
+    
     // Re-enable submit button
     if (elements.postSubmitBtn) {
       elements.postSubmitBtn.disabled = false;

@@ -62,7 +62,9 @@ export async function loadFeed(feedType = 'all', page = 1) {
   });
   
   try {
+    console.log(`Loading ${feedType} feed, page ${page} for character ${state.selectedCharacterId}`);
     const data = await api.fetchFeed(feedType, state.selectedCharacterId, page);
+    console.log("Feed data received:", data);
     
     // Hide loading indicator
     if (elements.feedLoading) {
@@ -126,9 +128,33 @@ function createPostElement(postData) {
   postElement.className = 'social-post';
   postElement.dataset.postId = postData.id;
   
-  // Format timestamp
-  const timestamp = postData.created_at ? new Date(postData.created_at) : new Date();
+  // Debug the timestamp we're working with
+  console.log(`Post #${postData.id} timestamp raw:`, postData.created_at);
+  
+  // Ensure we have a proper date object for the timestamp
+  let timestamp;
+  try {
+    // Different APIs might return dates in different formats
+    if (postData.created_at) {
+      if (typeof postData.created_at === 'string') {
+        timestamp = new Date(postData.created_at.replace(' ', 'T'));
+      } else if (typeof postData.created_at === 'number') {
+        timestamp = new Date(postData.created_at);
+      } else {
+        timestamp = postData.created_at;
+      }
+    } else {
+      timestamp = new Date();
+    }
+    console.log(`Post #${postData.id} parsed timestamp:`, timestamp.toISOString());
+  } catch (e) {
+    console.error(`Error parsing timestamp for post #${postData.id}:`, e);
+    timestamp = new Date(); // Fallback to current date
+  }
+  
+  // Format the timestamp for display
   const formattedTime = ui.formatTimestamp(timestamp);
+  console.log(`Post #${postData.id} formatted time:`, formattedTime);
   
   // Build the post's HTML content
   postElement.innerHTML = `
@@ -138,7 +164,7 @@ function createPostElement(postData) {
       </div>
       <div class="post-info">
         <div class="post-author">${postData.author_name || 'Unknown Author'}</div>
-        <div class="post-meta">${postData.author_position || ''} ${postData.author_team ? '• ' + postData.author_team : ''} • ${formattedTime}</div>
+        <div class="post-meta">${postData.author_position || ''} ${postData.author_team ? '• ' + postData.author_team : ''} • <span class="post-time" data-timestamp="${timestamp.toISOString()}">${formattedTime}</span></div>
       </div>
       <div class="post-menu">
         <button class="post-menu-btn">•••</button>
@@ -197,3 +223,22 @@ function createPostElement(postData) {
   
   return postElement;
 }
+
+// Periodically refresh timestamps (every minute)
+setInterval(() => {
+  // Find all timestamp elements
+  const timeElements = document.querySelectorAll('.post-time');
+  
+  // Update each one
+  timeElements.forEach(element => {
+    const timestampIso = element.getAttribute('data-timestamp');
+    if (timestampIso) {
+      try {
+        const timestamp = new Date(timestampIso);
+        element.textContent = ui.formatTimestamp(timestamp);
+      } catch (e) {
+        console.error('Error updating timestamp:', e);
+      }
+    }
+  });
+}, 60000); // 60 seconds
