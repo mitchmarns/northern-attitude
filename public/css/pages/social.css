@@ -878,3 +878,31 @@
 .modal-actions button {
   margin-left: var(--spacing-sm);
 }
+
+.message-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  background-color: var(--accent-bg);
+  color: white;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  transform: translateY(-100px);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.message-toast.visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.message-toast.success-message {
+  background-color: #28a745;
+}
+
+.message-toast.error-message {
+  background-color: #dc3545;
+}
