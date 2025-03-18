@@ -48,6 +48,7 @@
 @import 'pages/basics-tab.css';
 @import 'pages/contact-tab.css';
 @import 'pages/threads.css';
+@import 'pages/social.css';
 
 /* Utilities */
 @import 'utilities/spacing.css';

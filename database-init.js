@@ -13,7 +13,7 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const CURRENT_SCHEMA_VERSION = 5; // Increment when schema changes
+const CURRENT_SCHEMA_VERSION = 6; // Increment when schema changes
 
 // Logger function for consistent output
 function log(type, message) {
@@ -387,6 +387,102 @@ threadPosts: `
     FOREIGN KEY(thread_id) REFERENCES RoleplayThreads(id),
     FOREIGN KEY(character_id) REFERENCES Characters(id)
   )
+`,
+
+socialPosts: `
+CREATE TABLE IF NOT EXISTS SocialPosts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character_id INTEGER NOT NULL,
+    content TEXT,
+    media_url TEXT,
+    post_type VARCHAR(20), -- text, image, video, etc.
+    visibility VARCHAR(20) DEFAULT 'public', -- public, followers, team
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE
+)
+`,
+
+socialLikes: `
+CREATE TABLE IF NOT EXISTS SocialLikes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    character_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES SocialPosts(id) ON DELETE CASCADE,
+    FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+    UNIQUE(post_id, character_id)
+)
+`,
+
+socialComments: `
+CREATE TABLE IF NOT EXISTS SocialComments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    character_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    parent_comment_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES SocialPosts(id) ON DELETE CASCADE,
+    FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_comment_id) REFERENCES SocialComments(id) ON DELETE CASCADE
+)
+`,
+
+socialFollowers: `
+CREATE TABLE IF NOT EXISTS SocialFollowers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    follower_character_id INTEGER NOT NULL,
+    followed_character_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (follower_character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+    FOREIGN KEY (followed_character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+    UNIQUE(follower_character_id, followed_character_id)
+)
+`,
+
+socialHashtags: `
+CREATE TABLE IF NOT EXISTS SocialHashtags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(50) NOT NULL UNIQUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+`,
+
+socialPostHashtags: `
+CREATE TABLE IF NOT EXISTS SocialPostHashtags (
+    post_id INTEGER NOT NULL,
+    hashtag_id INTEGER NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES SocialPosts(id) ON DELETE CASCADE,
+    FOREIGN KEY (hashtag_id) REFERENCES SocialHashtags(id) ON DELETE CASCADE,
+    PRIMARY KEY (post_id, hashtag_id)
+)
+`,
+
+socialCharacterTags: `
+CREATE TABLE IF NOT EXISTS SocialCharacterTags (
+    post_id INTEGER NOT NULL,
+    character_id INTEGER NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES SocialPosts(id) ON DELETE CASCADE,
+    FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+    PRIMARY KEY (post_id, character_id)
+)
+`,
+
+socialNotifications: `
+CREATE TABLE IF NOT EXISTS SocialNotifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipient_character_id INTEGER NOT NULL,
+    actor_character_id INTEGER NOT NULL,
+    action_type VARCHAR(20) NOT NULL, -- follow, like, comment, mention, etc.
+    target_id INTEGER NOT NULL, -- post_id or comment_id
+    target_type VARCHAR(20) NOT NULL, -- post, comment
+    is_read BOOLEAN DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (recipient_character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_character_id) REFERENCES Characters(id) ON DELETE CASCADE
+)
 `
 };
 

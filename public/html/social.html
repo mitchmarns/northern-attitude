@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Feed | Northern Attitude</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link rel="stylesheet" href="https://use.typekit.net/eat5uwv.css">
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">northern<span>attitude</span></div>
+            <nav>
+                <ul>
+                    <li><a href="dash.html">Dashboard</a></li>
+                    <li><a href="my-characters.html">Players</a></li>
+                    <li><a href="teams.html">Teams</a></li>
+                    <li><a href="#">Games</a></li>
+                    <li><a href="messages.html">Messages</a></li>
+                    <li><a href="social.html" class="active">Social</a></li>
+                </ul>
+            </nav>
+            <div class="user-container">
+                <span id="username-display" class="username-display"></span>
+                <span> | </span>
+                <a href="#" id="logout-link" class="logout-link">Log Out</a>
+            </div>
+        </div>
+    </header>
+    
+    <main>
+        <div class="container social-container">
+            <aside class="social-sidebar">
+                <div class="character-selector">
+                    <h3>Your Character</h3>
+                    <div class="character-select-container">
+                        <select id="character-selector" class="character-selector-dropdown">
+                            <option value="">Select a character</option>
+                            <!-- Characters will be populated by JavaScript -->
+                        </select>
+                    </div>
+                    <div id="active-character-card" class="active-character-card">
+                        <div class="character-avatar">
+                            <img id="active-character-avatar" src="/api/placeholder/80/80" alt="Character avatar">
+                        </div>
+                        <div class="character-info">
+                            <h4 id="active-character-name">Select a character</h4>
+                            <div id="active-character-position">-</div>
+                            <div id="active-character-team">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="social-nav">
+                    <ul>
+                        <li class="active"><a href="social.html"><span class="icon">🏠</span> Home Feed</a></li>
+                        <li><a href="social-explore.html"><span class="icon">🔍</span> Explore</a></li>
+                        <li><a href="social-notifications.html"><span class="icon">🔔</span> Notifications <span class="badge" id="notifications-badge">0</span></a></li>
+                        <li><a href="social-profile.html"><span class="icon">👤</span> My Profile</a></li>
+                        <li><a href="social-bookmarks.html"><span class="icon">🔖</span> Saved Posts</a></li>
+                    </ul>
+                </nav>
+
+                <div class="trending-section">
+                    <h3>Trending Hashtags</h3>
+                    <ul id="trending-hashtags">
+                        <li><a href="#">#GameDay</a></li>
+                        <li><a href="#">#NHLDraft</a></li>
+                        <li><a href="#">#TrainingCamp</a></li>
+                        <li><a href="#">#TORvsVAN</a></li>
+                        <li><a href="#">#InjuryUpdate</a></li>
+                    </ul>
+                </div>
+
+                <div class="suggested-follows">
+                    <h3>Suggested Follows</h3>
+                    <div id="suggested-follows-container">
+                        <!-- Suggested follows will be populated by JavaScript -->
+                        <div class="suggested-follow-item">
+                            <div class="suggested-avatar">
+                                <img src="/api/placeholder/40/40" alt="Character avatar">
+                            </div>
+                            <div class="suggested-info">
+                                <div class="suggested-name">Toronto Maple Leafs</div>
+                                <div class="suggested-meta">Official Team</div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm follow-btn">Follow</button>
+                        </div>
+                        <div class="suggested-follow-item">
+                            <div class="suggested-avatar">
+                                <img src="/api/placeholder/40/40" alt="Character avatar">
+                            </div>
+                            <div class="suggested-info">
+                                <div class="suggested-name">NHL News</div>
+                                <div class="suggested-meta">Official Media</div>
+                            </div>
+                            <button class="btn btn-secondary btn-sm follow-btn">Follow</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="social-main-content">
+                <div class="post-composer">
+                    <form id="post-form">
+                        <div class="composer-header">
+                            <div class="composer-avatar">
+                                <img id="composer-avatar" src="/api/placeholder/40/40" alt="Your character">
+                            </div>
+                            <div class="composer-character-info">
+                                <span id="composer-character-name">Select a character</span>
+                                <span id="composer-character-team">-</span>
+                            </div>
+                        </div>
+                        <div class="composer-body">
+                            <textarea id="post-content" placeholder="What's happening?" rows="3"></textarea>
+                            <div id="post-preview" class="post-preview"></div>
+                        </div>
+                        <div class="composer-footer">
+                            <div class="composer-tools">
+                                <button type="button" id="add-image-btn" class="tool-btn" title="Add Image">📷</button>
+                                <button type="button" id="add-hashtag-btn" class="tool-btn" title="Add Hashtag">#</button>
+                                <button type="button" id="add-mention-btn" class="tool-btn" title="Mention">@</button>
+                                <div class="post-templates">
+                                    <button type="button" id="templates-btn" class="tool-btn" title="Post Templates">📝</button>
+                                    <div id="templates-dropdown" class="templates-dropdown">
+                                        <button type="button" data-template="pregame">Pregame Statement</button>
+                                        <button type="button" data-template="postgame">Postgame Reaction</button>
+                                        <button type="button" data-template="media">Media Interview</button>
+                                        <button type="button" data-template="team">Team Announcement</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="composer-actions">
+                                <select id="post-visibility">
+                                    <option value="public">Public</option>
+                                    <option value="followers">Followers Only</option>
+                                    <option value="team">Team Only</option>
+                                </select>
+                                <button type="submit" id="post-submit-btn" class="btn btn-primary" disabled>Post</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="feed-tabs">
+                    <button class="tab-btn active" data-feed="all">All Posts</button>
+                    <button class="tab-btn" data-feed="following">Following</button>
+                    <button class="tab-btn" data-feed="team">My Team</button>
+                    <button class="tab-btn" data-feed="league">League Official</button>
+                </div>
+
+                <div id="social-feed" class="social-feed">
+                    <!-- Posts will be dynamically loaded here -->
+                    <div id="feed-loading" class="feed-loading">
+                        <div class="loading-spinner"></div>
+                        <p>Loading feed...</p>
+                    </div>
+
+                    <!-- Sample posts for demonstration -->
+                    <article class="social-post">
+                        <div class="post-header">
+                            <div class="post-avatar">
+                                <img src="/api/placeholder/50/50" alt="Mark Stevens">
+                            </div>
+                            <div class="post-info">
+                                <div class="post-author">Mark Stevens <span class="verified-badge" title="Verified Player">✓</span></div>
+                                <div class="post-meta">Center • Toronto Maple Leafs • 2h ago</div>
+                            </div>
+                            <div class="post-menu">
+                                <button class="post-menu-btn">•••</button>
+                                <div class="post-menu-dropdown">
+                                    <button>Save Post</button>
+                                    <button>Copy Link</button>
+                                    <button>Report</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <p>Excited for tonight's game against Vancouver! The team has been working hard in practice, and we're ready to show what we've got. #LeafsNation #GameDay</p>
+                        </div>
+                        <div class="post-footer">
+                            <div class="post-stats">
+                                <span>42 likes</span>
+                                <span>12 comments</span>
+                                <span>5 shares</span>
+                            </div>
+                            <div class="post-actions">
+                                <button class="action-btn like-btn"><span class="icon">❤️</span> Like</button>
+                                <button class="action-btn comment-btn"><span class="icon">💬</span> Comment</button>
+                                <button class="action-btn share-btn"><span class="icon">🔄</span> Share</button>
+                            </div>
+                        </div>
+                        <div class="post-comments collapsed">
+                            <div class="comment-composer">
+                                <div class="comment-avatar">
+                                    <img src="/api/placeholder/30/30" alt="Your character">
+                                </div>
+                                <form class="comment-form">
+                                    <input type="text" placeholder="Write a comment...">
+                                    <button type="submit">Post</button>
+                                </form>
+                            </div>
+                            <div class="comments-list">
+                                <div class="comment">
+                                    <div class="comment-avatar">
+                                        <img src="/api/placeholder/30/30" alt="Alex Johnson">
+                                    </div>
+                                    <div class="comment-content">
+                                        <div class="comment-author">Alex Johnson</div>
+                                        <div class="comment-text">Good luck out there, captain! We're all behind you!</div>
+                                        <div class="comment-actions">
+                                            <button>Like</button>
+                                            <button>Reply</button>
+                                            <span class="comment-time">1h ago</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="view-more-comments">
+                                    <button>View 11 more comments</button>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article class="social-post">
+                        <div class="post-header">
+                            <div class="post-avatar">
+                                <img src="/api/placeholder/50/50" alt="Toronto Maple Leafs">
+                            </div>
+                            <div class="post-info">
+                                <div class="post-author">Toronto Maple Leafs <span class="verified-badge" title="Official Team Account">✓</span></div>
+                                <div class="post-meta">Official Team • 5h ago</div>
+                            </div>
+                            <div class="post-menu">
+                                <button class="post-menu-btn">•••</button>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <p>GAME DAY! The Leafs take on the Vancouver Canucks tonight at 7:00 PM ET. Who's ready? #LeafsForever #TORvsVAN</p>
+                            <div class="post-image">
+                                <img src="/api/placeholder/600/400" alt="Game day graphic">
+                            </div>
+                        </div>
+                        <div class="post-footer">
+                            <div class="post-stats">
+                                <span>128 likes</span>
+                                <span>37 comments</span>
+                                <span>52 shares</span>
+                            </div>
+                            <div class="post-actions">
+                                <button class="action-btn like-btn"><span class="icon">❤️</span> Like</button>
+                                <button class="action-btn comment-btn"><span class="icon">💬</span> Comment</button>
+                                <button class="action-btn share-btn"><span class="icon">🔄</span> Share</button>
+                            </div>
+                        </div>
+                        <div class="post-comments collapsed"></div>
+                    </article>
+
+                    <article class="social-post">
+                        <div class="post-header">
+                            <div class="post-avatar">
+                                <img src="/api/placeholder/50/50" alt="Hockey Insider">
+                            </div>
+                            <div class="post-info">
+                                <div class="post-author">Hockey Insider <span class="verified-badge" title="Verified Media">✓</span></div>
+                                <div class="post-meta">Media • 1d ago</div>
+                            </div>
+                            <div class="post-menu">
+                                <button class="post-menu-btn">•••</button>
+                            </div>
+                        </div>
+                        <div class="post-content">
+                            <p>BREAKING: Sources confirm that defenseman Ryan Mitchell will be out 2-3 weeks with a lower body injury. A big blow to Vancouver's blue line as they prepare for a tough road trip. #Canucks #InjuryUpdate</p>
+                        </div>
+                        <div class="post-footer">
+                            <div class="post-stats">
+                                <span>86 likes</span>
+                                <span>24 comments</span>
+                                <span>31 shares</span>
+                            </div>
+                            <div class="post-actions">
+                                <button class="action-btn like-btn"><span class="icon">❤️</span> Like</button>
+                                <button class="action-btn comment-btn"><span class="icon">💬</span> Comment</button>
+                                <button class="action-btn share-btn"><span class="icon">🔄</span> Share</button>
+                            </div>
+                        </div>
+                        <div class="post-comments collapsed"></div>
+                    </article>
+                </div>
+            </div>
+
+            <aside class="social-right-sidebar">
+                <div class="upcoming-games">
+                    <h3>Upcoming Games</h3>
+                    <div id="upcoming-games-container">
+                        <div class="game-card">
+                            <div class="game-teams">
+                                <div class="game-team">
+                                    <img src="/api/placeholder/30/30" alt="Toronto">
+                                    <span>TOR</span>
+                                </div>
+                                <span class="vs">vs</span>
+                                <div class="game-team">
+                                    <img src="/api/placeholder/30/30" alt="Vancouver">
+                                    <span>VAN</span>
+                                </div>
+                            </div>
+                            <div class="game-details">
+                                <div class="game-time">Today, 7:00 PM ET</div>
+                                <div class="game-location">Scotiabank Arena</div>
+                            </div>
+                        </div>
+                        <div class="game-card">
+                            <div class="game-teams">
+                                <div class="game-team">
+                                    <img src="/api/placeholder/30/30" alt="Montreal">
+                                    <span>MTL</span>
+                                </div>
+                                <span class="vs">vs</span>
+                                <div class="game-team">
+                                    <img src="/api/placeholder/30/30" alt="Boston">
+                                    <span>BOS</span>
+                                </div>
+                            </div>
+                            <div class="game-details">
+                                <div class="game-time">Tomorrow, 6:30 PM ET</div>
+                                <div class="game-location">Bell Centre</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="league-news">
+                    <h3>League Updates</h3>
+                    <div class="news-list">
+                        <div class="news-item">
+                            <div class="news-title">Trade Deadline Approaching</div>
+                            <div class="news-meta">Posted 3h ago</div>
+                        </div>
+                        <div class="news-item">
+                            <div class="news-title">All-Star Voting Now Open</div>
+                            <div class="news-meta">Posted 1d ago</div>
+                        </div>
+                        <div class="news-item">
+                            <div class="news-title">Player of the Week Announced</div>
+                            <div class="news-meta">Posted 2d ago</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Comment Modal for expanded comment view -->
+    <div id="comment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Comments</h3>
+                <button id="close-comment-modal" class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="full-comments-list">
+                    <!-- Comments will be populated here -->
+                </div>
+                <div class="modal-comment-composer">
+                    <div class="comment-avatar">
+                        <img id="modal-comment-avatar" src="/api/placeholder/40/40" alt="Your character">
+                    </div>
+                    <form id="modal-comment-form" class="comment-form">
+                        <input type="text" placeholder="Write a comment..." id="modal-comment-input">
+                        <button type="submit">Post</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Preview Modal -->
+    <div id="image-preview-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Image to Post</h3>
+                <button id="close-image-modal" class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="image-preview-container">
+                    <input type="url" id="image-url-input" placeholder="Enter image URL" class="form-control">
+                    <button id="preview-image-btn" class="btn btn-secondary">Preview</button>
+                </div>
+                <div class="image-preview">
+                    <img id="preview-image" src="/api/placeholder/400/300" alt="Image preview">
+                </div>
+                <div class="modal-actions">
+                    <button id="cancel-image-btn" class="btn btn-secondary">Cancel</button>
+                    <button id="add-image-to-post-btn" class="btn btn-primary">Add to Post</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Northern Attitude Hockey Roleplay. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="../js/auth-utils.js"></script>
+    <script src="../js/social-feed.js"></script>
+</body>
+</html>
