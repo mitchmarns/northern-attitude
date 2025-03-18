@@ -1189,4 +1189,133 @@ function loadUpcomingGames() {
       console.error('Error toggling like:', error);
     }
   }
+
+  function updatePostPreview() {
+    if (!elements.postPreview) return;
+    
+    // Clear previous preview
+    elements.postPreview.innerHTML = '';
+    
+    // If there's an image URL, show the image
+    if (currentState.postImageUrl) {
+      const previewImage = document.createElement('img');
+      previewImage.src = currentState.postImageUrl;
+      previewImage.alt = 'Post preview image';
+      elements.postPreview.appendChild(previewImage);
+    }
+    
+    // If there's text content, show formatted text
+    if (currentState.postContent) {
+      const previewText = document.createElement('p');
+      previewText.innerHTML = formatPostContent(currentState.postContent);
+      elements.postPreview.appendChild(previewText);
+    }
+    
+    // Show or hide preview container based on content
+    elements.postPreview.style.display = 
+      currentState.postImageUrl || currentState.postContent.trim() 
+        ? 'block' 
+        : 'none';
+  }
+
+  async function submitPost() {
+    // Ensure we have a selected character and some content
+    if (!currentState.selectedCharacterId) {
+      alert('Please select a character to post as');
+      return;
+    }
+  
+    if (!currentState.postContent.trim() && !currentState.postImageUrl) {
+      alert('Please enter some content or add an image');
+      return;
+    }
+  
+    try {
+      // Disable submit button and show loading state
+      if (elements.postSubmitBtn) {
+        elements.postSubmitBtn.disabled = true;
+        elements.postSubmitBtn.textContent = 'Posting...';
+      }
+  
+      // Prepare post data
+      const postData = {
+        characterId: currentState.selectedCharacterId,
+        content: currentState.postContent.trim(),
+        imageUrl: currentState.postImageUrl,
+        visibility: elements.postVisibility ? elements.postVisibility.value : 'public'
+      };
+  
+      // Send post to server
+      const response = await fetch('/api/social/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postData),
+        credentials: 'include'
+      });
+  
+      if (!response.ok) {
+        throw new Error('Failed to create post');
+      }
+  
+      // Reset form and state
+      currentState.postContent = '';
+      currentState.postImageUrl = null;
+      
+      if (elements.postContent) {
+        elements.postContent.value = '';
+      }
+      
+      if (elements.postPreview) {
+        elements.postPreview.innerHTML = '';
+        elements.postPreview.style.display = 'none';
+      }
+  
+      // Reload feed
+      loadFeed(currentState.currentFeed, 1);
+  
+      // Show success message
+      showSuccess('Post created successfully!');
+  
+    } catch (error) {
+      console.error('Error creating post:', error);
+      showError('Failed to create post. Please try again.');
+    } finally {
+      // Re-enable submit button
+      if (elements.postSubmitBtn) {
+        elements.postSubmitBtn.disabled = false;
+        elements.postSubmitBtn.textContent = 'Post';
+      }
+    }
+  }
+  
+  // Utility functions to show success and error messages
+  function showSuccess(message) {
+    const successDiv = document.createElement('div');
+    successDiv.className = 'success-message';
+    successDiv.textContent = message;
+    
+    // Append to body or a specific container
+    document.body.appendChild(successDiv);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      successDiv.remove();
+    }, 3000);
+  }
+  
+  function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'error-message';
+    errorDiv.textContent = message;
+    
+    // Append to body or a specific container
+    document.body.appendChild(errorDiv);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      errorDiv.remove();
+    }, 3000);
+  }
 });

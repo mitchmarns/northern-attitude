@@ -528,35 +528,6 @@ getSuggestedFollows: async (characterId, limit = 3) => {
         }
       });
     });
-  },
-
-  /**
-   * Get trending hashtags
-   * @param {number} limit - Number of trending hashtags to retrieve
-   * @param {number} days - Number of days to look back
-   */
-  getTrendingHashtags: async (limit = 5, days = 7) => {
-    return new Promise((resolve, reject) => {
-      db.all(`
-        SELECT 
-          h.name as tag, 
-          COUNT(ph.post_id) as count
-        FROM SocialHashtags h
-        JOIN SocialPostHashtags ph ON h.id = ph.hashtag_id
-        JOIN SocialPosts p ON ph.post_id = p.id
-        WHERE p.created_at >= datetime('now', '-${days} days')
-        GROUP BY h.name
-        ORDER BY count DESC
-        LIMIT ?
-      `, [limit], (err, rows) => {
-        if (err) {
-          console.error('Error fetching trending hashtags:', err);
-          reject(err);
-        } else {
-          resolve(rows || []);
-        }
-      });
-    });
   }
 };
 

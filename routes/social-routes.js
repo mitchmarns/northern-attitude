@@ -2,7 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../public/js/auth');
-const { characterOperations, socialOperations } = require('../config/db');
+const { socialOperations } = require('../config/db');
+const { characterOperations } = require('../config/db');
 
 // Get characters for social feed
 router.get('/characters', authMiddleware.isAuthenticated, async (req, res) => {

@@ -6,7 +6,7 @@ const teamOperations = require('./db/team-db');
 const gameOperations = require('./db/game-db');
 const messageOperations = require('./db/message-db');
 const authDbOperations = require('./db/auth-db');
-const socialOperations = require('./db/social-db.js')
+const { socialOperations } = require('./db/social-db.js')
 
 // Export everything with the same structure
 module.exports = {

@@ -69,4 +69,15 @@ router.get('/unread-messages', authMiddleware.isAuthenticated, async (req, res) 
   }
 });
 
+router.get('/games/upcoming', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || '2');
+    const games = await gameOperations.getUpcomingGames(limit);
+    res.json(games);
+  } catch (error) {
+    console.error('Error getting upcoming games:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 module.exports = router;
