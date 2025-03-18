@@ -1,6 +1,5 @@
 // config/db/social-db.js
-const { db } = require('../db.js');
-
+const { dbQuery, dbQueryAll, dbExecute, dbTransaction } = require('./utils');
 
 /**
  * Social database operations
