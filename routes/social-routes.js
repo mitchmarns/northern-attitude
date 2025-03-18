@@ -8,10 +8,15 @@ const { characterOperations, socialOperations } = require('../config/db');
 router.get('/characters', authMiddleware.isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
+    console.log('Fetching characters for user ID:', userId);
     
     // Get user's characters with team information
-    const characters = await characterOperations.getUserCharactersWithTeams(userId);
+    const characters = await characterOperations.getUserCharacters(userId);
     
+    // Log the result for debugging
+    console.log(`Found ${characters.length} characters for user ID ${userId}`);
+    
+    // Return characters as JSON
     res.status(200).json(characters);
   } catch (error) {
     console.error('Error fetching characters for social feed:', error);

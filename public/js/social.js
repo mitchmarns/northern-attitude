@@ -308,50 +308,54 @@ document.addEventListener('DOMContentLoaded', function() {
   // Function to load user's characters
   async function loadUserCharacters() {
     try {
-      // In a real app with API integration:
-      // const response = await fetch('/api/my-characters', {
-      //   method: 'GET',
-      //   credentials: 'include'
-      // });
-      // 
-      // if (!response.ok) {
-      //   throw new Error('Failed to fetch characters');
-      // }
-      // 
-      // const characters = await response.json();
+      if (elements.conversationList) {
+        elements.conversationList.innerHTML = '<div class="loading-indicator">Loading characters...</div>';
+      }
       
-      // For now, we'll use mock data
-      const mockCharacters = [
-        {
-          id: 1,
-          name: 'Mark Stevens',
-          position: 'Center',
-          team_name: 'Toronto Maple Leafs',
-          avatar_url: '/api/placeholder/80/80',
-          is_active: true
-        },
-        {
-          id: 2,
-          name: 'Alex Johnson',
-          position: 'Defense',
-          team_name: 'Toronto Maple Leafs',
-          avatar_url: '/api/placeholder/80/80',
-          is_active: false
-        },
-        {
-          id: 3,
-          name: 'Samantha Clarke',
-          position: 'Goalie',
-          team_name: 'Boston Bruins',
-          avatar_url: '/api/placeholder/80/80',
-          is_active: false
+      // Make API call to get the user's characters
+      const response = await fetch('/api/social/characters', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
         }
-      ];
+      });
       
-      populateCharacterSelector(mockCharacters);
+      if (!response.ok) {
+        throw new Error('Failed to fetch characters: ' + response.status);
+      }
+      
+      const characters = await response.json();
+      
+      // Check if we got any characters back
+      if (characters && characters.length > 0) {
+        console.log('Characters loaded:', characters);
+        populateCharacterSelector(characters);
+      } else {
+        console.log('No characters returned from API');
+        // Show a message prompting user to create characters
+        if (elements.characterSelector) {
+          elements.characterSelector.innerHTML = '<option value="">No characters available</option>';
+        }
+        
+        if (elements.activeCharacterName) {
+          elements.activeCharacterName.textContent = 'No characters found';
+        }
+        
+        if (elements.postSubmitBtn) {
+          elements.postSubmitBtn.disabled = true;
+        }
+      }
     } catch (error) {
       console.error('Error loading characters:', error);
-      // Show error message if needed
+      // Show error message
+      if (elements.characterSelector) {
+        elements.characterSelector.innerHTML = '<option value="">Failed to load characters</option>';
+      }
+      
+      if (elements.activeCharacterName) {
+        elements.activeCharacterName.textContent = 'Error loading characters';
+      }
     }
   }
   
@@ -359,9 +363,20 @@ document.addEventListener('DOMContentLoaded', function() {
   function populateCharacterSelector(characters) {
     if (!elements.characterSelector) return;
     
+    console.log('Populating character selector with:', characters);
+    
     // Clear existing options except the first one
     while (elements.characterSelector.options.length > 1) {
       elements.characterSelector.remove(1);
+    }
+    
+    if (characters.length === 0) {
+      // If no characters, show a message
+      elements.characterSelector.innerHTML = '<option value="">No characters found</option>';
+      if (elements.activeCharacterName) {
+        elements.activeCharacterName.textContent = 'No characters available';
+      }
+      return;
     }
     
     // Add character options
@@ -388,8 +403,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Enable post button if character is selected
-    if (currentState.selectedCharacterId) {
-      elements.postSubmitBtn.disabled = false;
+    if (currentState.selectedCharacterId && elements.postSubmitBtn) {
+      elements.postSubmitBtn.disabled = !currentState.postContent.trim() && !currentState.postImageUrl;
     }
   }
   
