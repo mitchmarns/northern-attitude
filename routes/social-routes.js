@@ -8,15 +8,10 @@ const { characterOperations, socialOperations } = require('../config/db');
 router.get('/characters', authMiddleware.isAuthenticated, async (req, res) => {
   try {
     const userId = req.user.id;
-    console.log('Fetching characters for user ID:', userId);
     
     // Get user's characters with team information
     const characters = await characterOperations.getUserCharacters(userId);
     
-    // Log the result for debugging
-    console.log(`Found ${characters.length} characters for user ID ${userId}`);
-    
-    // Return characters as JSON
     res.status(200).json(characters);
   } catch (error) {
     console.error('Error fetching characters for social feed:', error);
@@ -67,7 +62,7 @@ router.get('/feed/:type', authMiddleware.isAuthenticated, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching social feed:', error);
-    res.status(500).json({ message: 'Failed to load social feed' });
+    res.status(500).json({ message: 'Failed to load social feed', error: error.message });
   }
 });
 
@@ -153,6 +148,31 @@ router.get('/suggested-follows', authMiddleware.isAuthenticated, async (req, res
   }
 });
 
+// Notifications route
+router.get('/notifications-count', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const characterId = req.query.characterId;
+    
+    if (!characterId) {
+      return res.status(400).json({ message: 'Character ID is required' });
+    }
+    
+    // Check if character belongs to user
+    const isOwner = await characterOperations.isCharacterOwner(req.user.id, characterId);
+    if (!isOwner) {
+      return res.status(403).json({ message: 'You do not have permission to view this' });
+    }
+    
+    // Get notification count
+    const notificationCount = await socialOperations.getNotificationsCount(characterId);
+    
+    res.status(200).json({ count: notificationCount });
+  } catch (error) {
+    console.error('Error fetching notifications count:', error);
+    res.status(500).json({ message: 'Failed to load notifications' });
+  }
+});
+
 // Toggle like on a post
 router.post('/posts/:postId/like', authMiddleware.isAuthenticated, async (req, res) => {
   try {
@@ -191,6 +211,17 @@ router.get('/posts/:postId/comments', authMiddleware.isAuthenticated, async (req
   } catch (error) {
     console.error('Error fetching comments:', error);
     res.status(500).json({ message: 'Failed to load comments' });
+  }
+});
+
+router.get('/upcoming', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || '2');
+    const games = await gameOperations.getUpcomingGames(limit);
+    res.json(games);
+  } catch (error) {
+    console.error('Error getting upcoming games:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 

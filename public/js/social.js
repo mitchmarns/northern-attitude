@@ -84,7 +84,10 @@ document.addEventListener('DOMContentLoaded', function() {
     setupEventListeners();
     
     // Load supporting content
+    loadNotificationsCount();
     loadTrendingHashtags();
+    loadSuggestedFollows();
+    loadUpcomingGames();
   }
   
   // Set up event listeners
@@ -285,6 +288,37 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up global event delegation for post interactions
     document.addEventListener('click', handlePostInteractions);
   }
+
+  // Function to load notifications count
+function loadNotificationsCount() {
+  if (!elements.notificationsBadge || !currentState.selectedCharacterId) return;
+  
+  fetch(`/api/social/notifications-count?characterId=${currentState.selectedCharacterId}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to fetch notifications count');
+    }
+    return response.json();
+  })
+  .then(data => {
+    // Update notifications badge
+    const count = data.count || 0;
+    elements.notificationsBadge.textContent = count;
+    elements.notificationsBadge.style.display = count > 0 ? 'inline-block' : 'none';
+  })
+  .catch(error => {
+    console.error('Error loading notifications count:', error);
+    // Fallback display or hide badge
+    elements.notificationsBadge.textContent = '0';
+    elements.notificationsBadge.style.display = 'none';
+  });
+}
   
   // Handle post interactions via event delegation
   function handlePostInteractions(e) {
@@ -328,12 +362,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // Function to load user's characters
   async function loadUserCharacters() {
     try {
-      // Show loading state
-      if (elements.characterSelector) {
-        elements.characterSelector.innerHTML = '<option value="">Loading characters...</option>';
-      }
-      
-      // Make API call to get the user's characters
       const response = await fetch('/api/social/characters', {
         method: 'GET',
         credentials: 'include',
@@ -348,34 +376,13 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const characters = await response.json();
       
-      // Check if we got any characters back
-      if (characters && characters.length > 0) {
-        console.log('Characters loaded:', characters);
-        populateCharacterSelector(characters);
-      } else {
-        console.log('No characters returned from API');
-        // Show a message prompting user to create characters
-        if (elements.characterSelector) {
-          elements.characterSelector.innerHTML = '<option value="">No characters available</option>';
-        }
-        
-        if (elements.activeCharacterName) {
-          elements.activeCharacterName.textContent = 'No characters found';
-        }
-        
-        if (elements.postSubmitBtn) {
-          elements.postSubmitBtn.disabled = true;
-        }
-      }
+      // Populate character selector
+      populateCharacterSelector(characters);
     } catch (error) {
       console.error('Error loading characters:', error);
-      // Show error message
+      // Show error message in character selector
       if (elements.characterSelector) {
-        elements.characterSelector.innerHTML = '<option value="">Failed to load characters</option>';
-      }
-      
-      if (elements.activeCharacterName) {
-        elements.activeCharacterName.textContent = 'Error loading characters';
+        elements.characterSelector.innerHTML = '<option value="">Error loading characters</option>';
       }
     }
   }
@@ -384,25 +391,22 @@ document.addEventListener('DOMContentLoaded', function() {
   function populateCharacterSelector(characters) {
     if (!elements.characterSelector) return;
     
-    // Clear existing options
-    elements.characterSelector.innerHTML = '<option value="">Select a character</option>';
+    // Clear existing options except the first one
+    while (elements.characterSelector.options.length > 1) {
+      elements.characterSelector.remove(1);
+    }
     
     if (characters.length === 0) {
+      // If no characters, show a message
       elements.characterSelector.innerHTML = '<option value="">No characters found</option>';
-      if (elements.activeCharacterName) {
-        elements.activeCharacterName.textContent = 'No characters available';
-      }
       return;
     }
     
-    // Add character options with data attributes
+    // Add character options
     characters.forEach(character => {
       const option = document.createElement('option');
       option.value = character.id;
       option.textContent = character.name;
-      option.dataset.position = character.position;
-      option.dataset.team = character.team_name || '';
-      option.dataset.avatar = character.avatar_url || '/api/placeholder/80/80';
       
       // Set active character as selected
       if (character.is_active) {
@@ -421,15 +425,9 @@ document.addEventListener('DOMContentLoaded', function() {
       updateActiveCharacter(characters[0]);
     }
     
-    // Enable post button if character is selected
-    if (currentState.selectedCharacterId && elements.postSubmitBtn) {
-      elements.postSubmitBtn.disabled = !currentState.postContent.trim() && !currentState.postImageUrl;
-    }
-    
-    // Load feed for selected character
+    // Try to load feed for the selected character
     if (currentState.selectedCharacterId) {
-      loadFeed('all', 1);
-      loadSuggestedFollows(currentState.selectedCharacterId);
+      loadFeed(currentState.currentFeed);
     }
   }
   
@@ -480,34 +478,349 @@ document.addEventListener('DOMContentLoaded', function() {
       elements.postSubmitBtn.disabled = !currentState.postContent.trim() && !currentState.postImageUrl;
     }
   }
+
+  // Function to load trending hashtags
+function loadTrendingHashtags() {
+  if (!elements.trendingHashtags) return;
+  
+  fetch('/api/social/trending-hashtags', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to fetch trending hashtags');
+    }
+    return response.json();
+  })
+  .then(hashtags => {
+    // Clear existing content
+    elements.trendingHashtags.innerHTML = '';
+    
+    // Create hashtag elements
+    hashtags.forEach(hashtag => {
+      const hashtagElement = document.createElement('div');
+      hashtagElement.className = 'trending-item';
+      hashtagElement.innerHTML = `
+        <a href="#" class="hashtag">#${hashtag.tag}</a>
+        <span class="trending-count">${hashtag.count} posts</span>
+      `;
+      
+      elements.trendingHashtags.appendChild(hashtagElement);
+    });
+  })
+  .catch(error => {
+    console.error('Error loading trending hashtags:', error);
+    
+    // Fallback to mock trending hashtags
+    const mockHashtags = [
+      { tag: 'playoffs', count: 128 },
+      { tag: 'goal', count: 89 },
+      { tag: 'hockey', count: 76 },
+      { tag: 'training', count: 54 },
+      { tag: 'win', count: 43 }
+    ];
+    
+    // Clear existing content
+    elements.trendingHashtags.innerHTML = '';
+    
+    // Create hashtag elements
+    mockHashtags.forEach(hashtag => {
+      const hashtagElement = document.createElement('div');
+      hashtagElement.className = 'trending-item';
+      hashtagElement.innerHTML = `
+        <a href="#" class="hashtag">#${hashtag.tag}</a>
+        <span class="trending-count">${hashtag.count} posts</span>
+      `;
+      
+      elements.trendingHashtags.appendChild(hashtagElement);
+    });
+  });
+}
+
+// Function to load suggested follows
+function loadSuggestedFollows() {
+  if (!elements.suggestedFollows || !currentState.selectedCharacterId) return;
+  
+  fetch(`/api/social/suggested-follows?characterId=${currentState.selectedCharacterId}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to fetch suggested follows');
+    }
+    return response.json();
+  })
+  .then(suggestions => {
+    // Clear existing content
+    elements.suggestedFollows.innerHTML = '';
+    
+    // Create suggestion elements
+    suggestions.forEach(suggestion => {
+      const suggestionElement = document.createElement('div');
+      suggestionElement.className = 'suggested-follow-item';
+      suggestionElement.innerHTML = `
+        <div class="suggested-avatar">
+          <img src="${suggestion.avatar_url || '/api/placeholder/40/40'}" alt="${suggestion.name}">
+        </div>
+        <div class="suggested-info">
+          <div class="suggested-name">${suggestion.name}</div>
+          <div class="suggested-meta">
+            ${suggestion.position || ''} ${suggestion.team_name ? `| ${suggestion.team_name}` : ''}
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm follow-btn" data-character-id="${suggestion.id}">Follow</button>
+      `;
+      
+      elements.suggestedFollows.appendChild(suggestionElement);
+    });
+    
+    // Add event listeners for follow buttons
+    document.querySelectorAll('.follow-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        const characterId = this.dataset.characterId;
+        this.textContent = 'Following';
+        this.classList.add('following');
+        this.disabled = true;
+        
+        // Optional: Send follow request to server
+        fetch(`/api/social/characters/${characterId}/follow`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            characterId: currentState.selectedCharacterId 
+          })
+        }).catch(error => {
+          console.error('Error following character:', error);
+        });
+      });
+    });
+  })
+  .catch(error => {
+    console.error('Error loading suggested follows:', error);
+    
+    // Fallback to mock suggestions
+    const mockSuggestions = [
+      {
+        id: 4,
+        name: 'David Wilson',
+        position: 'Left Wing',
+        team_name: 'Montreal Canadiens',
+        avatar_url: '/api/placeholder/50/50'
+      },
+      {
+        id: 5,
+        name: 'Emma Thompson',
+        position: 'Defense',
+        team_name: 'Vancouver Canucks',
+        avatar_url: '/api/placeholder/50/50'
+      },
+      {
+        id: 6,
+        name: 'James Rodriguez',
+        position: 'Goalie',
+        team_name: 'Calgary Flames',
+        avatar_url: '/api/placeholder/50/50'
+      }
+    ];
+    
+    // Clear existing content
+    elements.suggestedFollows.innerHTML = '';
+    
+    // Create suggestion elements
+    mockSuggestions.forEach(suggestion => {
+      const suggestionElement = document.createElement('div');
+      suggestionElement.className = 'suggested-follow-item';
+      suggestionElement.innerHTML = `
+        <div class="suggested-avatar">
+          <img src="${suggestion.avatar_url}" alt="${suggestion.name}">
+        </div>
+        <div class="suggested-info">
+          <div class="suggested-name">${suggestion.name}</div>
+          <div class="suggested-meta">
+            ${suggestion.position || ''} ${suggestion.team_name ? `| ${suggestion.team_name}` : ''}
+          </div>
+        </div>
+        <button class="btn btn-secondary btn-sm follow-btn" data-character-id="${suggestion.id}">Follow</button>
+      `;
+      
+      elements.suggestedFollows.appendChild(suggestionElement);
+    });
+    
+    // Add event listeners for follow buttons
+    document.querySelectorAll('.follow-btn').forEach(button => {
+      button.addEventListener('click', function() {
+        this.textContent = 'Following';
+        this.classList.add('following');
+        this.disabled = true;
+      });
+    });
+  });
+}
+
+// Function to load upcoming games
+function loadUpcomingGames() {
+  if (!elements.upcomingGames) return;
+  
+  // Use a generic games endpoint, modify as needed
+  fetch('/api/games/upcoming', {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Failed to fetch upcoming games');
+    }
+    return response.json();
+  })
+  .then(games => {
+    // Clear existing content
+    elements.upcomingGames.innerHTML = '';
+    
+    // Create game elements
+    games.slice(0, 2).forEach(game => {
+      const gameElement = document.createElement('div');
+      gameElement.className = 'game-card';
+      
+      // Format date
+      const gameDate = new Date(game.date);
+      const formattedDate = gameDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      });
+      
+      gameElement.innerHTML = `
+        <div class="game-teams">
+          <div class="game-team">
+            <img src="/api/placeholder/30/30" alt="${game.home_team_name}">
+            <span>${game.home_team_name}</span>
+          </div>
+          <span class="vs">vs</span>
+          <div class="game-team">
+            <img src="/api/placeholder/30/30" alt="${game.away_team_name}">
+            <span>${game.away_team_name}</span>
+          </div>
+        </div>
+        <div class="game-details">
+          <div class="game-time">${formattedDate}</div>
+          <div class="game-location">${game.location || 'TBD'}</div>
+        </div>
+      `;
+      
+      elements.upcomingGames.appendChild(gameElement);
+    });
+  })
+  .catch(error => {
+    console.error('Error loading upcoming games:', error);
+    
+    // Fallback to mock games
+    const mockGames = [
+      {
+        home_team_name: 'Toronto Maple Leafs',
+        away_team_name: 'Montreal Canadiens',
+        date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+        location: 'Scotiabank Arena'
+      },
+      {
+        home_team_name: 'Vancouver Canucks',
+        away_team_name: 'Calgary Flames',
+        date: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
+        location: 'Rogers Arena'
+      }
+    ];
+    
+    // Clear existing content
+    elements.upcomingGames.innerHTML = '';
+    
+    // Create game elements
+    mockGames.forEach(game => {
+      const gameElement = document.createElement('div');
+      gameElement.className = 'game-card';
+      
+      // Format date
+      const gameDate = new Date(game.date);
+      const formattedDate = gameDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit'
+      });
+      
+      gameElement.innerHTML = `
+        <div class="game-teams">
+          <div class="game-team">
+            <img src="/api/placeholder/30/30" alt="${game.home_team_name}">
+            <span>${game.home_team_name}</span>
+          </div>
+          <span class="vs">vs</span>
+          <div class="game-team">
+            <img src="/api/placeholder/30/30" alt="${game.away_team_name}">
+            <span>${game.away_team_name}</span>
+          </div>
+        </div>
+        <div class="game-details">
+          <div class="game-time">${formattedDate}</div>
+          <div class="game-location">${game.location || 'TBD'}</div>
+        </div>
+      `;
+      
+      elements.upcomingGames.appendChild(gameElement);
+    });
+  });
+}
   
   // Load feed data
   async function loadFeed(feedType = 'all', page = 1) {
-    if (!currentState.selectedCharacterId) return;
+    if (!currentState.selectedCharacterId) {
+      console.error('No character selected');
+      return;
+    }
     
     // Show loading indicator
     if (elements.feedLoading) {
       elements.feedLoading.style.display = 'block';
     }
     
-    // Clear feed if it's the first page
-    if (page === 1 && elements.socialFeed) {
-      elements.socialFeed.innerHTML = '';
-    }
-    
     // Set current feed type
     currentState.currentFeed = feedType;
-    currentState.isLoadingMore = true;
+    
+    // Update active tab
+    elements.feedTabs.forEach(tab => {
+      if (tab.dataset.feed === feedType) {
+        tab.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+      }
+    });
     
     try {
-      // Make API call to get posts
       const response = await fetch(`/api/social/feed/${feedType}?characterId=${currentState.selectedCharacterId}&page=${page}&limit=10`, {
         method: 'GET',
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
       });
       
       if (!response.ok) {
-        throw new Error('Failed to load posts: ' + response.status);
+        throw new Error(`Failed to fetch ${feedType} feed: ${response.status}`);
       }
       
       const data = await response.json();
@@ -517,23 +830,31 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.feedLoading.style.display = 'none';
       }
       
+      // Clear feed or append based on page
+      if (page === 1) {
+        if (elements.socialFeed) {
+          elements.socialFeed.innerHTML = '';
+        }
+      }
+      
+      // Add posts to feed
       if (data.posts && data.posts.length > 0) {
-        // Create and append post elements
         data.posts.forEach(post => {
-          const postElement = createPostElement(post);
-          if (elements.socialFeed && postElement) {
+          const postElement = createPostElement(formatServerPost(post));
+          if (elements.socialFeed) {
             elements.socialFeed.appendChild(postElement);
           }
         });
-        
-        // Update current page
-        currentState.lastPage = page;
       } else if (page === 1) {
-        // No posts found for the first page
+        // Show empty state if no posts on first page
         if (elements.socialFeed) {
-          elements.socialFeed.innerHTML = '<div class="empty-feed">No posts found in this feed. Follow more characters or create a post!</div>';
+          elements.socialFeed.innerHTML = '<div class="empty-feed">No posts to show</div>';
         }
       }
+      
+      // Update state
+      currentState.lastPage = page;
+      currentState.isLoadingMore = false;
     } catch (error) {
       console.error('Error loading feed:', error);
       
@@ -543,12 +864,32 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       
       // Show error message
-      if (elements.socialFeed && page === 1) {
-        elements.socialFeed.innerHTML = '<div class="feed-error">Failed to load posts. Please try again later.</div>';
+      if (elements.socialFeed) {
+        elements.socialFeed.innerHTML = `<div class="error-feed">Failed to load feed: ${error.message}</div>`;
       }
-    } finally {
+      
       currentState.isLoadingMore = false;
     }
+  }
+
+  // Helper function to format server post to match client-side post structure
+  function formatServerPost(serverPost) {
+    return {
+      id: serverPost.id.toString(),
+      author: {
+        id: serverPost.character_id,
+        name: serverPost.author_name || 'Unknown',
+        position: serverPost.author_position || '',
+        team_name: serverPost.author_team || '',
+        avatar_url: serverPost.author_avatar || '/api/placeholder/60/60'
+      },
+      content: serverPost.content,
+      imageUrl: serverPost.media_url,
+      timestamp: new Date(serverPost.created_at),
+      likes: serverPost.likes_count || 0,
+      liked: serverPost.is_liked || false,
+      comments: [], // Will be fetched separately if needed
+    };
   }
   
   // Load more posts (for infinite scroll)
