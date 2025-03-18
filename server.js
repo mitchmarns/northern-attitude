@@ -94,6 +94,7 @@ const characterRoutes = require('./routes/character-routes');
 const teamRoutes = require('./routes/team-routes'); 
 const threadRoutes = require('./routes/thread-routes');
 const messageRoutes = require('./routes/message-routes'); 
+const socialRoutes = require('./routes/social-routes');
 const searchRoutes = require('./routes/search-routes');
 
 // Set up routes
@@ -104,6 +105,7 @@ app.use('/api', characterRoutes);
 app.use('/api', teamRoutes);  
 app.use('/api/threads', threadRoutes);
 app.use('/api/messages', messageRoutes);
+app.use('/api/social', socialRoutes);
 app.use('/api/search', searchRoutes);
 
 // Generate placeholder images
