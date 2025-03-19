@@ -70,9 +70,9 @@ router.get('/feed/:type', authMiddleware.isAuthenticated, async (req, res) => {
 // Create a new post
 router.post('/posts', authMiddleware.isAuthenticated, async (req, res) => {
   try {
-    const { characterId, content, imageUrl, visibility } = req.body;
+    const { characterId, content, images, visibility } = req.body;
     
-    if (!characterId || (!content && !imageUrl)) {
+    if (!characterId || (!content && (!images || images.length === 0))) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
     
@@ -82,8 +82,15 @@ router.post('/posts', authMiddleware.isAuthenticated, async (req, res) => {
       return res.status(403).json({ message: 'You do not have permission to post as this character' });
     }
     
-    // Create post in database
-    const postId = await socialOperations.createPost(characterId, content, imageUrl, visibility);
+    // Create post in database - Modified to handle multiple images
+    // This assumes your database schema has been updated to store an array of image URLs
+    // or a JSON string representing the array
+    const postId = await socialOperations.createPostWithImages(
+      characterId, 
+      content,
+      images, // Now an array
+      visibility
+    );
     
     // Extract and save hashtags if any
     if (content) {

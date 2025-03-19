@@ -16,7 +16,7 @@ const socialOperations = {
     const offset = (page - 1) * limit;
     
     return new Promise((resolve, reject) => {
-      // Comprehensive query to fetch posts visible to the character
+      // First query to get the posts with basic info
       db.all(`
         WITH post_likes AS (
           SELECT post_id, COUNT(*) as likes_count,
@@ -58,12 +58,53 @@ const socialOperations = {
           )
         ORDER BY p.created_at DESC
         LIMIT ? OFFSET ?
-      `, [characterId, characterId, characterId, characterId, limit, offset], (err, rows) => {
+      `, [characterId, characterId, characterId, characterId, limit, offset], async (err, posts) => {
         if (err) {
           console.error('Error fetching all posts:', err);
-          reject(err);
-        } else {
-          resolve(rows || []);
+          return reject(err);
+        }
+        
+        try {
+          // For each post, get its images
+          const postsWithImages = await Promise.all(posts.map(async (post) => {
+            // Get images for this post from SocialPostImages table
+            const images = await new Promise((resolve, reject) => {
+              db.all(`
+                SELECT image_url
+                FROM SocialPostImages
+                WHERE post_id = ?
+                ORDER BY id ASC
+              `, [post.id], (err, rows) => {
+                if (err) {
+                  console.error(`Error fetching images for post ${post.id}:`, err);
+                  return resolve([]); // Continue even if image fetch fails
+                }
+                
+                // Extract image URLs from rows
+                const imageUrls = rows.map(row => row.image_url);
+                
+                // Add the media_url as an image if it exists and no other images found
+                // (for backward compatibility)
+                if (imageUrls.length === 0 && post.media_url) {
+                  imageUrls.push(post.media_url);
+                }
+                
+                resolve(imageUrls);
+              });
+            });
+            
+            // Add images array to post
+            return {
+              ...post,
+              images: images || []
+            };
+          }));
+          
+          resolve(postsWithImages || []);
+        } catch (error) {
+          console.error('Error processing post images:', error);
+          // Fall back to returning posts without images
+          resolve(posts || []);
         }
       });
     });
@@ -528,7 +569,72 @@ getSuggestedFollows: async (characterId, limit = 3) => {
         }
       });
     });
-  }
+  },
+
+  // Create a post with multiple images
+createPostWithImages: async (characterId, content, images, visibility = 'public') => {
+  return new Promise((resolve, reject) => {
+    // Create the post and get its ID
+    db.run(`
+      INSERT INTO SocialPosts (character_id, content, visibility)
+      VALUES (?, ?, ?)
+    `, [characterId, content, visibility], function(err) {
+      if (err) {
+        reject(err);
+        return;
+      }
+      
+      const postId = this.lastID;
+      
+      // If no images, we're done
+      if (!images || images.length === 0) {
+        resolve(postId);
+        return;
+      }
+      
+      // Create an array of placeholders for the SQL statement
+      const placeholders = images.map(() => '(?, ?)').join(', ');
+      
+      // Create an array of values for the SQL statement
+      const values = [];
+      images.forEach(imageUrl => {
+        values.push(postId, imageUrl);
+      });
+      
+      // Insert all image URLs
+      db.run(`
+        INSERT INTO SocialPostImages (post_id, image_url)
+        VALUES ${placeholders}
+      `, values, err => {
+        if (err) {
+          reject(err);
+          return;
+        }
+        
+        resolve(postId);
+      });
+    });
+  });
+},
+
+// Get images for posts (for feed fetch)
+getPostImages: async (postId) => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT image_url
+      FROM SocialPostImages
+      WHERE post_id = ?
+      ORDER BY id ASC
+    `, [postId], (err, rows) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      
+      resolve(rows.map(row => row.image_url));
+    });
+  });
+}
 };
 
 module.exports = { socialOperations };

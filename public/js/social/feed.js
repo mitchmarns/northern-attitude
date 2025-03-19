@@ -113,6 +113,31 @@ export async function loadFeed(feedType = 'all', page = 1) {
   }
 }
 
+function createImageGalleryHtml(images) {
+  // Limit display to 4 images, with "+X more" for additional images
+  const displayImages = images.slice(0, 4);
+  const extraImagesCount = Math.max(0, images.length - 4);
+  
+  let html = `<div class="post-feed-gallery image-count-${displayImages.length}">`;
+  
+  // Add images to gallery
+  displayImages.forEach((imageUrl, index) => {
+    html += `
+      <div class="gallery-image">
+        <img src="${imageUrl}" alt="Gallery image ${index + 1}">
+      </div>
+    `;
+  });
+  
+  // Add "more images" indicator if needed
+  if (extraImagesCount > 0) {
+    html += `<div class="more-images-indicator">+${extraImagesCount} more</div>`;
+  }
+  
+  html += '</div>';
+  return html;
+}
+
 // Load more posts (for infinite scroll)
 export function loadMorePosts() {
   const state = window.socialApp.state;
@@ -156,6 +181,15 @@ function createPostElement(postData) {
   const formattedTime = ui.formatTimestamp(timestamp);
   console.log(`Post #${postData.id} formatted time:`, formattedTime);
   
+  // Create image gallery HTML if we have multiple images
+  let mediaHtml = '';
+  if (postData.images && postData.images.length > 0) {
+    mediaHtml = createImageGalleryHtml(postData.images);
+  } else if (postData.media_url) {
+    // Fallback to single image for backward compatibility
+    mediaHtml = `<div class="post-image"><img src="${postData.media_url}" alt="Post image"></div>`;
+  }
+  
   // Build the post's HTML content
   postElement.innerHTML = `
     <div class="post-header">
@@ -172,7 +206,7 @@ function createPostElement(postData) {
     </div>
     <div class="post-content">
       <p>${post.formatPostContent(postData.content || '')}</p>
-      ${postData.media_url ? `<div class="post-image"><img src="${postData.media_url}" alt="Post image"></div>` : ''}
+      ${mediaHtml}
     </div>
     <div class="post-footer">
       <div class="post-stats">

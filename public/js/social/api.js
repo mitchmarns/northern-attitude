@@ -43,7 +43,11 @@ export async function fetchFeed(feedType, characterId, page = 1, limit = 10) {
 }
 
 // Create a new post
-export async function createPost(characterId, content, imageUrl, visibility) {
+export async function createPost(characterId, content, images, visibility) {
+  // Check if images is an array or a single URL string
+  const isMultipleImages = Array.isArray(images);
+  const imagesArray = isMultipleImages ? images : (images ? [images] : []);
+  
   const response = await fetch('/api/social/posts', {
     method: 'POST',
     headers: {
@@ -52,7 +56,7 @@ export async function createPost(characterId, content, imageUrl, visibility) {
     body: JSON.stringify({
       characterId,
       content,
-      imageUrl,
+      images: imagesArray,  // Send as an array in all cases
       visibility
     }),
     credentials: 'include'

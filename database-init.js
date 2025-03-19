@@ -13,7 +13,7 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const CURRENT_SCHEMA_VERSION = 6; // Increment when schema changes
+const CURRENT_SCHEMA_VERSION = 7; // Increment when schema changes
 
 // Logger function for consistent output
 function log(type, message) {
@@ -400,6 +400,16 @@ CREATE TABLE IF NOT EXISTS SocialPosts (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE
+)
+`,
+
+socialPostImages: `
+CREATE TABLE IF NOT EXISTS SocialPostImages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    image_url TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES SocialPosts(id) ON DELETE CASCADE
 )
 `,
 
