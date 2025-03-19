@@ -1,14 +1,11 @@
 // database-init-prod.js
+const dotenv = require('dotenv');
+dotenv.config(); // Load environment variables
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
-const dotenv = require('dotenv');
-const fs = require('fs');
-const { dbPath, sqlite3 } = require('./database-init');
 
-dotenv.config();
-
-const dbPath = path.resolve(__dirname, process.env.DATABASE_PATH);
+const dbPath = path.resolve(__dirname, process.env.DATABASE_PATH || 'config/hockey_roleplay.db');
 
 // Ensure the directory exists
 const dbDir = path.dirname(dbPath);
@@ -552,6 +549,20 @@ async function checkSchemaVersion() {
   }
 }
 
+function closeDatabase() {
+  return new Promise((resolve, reject) => {
+    db.close((err) => {
+      if (err) {
+        log('error', `Error closing database: ${err.message}`);
+        reject(err);
+      } else {
+        log('log', 'Database connection closed');
+        resolve();
+      }
+    });
+  });
+}
+
 // Main initialization function
 async function initDatabase() {
   try {
@@ -607,7 +618,6 @@ async function initDatabase() {
     // Insert sample data for new databases
     if (!dbExists) {
       log('log', 'New database detected! Inserting sample data...');
-      await insertSampleData();
     }
     
     log('log', 'Database initialization completed successfully!');
