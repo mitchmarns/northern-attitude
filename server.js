@@ -151,14 +151,31 @@ app.use((err, req, res, next) => {
   
   // Log detailed error on server side
   if (process.env.NODE_ENV === 'production') {
-    // Minimal error response in production
-    res.status(500).json({ message: 'An unexpected error occurred' });
-  } else {
-    // Detailed error in development
-    res.status(500).json({ 
-      message: err.message,
-      stack: err.stack 
-    });
+    const v8 = require('v8');
+    // Reduce the size of heap (adjust as needed)
+    v8.setFlagsFromString('--max-old-space-size=2048');
+    
+    // Force garbage collection when memory pressure is detected
+    global.gc = function() {
+      try {
+        if (global.gc) {
+          global.gc();
+          console.log('Manual garbage collection executed');
+        }
+      } catch (e) {
+        console.error('Failed to force garbage collection:', e);
+      }
+    };
+    
+    // Monitor memory usage
+    setInterval(() => {
+      const used = process.memoryUsage();
+      console.log(`Memory usage: ${Math.round(used.rss / 1024 / 1024)}MB`);
+      if (used.rss > 3 * 1024 * 1024 * 1024) { // 3GB threshold
+        console.log('High memory usage detected, forcing garbage collection');
+        if (global.gc) global.gc();
+      }
+    }, 60000); // Check every minute
   }
 });
 

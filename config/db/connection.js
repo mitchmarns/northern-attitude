@@ -1,5 +1,5 @@
 // connection.js - Fixed with absolute path handling
-const sqlite3 = require('sqlite3').verbose();
+const mysql = require('mysql2');
 const path = require('path');
 const fs = require('fs');
 
@@ -19,16 +19,19 @@ if (!dbExists) {
 }
 
 // Create a database connection
-const db = new sqlite3.Database(dbPath, (err) => {
+const db = mysql.createConnection({
+  host: 'localhost',
+  user: 'username_hockey_app_user',  // Your created username
+  password: 'your_strong_password',  // Your created password
+  database: 'username_hockey_roleplay'  // Your created database name
+});
+
+db.connect((err) => {
   if (err) {
-    console.error('Error connecting to database:', err);
-    process.exit(1);
+    console.error('Error connecting to the database:', err);
+    return;
   }
-  
-  console.log('Successfully connected to database at:', dbPath);
-  
-  // Enable foreign keys
-  db.run('PRAGMA foreign_keys = ON');
+  console.log('Connected to MySQL database');
 });
 
 module.exports = { db };
