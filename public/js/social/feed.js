@@ -7,10 +7,6 @@ import * as interactions from './interactions.js';
 import * as ui from './ui.js';
 import * as hashtags from './hashtags.js';
 
-// Import the required functions specifically
-import { formatPostContent } from './post.js'; // Import formatPostContent from post.js
-// The formatTimestamp function is imported via ui module
-
 // DOM elements
 const elements = {
   feedTabs: document.querySelectorAll('.tab-btn'),
@@ -37,6 +33,47 @@ function setupEventListeners(state) {
       state.currentFeed = feedType;
       loadFeed(feedType, 1);
     });
+  });
+
+  // Event delegation for hashtag and mention clicks in posts
+  document.addEventListener('click', async (e) => {
+    // Check if a hashtag link was clicked
+    if (e.target.classList.contains('hashtag') || e.target.parentElement.classList.contains('hashtag')) {
+      e.preventDefault();
+      
+      // Get the hashtag text (remove the # symbol)
+      const hashtagElement = e.target.classList.contains('hashtag') ? e.target : e.target.parentElement;
+      const hashtag = hashtagElement.textContent.substring(1);
+      
+      // Filter feed by hashtag
+      hashtags.filterByHashtag(hashtag, state);
+    }
+    
+    // Check if a mention link was clicked for tagging
+    if (e.target.classList.contains('mention') || e.target.parentElement.classList.contains('mention')) {
+      e.preventDefault();
+      
+      // Get the username
+      const mentionElement = e.target.classList.contains('mention') ? e.target : e.target.parentElement;
+      const username = mentionElement.dataset.username;
+      
+      // Find character(s) with this username
+      const characters = await post.findCharactersByUsername(username);
+      
+      if (characters.length === 0) {
+        ui.showMessage(`No character found with username @${username}`, 'error');
+        return;
+      }
+      
+      // If only one character, tag that character
+      if (characters.length === 1) {
+        await tagCharacter(characters[0]);
+        return;
+      }
+      
+      // If multiple characters, show selection modal
+      showCharacterSelectionModal(characters);
+    }
   });
 }
 
@@ -148,6 +185,16 @@ export async function loadFeed(feedType = 'all', page = 1) {
   }
 }
 
+// Load more posts (for infinite scroll)
+export function loadMorePosts() {
+  const state = window.socialApp.state;
+  if (state.pagination.isLoadingMore) return;
+  
+  state.pagination.isLoadingMore = true;
+  loadFeed(state.currentFeed, state.pagination.lastPage + 1);
+}
+
+// Create an image gallery HTML for multiple images
 function createImageGalleryHtml(images) {
   // Limit display to 4 images, with "+X more" for additional images
   const displayImages = images.slice(0, 4);
@@ -172,17 +219,6 @@ function createImageGalleryHtml(images) {
   html += '</div>';
   return html;
 }
-
-// Load more posts (for infinite scroll)
-export function loadMorePosts() {
-  const state = window.socialApp.state;
-  if (state.pagination.isLoadingMore) return;
-  
-  state.pagination.isLoadingMore = true;
-  loadFeed(state.currentFeed, state.pagination.lastPage + 1);
-}
-
-// Note: We're using formatTimestamp from ui.js instead of defining it here
 
 // Create a post element from post data
 export function createPostElement(postData) {
@@ -237,7 +273,7 @@ export function createPostElement(postData) {
       </div>
     </div>
     <div class="post-content">
-      <p>${formatPostContent(postData.content || '')}</p>
+      <p>${post.formatPostContent(postData.content || '')}</p>
       ${mediaHtml}
     </div>
     <div class="post-footer">
@@ -281,18 +317,43 @@ export function createPostElement(postData) {
       
       const commentInput = commentForm.querySelector('.comment-input');
       if (commentInput && commentInput.value.trim()) {
-        // We'll integrate this with our comments module
         const state = window.socialApp.state;
-        window.socialApp.comments.addComment(postData.id, commentInput.value.trim(), postElement);
+        comments.addComment(postData.id, commentInput.value.trim(), postElement);
         commentInput.value = '';
       }
     });
   }
   
+  // Set up interaction event listeners
+  setupInteractionListeners(postElement, postData);
+  
   return postElement;
 }
 
-// Note: We're using formatPostContent from post.js instead of defining it here
+// Set up post interaction listeners
+function setupInteractionListeners(postElement, postData) {
+  // Like button
+  const likeButton = postElement.querySelector('.like-btn');
+  if (likeButton) {
+    likeButton.addEventListener('click', async () => {
+      const state = window.socialApp.state;
+      try {
+        await interactions.toggleLike(likeButton, postData.id, state);
+      } catch (error) {
+        console.error('Error toggling like:', error);
+      }
+    });
+  }
+  
+  // Comment button
+  const commentButton = postElement.querySelector('.comment-btn');
+  if (commentButton) {
+    commentButton.addEventListener('click', () => {
+      const commentSection = postElement.querySelector('.post-comments');
+      comments.toggleComments(postElement, postData.id);
+    });
+  }
+}
 
 // Periodically refresh timestamps (every minute)
 setInterval(() => {
@@ -312,3 +373,103 @@ setInterval(() => {
     }
   });
 }, 60000); // 60 seconds
+
+// Character tagging modal
+function showCharacterSelectionModal(characters) {
+  // Create a modal dynamically
+  const modal = document.createElement('div');
+  modal.className = 'modal character-selection-modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Select Character to Tag</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="character-list">
+          ${characters.map(char => `
+            <div class="character-option" data-character-id="${char.id}">
+              <img src="${char.avatar_url || '/api/placeholder/50/50'}" alt="${char.name}">
+              <div class="character-info">
+                <div class="character-name">${char.name}</div>
+                <div class="character-details">
+                  ${char.position} ${char.team_name ? `| ${char.team_name}` : ''}
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Add to body
+  document.body.appendChild(modal);
+  
+  // Close button functionality
+  modal.querySelector('.close-modal').addEventListener('click', () => {
+    modal.remove();
+  });
+  
+  // Character selection
+  modal.querySelectorAll('.character-option').forEach(option => {
+    option.addEventListener('click', async () => {
+      const characterId = option.dataset.characterId;
+      const character = characters.find(c => c.id === parseInt(characterId));
+      
+      if (character) {
+        try {
+          const state = window.socialApp.state;
+          const postElement = document.querySelector('.social-post:focus, .social-post:hover');
+          
+          if (!postElement || !state.selectedCharacterId) {
+            ui.showMessage('Cannot tag character. Please select an active character.', 'error');
+            return;
+          }
+          
+          const postId = postElement.dataset.postId;
+          
+          const result = await api.tagCharacterInPost(
+            postId, 
+            state.selectedCharacterId, 
+            character.id
+          );
+          
+          ui.showMessage(`Tagged ${character.name} in the post`, 'success');
+          
+          // Remove the modal
+          modal.remove();
+        } catch (error) {
+          console.error('Error tagging character:', error);
+          ui.showMessage('Failed to tag character', 'error');
+        }
+      }
+    });
+  });
+}
+
+// Helper function to tag a character
+async function tagCharacter(character) {
+try {
+  const state = window.socialApp.state;
+  const postElement = document.querySelector('.social-post:focus, .social-post:hover');
+  
+  if (!postElement || !state.selectedCharacterId) {
+    ui.showMessage('Cannot tag character. Please select an active character.', 'error');
+    return;
+  }
+  
+  const postId = postElement.dataset.postId;
+  
+  const result = await api.tagCharacterInPost(
+    postId, 
+    state.selectedCharacterId, 
+    character.id
+  );
+  
+  ui.showMessage(`Tagged ${character.name} in the post`, 'success');
+} catch (error) {
+  console.error('Error tagging character:', error);
+  ui.showMessage('Failed to tag character', 'error');
+}
+}

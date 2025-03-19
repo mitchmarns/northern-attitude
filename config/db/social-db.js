@@ -818,7 +818,68 @@ addHashtagsToPost: async (postId, hashtags) => {
       // Continue with next hashtag even if there's an error
     }
   }
-}
+},
+
+createNotification: async ({ 
+  recipientCharacterId, 
+  actorCharacterId, 
+  actionType, 
+  targetId, 
+  targetType 
+}) => {
+  return new Promise((resolve, reject) => {
+    db.run(`
+      INSERT INTO SocialNotifications (
+        recipient_character_id, 
+        actor_character_id, 
+        action_type, 
+        target_id, 
+        target_type, 
+        is_read, 
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP)
+    `, [
+      recipientCharacterId, 
+      actorCharacterId, 
+      actionType, 
+      targetId, 
+      targetType
+    ], function(err) {
+      if (err) {
+        console.error('Error creating notification:', err);
+        reject(err);
+      } else {
+        resolve(this.lastID);
+      }
+    });
+  });
+},
+
+// Update method to get notifications
+getNotificationsForCharacter: async (characterId, limit = 20) => {
+  return new Promise((resolve, reject) => {
+    db.all(`
+      SELECT n.*, 
+             a.name as actor_name, 
+             a.avatar_url as actor_avatar,
+             p.content as post_content,
+             p.media_url as post_media_url
+      FROM SocialNotifications n
+      JOIN Characters a ON n.actor_character_id = a.id
+      LEFT JOIN SocialPosts p ON n.target_id = p.id AND n.target_type = 'post'
+      WHERE n.recipient_character_id = ?
+      ORDER BY n.created_at DESC
+      LIMIT ?
+    `, [characterId, limit], (err, rows) => {
+      if (err) {
+        console.error('Error fetching notifications:', err);
+        reject(err);
+      } else {
+        resolve(rows || []);
+      }
+    });
+  });
+},
 };
 
 module.exports = { socialOperations };

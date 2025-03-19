@@ -9,6 +9,7 @@ import * as interactions from './interactions.js';
 import * as ui from './ui.js';
 import * as api from './api.js';
 import * as hashtags from './hashtags.js';
+import * as notifications from './notifications.js';
 
 // Shared state - accessible to all modules
 export const state = {
@@ -40,6 +41,7 @@ export function init() {
   interactions.init(state);
   ui.init(state);
   hashtags.init(state);
+  notifications.init(state);
 
   
   // Set up infinite scroll
@@ -50,6 +52,9 @@ export function init() {
   api.loadTrendingHashtags();
   api.loadSuggestedFollows(state.selectedCharacterId);
   api.loadUpcomingGames();
+
+  // Add periodic notification refresh
+  notifications.setupNotificationRefresh(state);
 }
 
 // Set up infinite scroll

@@ -109,6 +109,24 @@ export async function loadTrendingHashtags() {
 
 // Filter feed by hashtag
 export function filterByHashtag(hashtag, state) {
+  if (!state) {
+    console.error("State is undefined in filterByHashtag");
+    state = window.socialApp.state; // Fallback to global state
+    if (!state) {
+      console.error("Global state is also undefined");
+      return; // Can't proceed without state
+    }
+  }
+  
+  console.log(`Filtering by hashtag: #${hashtag}, characterId: ${state.selectedCharacterId}`);
+  
+  // Make sure we have a selected character
+  if (!state.selectedCharacterId) {
+    console.error("No character selected, cannot filter by hashtag");
+    ui.showMessage("Please select a character before using hashtags", "error");
+    return;
+  }
+  
   // Update UI to show we're filtering by hashtag
   updateFilterUI(hashtag);
   
@@ -127,8 +145,24 @@ async function loadHashtagPosts(hashtag, page = 1) {
     
     if (!characterId) {
       console.error('No character selected');
+      if (elements.socialFeed) {
+        elements.socialFeed.innerHTML = `
+          <div class="error-feed">
+            <p>Error: Please select a character first.</p>
+            <button class="btn btn-secondary" id="clear-hashtag-filter">Clear Filter</button>
+          </div>
+        `;
+        
+        // Add event listener to clear filter button
+        document.getElementById('clear-hashtag-filter')?.addEventListener('click', () => {
+          clearHashtagFilter();
+        });
+      }
       return;
     }
+    
+    console.log(`Loading hashtag posts: #${hashtag}, page ${page}, characterId ${characterId}`);
+    
     // Show loading indicator
     if (elements.socialFeed) {
       elements.socialFeed.innerHTML = `
@@ -139,17 +173,26 @@ async function loadHashtagPosts(hashtag, page = 1) {
       `;
     }
     
-    // Fetch posts with the hashtag
-    const response = await fetch(`/api/social/hashtag/${hashtag}?page=${page}`, {
+    // Fetch posts with the hashtag - make sure to include characterId parameter
+    const url = `/api/social/hashtag/${hashtag}?characterId=${characterId}&page=${page}`;
+    console.log(`Fetching from URL: ${url}`);
+    
+    const response = await fetch(url, {
       method: 'GET',
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json'
+      }
     });
     
     if (!response.ok) {
-      throw new Error('Failed to fetch hashtag posts');
+      const errorText = await response.text();
+      console.error(`Error response: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to fetch hashtag posts: ${response.status} ${response.statusText}`);
     }
     
     const data = await response.json();
+    console.log(`Received ${data.posts ? data.posts.length : 0} posts for hashtag #${hashtag}`);
     
     // Clear loading indicator
     if (elements.socialFeed) {
@@ -191,7 +234,7 @@ async function loadHashtagPosts(hashtag, page = 1) {
     if (elements.socialFeed) {
       elements.socialFeed.innerHTML = `
         <div class="error-feed">
-          <p>Failed to load posts with #${hashtag}</p>
+          <p>Failed to load posts with #${hashtag}: ${error.message}</p>
           <button class="btn btn-secondary" id="clear-hashtag-filter">Clear Filter</button>
         </div>
       `;

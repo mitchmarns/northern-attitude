@@ -429,7 +429,7 @@ function applyTemplate(templateType, state) {
   updateSubmitButtonState(state);
 }
 
-// Format post content with hashtags, mentions, and links
+// Extract mentions from post content
 export function formatPostContent(content) {
   if (!content) return '';
   
@@ -444,8 +444,11 @@ export function formatPostContent(content) {
   // Format hashtags
   safeContent = safeContent.replace(/#(\w+)/g, '<a href="#" class="hashtag">#$1</a>');
   
-  // Format mentions
-  safeContent = safeContent.replace(/@(\w+)/g, '<a href="#" class="mention">@$1</a>');
+  // Format mentions with data attributes to enable tagging interaction
+  safeContent = safeContent.replace(
+    /@(\w+)/g, 
+    (match, username) => `<a href="#" class="mention" data-username="${username.toLowerCase()}">@${username}</a>`
+  );
   
   // Format URLs
   safeContent = safeContent.replace(
@@ -454,4 +457,35 @@ export function formatPostContent(content) {
   );
   
   return safeContent;
+}
+
+// Function to find characters by username
+export async function findCharactersByUsername(username) {
+  try {
+    const response = await fetch(`/api/search/characters?username=${encodeURIComponent(username)}`, {
+      method: 'GET',
+      credentials: 'include'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to search characters');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error finding characters:', error);
+    return [];
+  }
+}
+
+// Extract mentions with more robust processing
+export function extractMentions(content) {
+  if (!content) return [];
+  
+  const mentionRegex = /@(\w+)/g;
+  const matches = content.match(mentionRegex);
+  
+  if (!matches) return [];
+  
+  return matches.map(mention => mention.substring(1).toLowerCase());
 }

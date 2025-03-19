@@ -271,6 +271,41 @@ export async function loadSuggestedFollows(characterId) {
   }
 }
 
+// Add to existing exports in api.js
+export async function tagCharacterInPost(postId, taggerCharacterId, taggedCharacterId) {
+  const response = await fetch(`/api/social/posts/${postId}/tag`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ 
+      taggerCharacterId, 
+      taggedCharacterId 
+    }),
+    credentials: 'include'
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to tag character in post');
+  }
+  
+  return response.json();
+}
+
+// Function to fetch notifications
+export async function fetchNotifications(characterId, limit = 20) {
+  const response = await fetch(`/api/social/notifications?characterId=${characterId}&limit=${limit}`, {
+    method: 'GET',
+    credentials: 'include'
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch notifications');
+  }
+  
+  return response.json();
+}
+
 // Fallback suggested follows
 function fallbackSuggestedFollows() {
   if (!elements.suggestedFollows) return;

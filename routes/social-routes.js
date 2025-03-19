@@ -294,22 +294,28 @@ router.get('/hashtag/:tag', authMiddleware.isAuthenticated, async (req, res) => 
     const page = parseInt(req.query.page || '1');
     const limit = parseInt(req.query.limit || '10');
     
+    console.log(`Hashtag route called with: hashtag=${hashtag}, characterId=${characterId}, page=${page}, limit=${limit}`);
+    
     if (!hashtag) {
+      console.log('Error: Missing hashtag parameter');
       return res.status(400).json({ message: 'Hashtag is required' });
     }
     
     if (!characterId) {
+      console.log('Error: Missing characterId parameter');
       return res.status(400).json({ message: 'Character ID is required' });
     }
     
     // Check if character belongs to user
     const isOwner = await characterOperations.isCharacterOwner(req.user.id, characterId);
     if (!isOwner) {
+      console.log(`Error: Character ${characterId} does not belong to user ${req.user.id}`);
       return res.status(403).json({ message: 'You do not have permission to view this feed' });
     }
     
     // Get posts with the hashtag
     const posts = await socialOperations.getPostsByHashtag(hashtag, characterId, page, limit);
+    console.log(`Found ${posts.length} posts for hashtag #${hashtag}`);
     
     res.status(200).json({
       posts,
@@ -320,8 +326,11 @@ router.get('/hashtag/:tag', authMiddleware.isAuthenticated, async (req, res) => 
       }
     });
   } catch (error) {
-    console.error('Error fetching posts by hashtag:', error);
-    res.status(500).json({ message: 'Failed to load posts with this hashtag' });
+    console.error(`Error in hashtag route for #${req.params.tag}:`, error);
+    res.status(500).json({ 
+      message: 'Failed to load posts with this hashtag',
+      error: error.message 
+    });
   }
 });
 
@@ -368,6 +377,167 @@ router.post('/posts/:postId/hashtags', authMiddleware.isAuthenticated, async (re
   } catch (error) {
     console.error('Error adding hashtags to post:', error);
     res.status(500).json({ message: 'Failed to add hashtags to post' });
+  }
+});
+
+const tagCharacterInPost = async (postId, taggerCharacterId, taggedCharacterId) => {
+  return new Promise((resolve, reject) => {
+    db.run(`
+      INSERT OR IGNORE INTO SocialCharacterTags (post_id, character_id)
+      VALUES (?, ?)
+    `, [postId, taggedCharacterId], function(err) {
+      if (err) reject(err);
+      resolve(this.lastID);
+    });
+  });
+};
+
+router.post('/posts/:postId/tag', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const { taggerCharacterId, taggedCharacterId } = req.body;
+    
+    // Verify both characters belong to the authenticated user
+    const [isTaggerOwner, isTaggedOwner] = await Promise.all([
+      characterOperations.isCharacterOwner(req.user.id, taggerCharacterId),
+      characterOperations.isCharacterOwner(req.user.id, taggedCharacterId)
+    ]);
+    
+    if (!isTaggerOwner || !isTaggedOwner) {
+      return res.status(403).json({ message: 'You do not have permission to tag these characters' });
+    }
+    
+    // Get the tagged character's details
+    const taggedCharacter = await characterOperations.getCharacterById(taggedCharacterId);
+    
+    // Create a notification for the tagged character
+    await socialOperations.createNotification({
+      recipientCharacterId: taggedCharacterId,
+      actorCharacterId: taggerCharacterId,
+      actionType: 'tag',
+      targetId: postId,
+      targetType: 'post'
+    });
+    
+    // Tag the character in the post
+    const tagId = await tagCharacterInPost(postId, taggerCharacterId, taggedCharacterId);
+    
+    res.status(201).json({ 
+      message: 'Character tagged successfully', 
+      tagId,
+      taggedCharacter: {
+        id: taggedCharacter.id,
+        name: taggedCharacter.name
+      }
+    });
+  } catch (error) {
+    console.error('Error tagging character in post:', error);
+    res.status(500).json({ message: 'Failed to tag character in post' });
+  }
+});
+
+// Search characters by username
+router.get('/search/characters', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const username = req.query.username;
+    
+    if (!username || username.length < 2) {
+      return res.status(400).json({ message: 'Username must be at least 2 characters long' });
+    }
+    
+    // Search for characters with similar username
+    const characters = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          c.id, 
+          c.name, 
+          c.position, 
+          c.avatar_url, 
+          t.name as team_name
+        FROM Characters c
+        LEFT JOIN Teams t ON c.team_id = t.id
+        WHERE LOWER(c.name) LIKE ? 
+        OR LOWER(c.name) LIKE ? 
+        LIMIT 10
+      `, [`%${username.toLowerCase()}%`, `${username.toLowerCase()}%`], (err, rows) => {
+        if (err) reject(err);
+        resolve(rows || []);
+      });
+    });
+    
+    res.status(200).json(characters);
+  } catch (error) {
+    console.error('Error searching characters:', error);
+    res.status(500).json({ message: 'Failed to search characters' });
+  }
+});
+
+// Get user's notifications
+router.get('/notifications', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const characterId = req.query.characterId;
+    const limit = parseInt(req.query.limit || '20');
+    
+    if (!characterId) {
+      return res.status(400).json({ message: 'Character ID is required' });
+    }
+    
+    // Verify character belongs to user
+    const isOwner = await characterOperations.isCharacterOwner(req.user.id, characterId);
+    if (!isOwner) {
+      return res.status(403).json({ message: 'You do not have permission to view these notifications' });
+    }
+    
+    // Fetch notifications
+    const notifications = await socialOperations.getNotificationsForCharacter(characterId, limit);
+    
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error('Error fetching notifications:', error);
+    res.status(500).json({ message: 'Failed to fetch notifications' });
+  }
+});
+
+// Mark notifications as read
+router.put('/notifications/read', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const { characterId, notificationIds } = req.body;
+    
+    if (!characterId || !Array.isArray(notificationIds)) {
+      return res.status(400).json({ message: 'Invalid request parameters' });
+    }
+    
+    // Verify character belongs to user
+    const isOwner = await characterOperations.isCharacterOwner(req.user.id, characterId);
+    if (!isOwner) {
+      return res.status(403).json({ message: 'You do not have permission to mark these notifications' });
+    }
+    
+    // Mark notifications as read
+    await new Promise((resolve, reject) => {
+      const placeholders = notificationIds.map(() => '?').join(',');
+      const query = `
+        UPDATE SocialNotifications 
+        SET is_read = 1 
+        WHERE id IN (${placeholders}) 
+        AND recipient_character_id = ?
+      `;
+      
+      const queryParams = [...notificationIds, characterId];
+      
+      db.run(query, queryParams, function(err) {
+        if (err) reject(err);
+        resolve(this.changes);
+      });
+    });
+    
+    res.status(200).json({ 
+      message: 'Notifications marked as read', 
+      markedCount: notificationIds.length 
+    });
+  } catch (error) {
+    console.error('Error marking notifications:', error);
+    res.status(500).json({ message: 'Failed to mark notifications' });
   }
 });
 
