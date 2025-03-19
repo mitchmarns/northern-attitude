@@ -436,43 +436,6 @@ router.post('/posts/:postId/tag', authMiddleware.isAuthenticated, async (req, re
   }
 });
 
-// Search characters by username
-// Search characters by name
-router.get('/search/characters', authMiddleware.isAuthenticated, async (req, res) => {
-  try {
-    const searchTerm = req.query.username; // We'll still use 'username' for compatibility
-    
-    if (!searchTerm || searchTerm.length < 2) {
-      return res.status(400).json({ message: 'Search term must be at least 2 characters long' });
-    }
-    
-    // Search for characters with similar name
-    const characters = await new Promise((resolve, reject) => {
-      db.all(`
-        SELECT 
-          c.id, 
-          c.name, 
-          c.position, 
-          c.avatar_url, 
-          t.name as team_name
-        FROM Characters c
-        LEFT JOIN Teams t ON c.team_id = t.id
-        WHERE LOWER(c.name) LIKE ? 
-        OR LOWER(c.name) LIKE ? 
-        LIMIT 10
-      `, [`%${searchTerm.toLowerCase()}%`, `${searchTerm.toLowerCase()}%`], (err, rows) => {
-        if (err) reject(err);
-        resolve(rows || []);
-      });
-    });
-    
-    res.status(200).json(characters);
-  } catch (error) {
-    console.error('Error searching characters:', error);
-    res.status(500).json({ message: 'Failed to search characters' });
-  }
-});
-
 // Get user's notifications
 router.get('/notifications', authMiddleware.isAuthenticated, async (req, res) => {
   try {

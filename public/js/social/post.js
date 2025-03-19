@@ -464,7 +464,7 @@ export function formatPostContent(content) {
 // Function to find characters by username
 export async function findCharactersByUsername(name) {
   try {
-    const response = await fetch(`/api/search/characters?username=${encodeURIComponent(name)}`, {
+    const response = await fetch(`/api/search/characters?q=${encodeURIComponent(name)}`, {
       method: 'GET',
       credentials: 'include'
     });

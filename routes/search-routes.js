@@ -15,10 +15,9 @@ const dbQueryAll = (query, params = []) => {
 };
 
 // Search for characters
-router.get('/api/characters/search', authMiddleware.isAuthenticated, async (req, res) => {
+router.get('/api/search/characters', authMiddleware.isAuthenticated, async (req, res) => {
   try {
     const query = req.query.q || '';
-    // Make sure we're handling the parameter name properly
     const excludeUserId = req.query.excludeUserId || null;
     
     if (query.length < 2) {
@@ -26,23 +25,27 @@ router.get('/api/characters/search', authMiddleware.isAuthenticated, async (req,
     }
     
     // Search for characters by name
-    let sqlQuery = `
-      SELECT c.id, c.name, c.position, c.avatar_url, c.user_id, t.name as team_name
-      FROM Characters c
-      LEFT JOIN Teams t ON c.team_id = t.id
-      WHERE c.name LIKE ?`;
-    
-    const params = [`%${query}%`];
-    
-    // Add exclusion filter if provided
-    if (excludeUserId) {
-      sqlQuery += ' AND c.id != ?';
-      params.push(excludeUserId);
-    }
-    
-    sqlQuery += ' ORDER BY c.name LIMIT 20';
-    
-    const characters = await dbQueryAll(sqlQuery, params);
+    const characters = await new Promise((resolve, reject) => {
+      db.all(`
+        SELECT 
+          c.id, 
+          c.name, 
+          c.position, 
+          c.avatar_url, 
+          t.name as team_name
+        FROM Characters c
+        LEFT JOIN Teams t ON c.team_id = t.id
+        WHERE 
+          LOWER(c.name) LIKE ? 
+          OR LOWER(c.name) LIKE ?
+        ${excludeUserId ? 'AND c.id != ?' : ''}
+        ORDER BY c.name
+        LIMIT 10
+      `, [`%${query.toLowerCase()}%`, `${query.toLowerCase()}%`, ...(excludeUserId ? [excludeUserId] : [])], (err, rows) => {
+        if (err) reject(err);
+        resolve(rows || []);
+      });
+    });
     
     res.status(200).json(characters);
   } catch (error) {
