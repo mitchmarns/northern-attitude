@@ -360,6 +360,31 @@ getUpcomingGames: (limit = 2) => {
   },
 
   /**
+ * Tag a character in a post
+ * @param {number} postId - Post ID
+ * @param {number} characterId - Character ID to tag
+ * @returns {Promise<Object>} - Result with inserted ID
+ */
+tagCharacterInPost: async (postId, characterId) => {
+  return new Promise((resolve, reject) => {
+    db.run(`
+      INSERT OR IGNORE INTO SocialCharacterTags (post_id, character_id)
+      VALUES (?, ?)
+    `, [postId, characterId], function(err) {
+      if (err) {
+        console.error('Error tagging character in post:', err);
+        reject(err);
+        return;
+      }
+      resolve({
+        id: this.lastID,
+        changes: this.changes
+      });
+    });
+  });
+},
+
+  /**
    * Extract hashtags from post content
    * @param {string} content - Post content
    * @returns {string[]} - Array of hashtags

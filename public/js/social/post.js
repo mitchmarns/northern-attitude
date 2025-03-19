@@ -429,7 +429,6 @@ function applyTemplate(templateType, state) {
   updateSubmitButtonState(state);
 }
 
-// Extract mentions from post content
 // Format post content with interactive mentions
 export function formatPostContent(content) {
   if (!content) return '';
@@ -445,11 +444,11 @@ export function formatPostContent(content) {
   // Format hashtags
   safeContent = safeContent.replace(/#(\w+)/g, '<a href="#" class="hashtag">#$1</a>');
   
-  // Format mentions with data attributes to enable tagging interaction
-  // Improved to add more context and make tagging more interactive
+  // Format mentions with data attributes
+  // Updated regex to capture more complex usernames (including spaces)
   safeContent = safeContent.replace(
-    /@(\w+)/g, 
-    (match, name) => `<a href="#" class="mention" data-name="${name.toLowerCase()}">@${name}</a>`
+    /@(\w+(?:\s\w+)*)/g, 
+    (match, name) => `<a href="#" class="mention" data-name="${name.trim()}">${match}</a>`
   );
   
   // Format URLs
@@ -464,18 +463,36 @@ export function formatPostContent(content) {
 // Function to find characters by username
 export async function findCharactersByUsername(name) {
   try {
-    const response = await fetch(`/api/search/characters?q=${encodeURIComponent(name)}`, {
+    // Trim whitespace and handle spaces properly
+    const searchTerm = name.trim();
+    
+    // If the name is empty after trimming, return empty array
+    if (!searchTerm) {
+      return [];
+    }
+    
+    console.log(`Searching for character: "${searchTerm}"`);
+    
+    // Make the API request with the cleaned search term
+    const response = await fetch(`/api/search/characters?q=${encodeURIComponent(searchTerm)}`, {
       method: 'GET',
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json'
+      }
     });
     
     if (!response.ok) {
+      console.error(`Error status: ${response.status} searching for "${searchTerm}"`);
       throw new Error('Failed to search characters');
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log(`Found ${data.length} characters matching "${searchTerm}"`);
+    return data;
   } catch (error) {
     console.error('Error finding characters:', error);
+    // Return empty array instead of failing completely
     return [];
   }
 }

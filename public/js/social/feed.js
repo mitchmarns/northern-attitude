@@ -55,13 +55,38 @@ function setupEventListeners(state) {
       
       // Get the character name
       const mentionElement = e.target.classList.contains('mention') ? e.target : e.target.parentElement;
+      // Get the name attribute which contains the raw mention
       const characterName = mentionElement.dataset.name;
+      
+      console.log(`Mention clicked: @${characterName}`);
       
       // Find character(s) with this name
       const characters = await post.findCharactersByUsername(characterName);
       
       if (characters.length === 0) {
-        ui.showMessage(`No character found with name @${characterName}`, 'error');
+        // Try again with spaces added to the name if there are none
+        // This helps with names like "declanthorne" -> "declan thorne"
+        if (!characterName.includes(' ')) {
+          // Try to split the name at capital letters or common break points
+          const nameWithSpaces = characterName
+            .replace(/([a-z])([A-Z])/g, '$1 $2') // Add space between camelCase
+            .replace(/([a-zA-Z])(\d)/g, '$1 $2') // Add space between letters and numbers
+            .toLowerCase();
+          
+          console.log(`Trying again with spaces: "${nameWithSpaces}"`);
+          const alternativeCharacters = await post.findCharactersByUsername(nameWithSpaces);
+          
+          if (alternativeCharacters.length > 0) {
+            showCharacterSelectionModal(alternativeCharacters);
+            return;
+          }
+        }
+        
+        // If no character found, offer to create one
+        const createNew = confirm(`No character found with name @${characterName}. Would you like to create a new character?`);
+        if (createNew) {
+          window.location.href = 'character-form.html'; // Redirect to character creation
+        }
         return;
       }
       
@@ -374,12 +399,20 @@ setInterval(() => {
   });
 }, 60000); // 60 seconds
 
-// Character tagging modal
 // Function to show character selection modal
 function showCharacterSelectionModal(characters) {
+  // Remove any existing modal first
+  const existingModal = document.querySelector('.character-selection-modal');
+  if (existingModal) {
+    existingModal.remove();
+  }
+  
   // Create a modal dynamically
   const modal = document.createElement('div');
   modal.className = 'modal character-selection-modal';
+  modal.style.display = 'flex';
+  
+  // Create modal content with better styling
   modal.innerHTML = `
     <div class="modal-content">
       <div class="modal-header">
@@ -387,6 +420,7 @@ function showCharacterSelectionModal(characters) {
         <button class="close-modal">&times;</button>
       </div>
       <div class="modal-body">
+        <p>Multiple characters match this name. Please select which one you want to tag:</p>
         <div class="character-list">
           ${characters.map(char => `
             <div class="character-option" data-character-id="${char.id}">
@@ -394,7 +428,7 @@ function showCharacterSelectionModal(characters) {
               <div class="character-info">
                 <div class="character-name">${char.name}</div>
                 <div class="character-details">
-                  ${char.position} ${char.team_name ? `| ${char.team_name}` : ''}
+                  ${char.position || ''} ${char.team_name ? `| ${char.team_name}` : ''}
                 </div>
               </div>
             </div>
@@ -407,68 +441,113 @@ function showCharacterSelectionModal(characters) {
   // Add to body
   document.body.appendChild(modal);
   
+  // Add some additional style to make it look better
+  const style = document.createElement('style');
+  style.textContent = `
+    .character-option {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      background-color: var(--accent-bg, rgba(90, 128, 149, 0.1));
+      transition: background-color 0.2s;
+    }
+    
+    .character-option:hover {
+      background-color: var(--accent-bg-hover, rgba(90, 128, 149, 0.2));
+    }
+    
+    .character-option img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 12px;
+    }
+    
+    .character-name {
+      font-weight: bold;
+      color: var(--header, #5a8095);
+      margin-bottom: 3px;
+    }
+    
+    .character-details {
+      font-size: 0.85rem;
+      color: var(--lighttext, #e8e9e8);
+    }
+  `;
+  document.head.appendChild(style);
+  
   // Close button functionality
   modal.querySelector('.close-modal').addEventListener('click', () => {
     modal.remove();
+    style.remove();
   });
   
   // Character selection
   modal.querySelectorAll('.character-option').forEach(option => {
     option.addEventListener('click', async () => {
       const characterId = option.dataset.characterId;
-      const character = characters.find(c => c.id === parseInt(characterId));
+      const character = characters.find(c => c.id === characterId || c.id === parseInt(characterId));
       
       if (character) {
-        try {
-          const state = window.socialApp.state;
-          
-          // Find the current post (last clicked/hovered post)
-          const postElement = document.querySelector('.social-post:focus, .social-post:hover');
-          
-          if (!postElement || !state.selectedCharacterId) {
-            ui.showMessage('Cannot tag character. Please select an active character.', 'error');
-            return;
-          }
-          
-          const postId = postElement.dataset.postId;
-          
-          const result = await api.tagCharacterInPost(
-            postId, 
-            state.selectedCharacterId, 
-            character.id
-          );
-          
-          ui.showMessage(`Tagged ${character.name} in the post`, 'success');
-          
-          // Remove the modal
-          modal.remove();
-        } catch (error) {
-          console.error('Error tagging character:', error);
-          ui.showMessage('Failed to tag character', 'error');
-        }
+        await tagCharacter(character);
+        
+        // Remove the modal after tagging
+        modal.remove();
+        style.remove();
       }
     });
+  });
+  
+  // Close when clicking outside the modal content
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
+      style.remove();
+    }
   });
 }
 
 // Helper function to tag a character
 async function tagCharacter(character) {
   try {
-    const state = window.socialApp.state;
-    
-    // Find the current post (last clicked/hovered post)
+    // Get the post element - select either the focused or hovered post
     const postElement = document.querySelector('.social-post:focus, .social-post:hover');
     
-    if (!postElement || !state.selectedCharacterId) {
-      ui.showMessage('Cannot tag character. Please select an active character.', 'error');
+    if (!postElement) {
+      ui.showMessage('Cannot tag character. Please select a post first.', 'error');
       return;
     }
     
     const postId = postElement.dataset.postId;
+    if (!postId) {
+      ui.showMessage('Invalid post selected. Please try again.', 'error');
+      return;
+    }
     
+    // Get the current user's character - either the selected one or the first available
+    let taggerCharacterId = window.socialApp.state.selectedCharacterId;
+    
+    // If no character is selected, try to use any available character
+    if (!taggerCharacterId && window.socialApp.state.userCharacters) {
+      const firstCharacter = window.socialApp.state.userCharacters[0];
+      if (firstCharacter) {
+        taggerCharacterId = firstCharacter.id;
+      }
+    }
+    
+    if (!taggerCharacterId) {
+      ui.showMessage('You need to have at least one character to tag others', 'error');
+      return;
+    }
+    
+    // Make the API request to tag the character
     const result = await api.tagCharacterInPost(
       postId, 
-      state.selectedCharacterId, 
+      taggerCharacterId, 
       character.id
     );
     

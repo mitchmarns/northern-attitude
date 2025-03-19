@@ -14,6 +14,7 @@ import * as notifications from './notifications.js';
 // Shared state - accessible to all modules
 export const state = {
   selectedCharacterId: null,
+  userCharacters: [],
   currentFeed: 'all',
   currentHashtag: null,
   postData: {

@@ -13,7 +13,7 @@ if (!fs.existsSync(dbDir)) {
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
-const CURRENT_SCHEMA_VERSION = 7; // Increment when schema changes
+const CURRENT_SCHEMA_VERSION = 8; // Increment when schema changes
 
 // Logger function for consistent output
 function log(type, message) {
@@ -422,6 +422,17 @@ CREATE TABLE IF NOT EXISTS SocialLikes (
     FOREIGN KEY (post_id) REFERENCES SocialPosts(id) ON DELETE CASCADE,
     FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE,
     UNIQUE(post_id, character_id)
+)
+`,
+
+socialCharacterTags: `
+CREATE TABLE IF NOT EXISTS SocialCharacterTags (
+    post_id INTEGER NOT NULL,
+    character_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES SocialPosts(id) ON DELETE CASCADE,
+    FOREIGN KEY (character_id) REFERENCES Characters(id) ON DELETE CASCADE,
+    PRIMARY KEY (post_id, character_id)
 )
 `,
 

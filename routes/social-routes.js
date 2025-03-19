@@ -397,18 +397,25 @@ router.post('/posts/:postId/tag', authMiddleware.isAuthenticated, async (req, re
     const postId = req.params.postId;
     const { taggerCharacterId, taggedCharacterId } = req.body;
     
-    // Verify both characters belong to the authenticated user
-    const [isTaggerOwner, isTaggedOwner] = await Promise.all([
-      characterOperations.isCharacterOwner(req.user.id, taggerCharacterId),
-      characterOperations.isCharacterOwner(req.user.id, taggedCharacterId)
-    ]);
-    
-    if (!isTaggerOwner || !isTaggedOwner) {
-      return res.status(403).json({ message: 'You do not have permission to tag these characters' });
+    // Validate required fields
+    if (!taggerCharacterId || !taggedCharacterId) {
+      return res.status(400).json({ message: 'Both tagger and tagged character IDs are required' });
     }
     
-    // Get the tagged character's details
+    // Only verify that the tagger character belongs to the authenticated user
+    // We don't need to verify ownership of the tagged character
+    const isTaggerOwner = await characterOperations.isCharacterOwner(req.user.id, taggerCharacterId);
+    
+    if (!isTaggerOwner) {
+      return res.status(403).json({ message: 'You do not have permission to tag as this character' });
+    }
+    
+    // Get the tagged character's details - no ownership check here
     const taggedCharacter = await characterOperations.getCharacterById(taggedCharacterId);
+    
+    if (!taggedCharacter) {
+      return res.status(404).json({ message: 'Tagged character not found' });
+    }
     
     // Create a notification for the tagged character
     await socialOperations.createNotification({
@@ -419,12 +426,27 @@ router.post('/posts/:postId/tag', authMiddleware.isAuthenticated, async (req, re
       targetType: 'post'
     });
     
-    // Tag the character in the post
-    const tagId = await tagCharacterInPost(postId, taggerCharacterId, taggedCharacterId);
+    // Tag the character in the post - using db directly
+    const tagResult = await new Promise((resolve, reject) => {
+      db.run(`
+        INSERT OR IGNORE INTO SocialCharacterTags (post_id, character_id)
+        VALUES (?, ?)
+      `, [postId, taggedCharacterId], function(err) {
+        if (err) {
+          console.error('Error tagging character in post:', err);
+          reject(err);
+          return;
+        }
+        resolve({
+          id: this.lastID,
+          changes: this.changes
+        });
+      });
+    });
     
     res.status(201).json({ 
       message: 'Character tagged successfully', 
-      tagId,
+      tagId: tagResult.id,
       taggedCharacter: {
         id: taggedCharacter.id,
         name: taggedCharacter.name

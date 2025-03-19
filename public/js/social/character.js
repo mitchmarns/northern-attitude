@@ -63,6 +63,9 @@ export async function loadUserCharacters(state) {
   try {
     const characters = await api.fetchCharacters();
     
+    // Store all characters in state for reference
+    state.userCharacters = characters;
+    
     // Populate character selector
     populateCharacterSelector(characters, state);
   } catch (error) {
