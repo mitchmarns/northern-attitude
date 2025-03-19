@@ -5,9 +5,13 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const morgan = require('morgan');
 const fs = require('fs');
-const cors = require('cors'); // Import cors at the top
+const cors = require('cors');
+const dotenv = require('dotenv');
+const helmet = require('helmet');
 
-let dbPath = path.resolve(__dirname, 'config/hockey_roleplay.db');
+dotenv.config();
+
+let dbPath = path.resolve(__dirname, process.env.DATABASE_PATH || 'config/hockey_roleplay.db');
 console.log('Checking for database at:', dbPath);
 
 if (!fs.existsSync(dbPath)) {
@@ -41,7 +45,7 @@ const app = express();
 
 // Configure CORS with credentials support
 const corsOptions = {
-  origin: true, // Allow any origin in development, restrict in production
+  origin: process.env.CORS_ORIGIN, // Allow any origin in development, restrict in production
   credentials: true, // Allow cookies to be sent with requests
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -49,7 +53,8 @@ const corsOptions = {
 
 // Middleware setup - now cors is defined before being used
 app.use(cors(corsOptions));
-app.use(morgan('dev'));
+app.use(helmet());
+app.use(morgan('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -87,26 +92,28 @@ app.use(async (req, res, next) => {
 });
 
 // Import route handlers
-const authRoutes = require('./routes/auth');  
-const apiRoutes = require('./routes/api');  
-const userRoutes = require('./routes/user-routes');  
-const characterRoutes = require('./routes/character-routes');  
-const teamRoutes = require('./routes/team-routes'); 
+const authRoutes = require('./routes/auth-routes');
+const characterRoutes = require('./routes/character-routes');
+const teamRoutes = require('./routes/team-routes');
+const userRoutes = require('./routes/user-routes');
+const messageRoutes = require('./routes/message-routes');
 const threadRoutes = require('./routes/thread-routes');
-const messageRoutes = require('./routes/message-routes'); 
-const socialRoutes = require('./routes/social-routes');
 const searchRoutes = require('./routes/search-routes');
+const socialRoutes = require('./routes/social-routes');
+const apiRoutes = require('./routes/api');
 
 // Set up routes
 app.use('/api/auth', authRoutes);
-app.use('/api', apiRoutes);  
-app.use('/api/users', userRoutes);  
-app.use('/api', characterRoutes);  
-app.use('/api', teamRoutes);  
-app.use('/api/threads', threadRoutes);
+app.use('/api', characterRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
-app.use('/api/social', socialRoutes);
+app.use('/api/threads', threadRoutes);
 app.use('/api/search', searchRoutes);
+app.use('/api/social', socialRoutes);
+app.use('/api', apiRoutes);
+
+app.use('/api/user', userRoutes);
 
 // Generate placeholder images
 app.get('/api/placeholder/:width/:height', (req, res) => {
@@ -142,19 +149,55 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
   
-  if (req.path.startsWith('/api')) {
-    // For API routes, return JSON error
-    return res.status(500).json({ message: 'Internal server error' });
+  // Log detailed error on server side
+  if (process.env.NODE_ENV === 'production') {
+    // Minimal error response in production
+    res.status(500).json({ message: 'An unexpected error occurred' });
+  } else {
+    // Detailed error in development
+    res.status(500).json({ 
+      message: err.message,
+      stack: err.stack 
+    });
   }
-  
-  // For non-API routes, send generic error message
-  res.status(500).send('Server error occurred. Please try again later.');
 });
+
+// Rate limiting
+const rateLimit = require('express-rate-limit');
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100 // limit each IP to 100 requests per windowMs
+});
+app.use('/api/', limiter);
 
 // Start server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+}).on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use`);
+    process.exit(1);
+  }
+  console.error('Server startup error:', error);
+
+  if (process.env.HTTPS_KEY_PATH && process.env.HTTPS_CERT_PATH) {
+    try {
+      const https = require('https');
+      const fs = require('fs');
+  
+      const httpsOptions = {
+        key: fs.readFileSync(process.env.HTTPS_KEY_PATH),
+        cert: fs.readFileSync(process.env.HTTPS_CERT_PATH)
+      };
+  
+      https.createServer(httpsOptions, app).listen(443, () => {
+        console.log('HTTPS Server running on port 443');
+      });
+    } catch (error) {
+      console.error('Failed to start HTTPS server:', error);
+    }
+  }
 });
 
 module.exports = app;

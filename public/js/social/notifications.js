@@ -2,6 +2,14 @@
 import * as api from './api.js';
 import * as ui from './ui.js';
 
+document.addEventListener('DOMContentLoaded', () => {
+  const badge = document.getElementById('notifications-badge');
+  console.log('Notifications badge element:', badge);
+  if (!badge) {
+    console.error('Notifications badge element not found in the DOM');
+  }
+});
+
 // DOM elements
 const elements = {
   notificationsBadge: document.getElementById('notifications-badge'),
@@ -55,10 +63,9 @@ export async function loadNotifications(state) {
   }
   
   try {
-    // Fetch notifications
-    const notifications = await api.fetchNotifications(
-      state.selectedCharacterId
-    );
+    console.log(`Fetching notifications for character ${state.selectedCharacterId}`);
+    const notifications = await api.fetchNotifications(state.selectedCharacterId);
+    console.log('Received notifications:', notifications);
     
     // Display notifications
     displayNotifications(notifications);
@@ -72,7 +79,24 @@ export async function loadNotifications(state) {
 
 // Display notifications in the notifications container
 function displayNotifications(notifications) {
-  if (!elements.notificationsContainer) return;
+  if (!elements.notificationsContainer) {
+    console.log('Creating notifications container dynamically');
+    // Find parent element where notifications should go
+    const navItem = document.querySelector('.social-nav li:nth-child(3)'); // Adjust selector as needed
+    
+    if (navItem) {
+      const container = document.createElement('div');
+      container.id = 'notifications-container';
+      container.className = 'notifications-container';
+      navItem.appendChild(container);
+      elements.notificationsContainer = container;
+    } else {
+      console.error('Cannot find parent element to attach notifications container');
+      return;
+    }
+  }
+  
+  console.log('Displaying', notifications.length, 'notifications in container');
   
   // Clear existing notifications
   elements.notificationsContainer.innerHTML = '';
@@ -88,6 +112,9 @@ function displayNotifications(notifications) {
   
   // Create notification elements
   notifications.forEach(notification => {
+    // Log each notification as we process it
+    console.log('Processing notification:', notification);
+    
     const notificationElement = document.createElement('div');
     notificationElement.className = `notification-item ${notification.is_read ? 'read' : 'unread'}`;
     notificationElement.dataset.notificationId = notification.id;
@@ -97,7 +124,9 @@ function displayNotifications(notifications) {
     
     notificationElement.innerHTML = `
       <div class="notification-avatar">
-        <img src="${notification.actor_avatar || '/api/placeholder/40/40'}" alt="${notification.actor_name}">
+        <img src="${notification.actor_avatar || '/api/placeholder/40/40'}" 
+             alt="${notification.actor_name}"
+             style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" />
       </div>
       <div class="notification-content">
         <p>${notificationText}</p>
@@ -135,12 +164,27 @@ function handleNotificationAction(notificationElement) {
 
 // Update notifications badge with unread count
 function updateNotificationsBadge(notifications) {
-  if (!elements.notificationsBadge) return;
+  if (!elements.notificationsBadge) {
+    console.error('Notification badge element not found');
+    return;
+  }
   
   const unreadCount = notifications.filter(n => !n.is_read).length;
+  console.log(`Updating badge with ${unreadCount} unread notifications`);
   
   elements.notificationsBadge.textContent = unreadCount;
   elements.notificationsBadge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+  
+  // Force visibility check
+  if (unreadCount > 0) {
+    console.log('Badge should be visible now');
+    elements.notificationsBadge.style.backgroundColor = 'var(--accent)';
+    elements.notificationsBadge.style.color = 'white';
+    elements.notificationsBadge.style.padding = '2px 6px';
+    elements.notificationsBadge.style.borderRadius = '10px';
+    elements.notificationsBadge.style.fontSize = '0.75rem';
+    elements.notificationsBadge.style.display = 'inline-block';
+  }
 }
 
 // Mark notifications as read
@@ -166,5 +210,5 @@ async function markNotificationsAsRead(characterId, notificationIds) {
 export function setupNotificationRefresh(state) {
   setInterval(() => {
     loadNotifications(state);
-  }, 60000); // Refresh every minute
+  }, 30000); // Refresh every 30 secs
 }

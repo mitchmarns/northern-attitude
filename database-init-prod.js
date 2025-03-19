@@ -1,20 +1,20 @@
-// database-init.js - Script for proper database initialization
+// database-init-prod.js
 const sqlite3 = require('sqlite3').verbose();
-exports.sqlite3 = sqlite3;
 const path = require('path');
 const fs = require('fs');
+const dotenv = require('dotenv');
+const fs = require('fs');
+const { dbPath, sqlite3 } = require('./database-init');
 
-const dbPath = path.resolve(__dirname, 'config/hockey_roleplay.db');
-exports.dbPath = dbPath;
-console.log('Database will be created at:', dbPath);
+dotenv.config();
 
-// Ensure the directory exists before creating the database
+const dbPath = path.resolve(__dirname, process.env.DATABASE_PATH);
+
+// Ensure the directory exists
 const dbDir = path.dirname(dbPath);
 if (!fs.existsSync(dbDir)) {
-  console.log(`Creating directory: ${dbDir}`);
   fs.mkdirSync(dbDir, { recursive: true });
 }
-
 const CURRENT_SCHEMA_VERSION = 8; // Increment when schema changes
 
 // Logger function for consistent output

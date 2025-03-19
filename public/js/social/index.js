@@ -56,6 +56,7 @@ export function init() {
 
   // Add periodic notification refresh
   notifications.setupNotificationRefresh(state);
+  notifications.loadNotifications(state);
 }
 
 // Set up infinite scroll

@@ -11,7 +11,9 @@ const activeSessions = new Map();
 const SALT_ROUNDS = 10;
 
 // Session expiration time (24 hours in milliseconds)
-const SESSION_EXPIRY = 24 * 60 * 60 * 1000; 
+const SESSION_EXPIRY = process.env.NODE_ENV === 'production' 
+  ? 24 * 60 * 60 * 1000 // 24 hours in production 
+  : 7 * 24 * 60 * 60 * 1000; // 7 days in development
 
 // Authentication middleware
 const authMiddleware = {
