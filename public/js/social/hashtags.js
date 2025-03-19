@@ -123,6 +123,12 @@ export function filterByHashtag(hashtag, state) {
 // Load posts that contain a specific hashtag
 async function loadHashtagPosts(hashtag, page = 1) {
   try {
+    const characterId = window.socialApp.state.selectedCharacterId;
+    
+    if (!characterId) {
+      console.error('No character selected');
+      return;
+    }
     // Show loading indicator
     if (elements.socialFeed) {
       elements.socialFeed.innerHTML = `
