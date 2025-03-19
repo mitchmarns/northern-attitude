@@ -437,15 +437,16 @@ router.post('/posts/:postId/tag', authMiddleware.isAuthenticated, async (req, re
 });
 
 // Search characters by username
+// Search characters by name
 router.get('/search/characters', authMiddleware.isAuthenticated, async (req, res) => {
   try {
-    const username = req.query.username;
+    const searchTerm = req.query.username; // We'll still use 'username' for compatibility
     
-    if (!username || username.length < 2) {
-      return res.status(400).json({ message: 'Username must be at least 2 characters long' });
+    if (!searchTerm || searchTerm.length < 2) {
+      return res.status(400).json({ message: 'Search term must be at least 2 characters long' });
     }
     
-    // Search for characters with similar username
+    // Search for characters with similar name
     const characters = await new Promise((resolve, reject) => {
       db.all(`
         SELECT 
@@ -459,7 +460,7 @@ router.get('/search/characters', authMiddleware.isAuthenticated, async (req, res
         WHERE LOWER(c.name) LIKE ? 
         OR LOWER(c.name) LIKE ? 
         LIMIT 10
-      `, [`%${username.toLowerCase()}%`, `${username.toLowerCase()}%`], (err, rows) => {
+      `, [`%${searchTerm.toLowerCase()}%`, `${searchTerm.toLowerCase()}%`], (err, rows) => {
         if (err) reject(err);
         resolve(rows || []);
       });

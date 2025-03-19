@@ -53,15 +53,15 @@ function setupEventListeners(state) {
     if (e.target.classList.contains('mention') || e.target.parentElement.classList.contains('mention')) {
       e.preventDefault();
       
-      // Get the username
+      // Get the character name
       const mentionElement = e.target.classList.contains('mention') ? e.target : e.target.parentElement;
-      const username = mentionElement.dataset.username;
+      const characterName = mentionElement.dataset.name;
       
-      // Find character(s) with this username
-      const characters = await post.findCharactersByUsername(username);
+      // Find character(s) with this name
+      const characters = await post.findCharactersByUsername(characterName);
       
       if (characters.length === 0) {
-        ui.showMessage(`No character found with username @${username}`, 'error');
+        ui.showMessage(`No character found with name @${characterName}`, 'error');
         return;
       }
       
@@ -375,6 +375,7 @@ setInterval(() => {
 }, 60000); // 60 seconds
 
 // Character tagging modal
+// Function to show character selection modal
 function showCharacterSelectionModal(characters) {
   // Create a modal dynamically
   const modal = document.createElement('div');
@@ -420,6 +421,8 @@ function showCharacterSelectionModal(characters) {
       if (character) {
         try {
           const state = window.socialApp.state;
+          
+          // Find the current post (last clicked/hovered post)
           const postElement = document.querySelector('.social-post:focus, .social-post:hover');
           
           if (!postElement || !state.selectedCharacterId) {
@@ -450,26 +453,28 @@ function showCharacterSelectionModal(characters) {
 
 // Helper function to tag a character
 async function tagCharacter(character) {
-try {
-  const state = window.socialApp.state;
-  const postElement = document.querySelector('.social-post:focus, .social-post:hover');
-  
-  if (!postElement || !state.selectedCharacterId) {
-    ui.showMessage('Cannot tag character. Please select an active character.', 'error');
-    return;
+  try {
+    const state = window.socialApp.state;
+    
+    // Find the current post (last clicked/hovered post)
+    const postElement = document.querySelector('.social-post:focus, .social-post:hover');
+    
+    if (!postElement || !state.selectedCharacterId) {
+      ui.showMessage('Cannot tag character. Please select an active character.', 'error');
+      return;
+    }
+    
+    const postId = postElement.dataset.postId;
+    
+    const result = await api.tagCharacterInPost(
+      postId, 
+      state.selectedCharacterId, 
+      character.id
+    );
+    
+    ui.showMessage(`Tagged ${character.name} in the post`, 'success');
+  } catch (error) {
+    console.error('Error tagging character:', error);
+    ui.showMessage('Failed to tag character', 'error');
   }
-  
-  const postId = postElement.dataset.postId;
-  
-  const result = await api.tagCharacterInPost(
-    postId, 
-    state.selectedCharacterId, 
-    character.id
-  );
-  
-  ui.showMessage(`Tagged ${character.name} in the post`, 'success');
-} catch (error) {
-  console.error('Error tagging character:', error);
-  ui.showMessage('Failed to tag character', 'error');
-}
 }

@@ -430,6 +430,7 @@ function applyTemplate(templateType, state) {
 }
 
 // Extract mentions from post content
+// Format post content with interactive mentions
 export function formatPostContent(content) {
   if (!content) return '';
   
@@ -445,9 +446,10 @@ export function formatPostContent(content) {
   safeContent = safeContent.replace(/#(\w+)/g, '<a href="#" class="hashtag">#$1</a>');
   
   // Format mentions with data attributes to enable tagging interaction
+  // Improved to add more context and make tagging more interactive
   safeContent = safeContent.replace(
     /@(\w+)/g, 
-    (match, username) => `<a href="#" class="mention" data-username="${username.toLowerCase()}">@${username}</a>`
+    (match, name) => `<a href="#" class="mention" data-name="${name.toLowerCase()}">@${name}</a>`
   );
   
   // Format URLs
@@ -460,9 +462,9 @@ export function formatPostContent(content) {
 }
 
 // Function to find characters by username
-export async function findCharactersByUsername(username) {
+export async function findCharactersByUsername(name) {
   try {
-    const response = await fetch(`/api/search/characters?username=${encodeURIComponent(username)}`, {
+    const response = await fetch(`/api/search/characters?username=${encodeURIComponent(name)}`, {
       method: 'GET',
       credentials: 'include'
     });
@@ -478,7 +480,7 @@ export async function findCharactersByUsername(username) {
   }
 }
 
-// Extract mentions with more robust processing
+// Update mentions extraction to be case-insensitive and handle more scenarios
 export function extractMentions(content) {
   if (!content) return [];
   
