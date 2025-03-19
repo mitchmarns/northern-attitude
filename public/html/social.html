@@ -102,47 +102,62 @@
             </aside>
 
             <div class="social-main-content">
-                <div class="post-composer">
-                    <form id="post-form">
-                        <div class="composer-header">
-                            <div class="composer-avatar">
-                                <img id="composer-avatar" src="/api/placeholder/40/40" alt="Your character">
-                            </div>
-                            <div class="composer-character-info">
-                                <span id="composer-character-name">Select a character</span>
-                                <span id="composer-character-team">-</span>
-                            </div>
+              <div class="post-composer">
+                <form id="post-form">
+                    <div class="composer-header">
+                        <div class="composer-avatar">
+                            <img id="composer-avatar" src="/api/placeholder/40/40" alt="Your character">
                         </div>
-                        <div class="composer-body">
-                            <textarea id="post-content" placeholder="What's happening?" rows="3"></textarea>
-                            <div id="post-preview" class="post-preview"></div>
+                        <div class="composer-character-info">
+                            <span id="composer-character-name">Select a character</span>
+                            <span id="composer-character-team">-</span>
                         </div>
-                        <div class="composer-footer">
-                            <div class="composer-tools">
-                                <button type="button" id="add-image-btn" class="tool-btn" title="Add Image">📷</button>
-                                <button type="button" id="add-hashtag-btn" class="tool-btn" title="Add Hashtag">#</button>
-                                <button type="button" id="add-mention-btn" class="tool-btn" title="Mention">@</button>
-                                <div class="post-templates">
-                                    <button type="button" id="templates-btn" class="tool-btn" title="Post Templates">📝</button>
-                                    <div id="templates-dropdown" class="templates-dropdown">
-                                        <button type="button" data-template="pregame">Pregame Statement</button>
-                                        <button type="button" data-template="postgame">Postgame Reaction</button>
-                                        <button type="button" data-template="media">Media Interview</button>
-                                        <button type="button" data-template="team">Team Announcement</button>
-                                    </div>
+                    </div>
+                    <div class="composer-body">
+                        <textarea id="post-content" placeholder="What's happening?" rows="3"></textarea>
+                        
+                        <!-- New multi-image gallery preview -->
+                        <div id="post-preview" class="post-preview">
+                            <!-- Images will be dynamically added here -->
+                        </div>
+                        
+                        <!-- New image upload input container -->
+                        <div class="image-input-container">
+                            <input 
+                                type="url" 
+                                id="image-url-input" 
+                                placeholder="Enter image URL" 
+                                class="form-control"
+                            >
+                            <button type="button" id="add-to-gallery-btn">Add Image</button>
+                            <span id="image-counter" class="image-counter">0/10 images</span>
+                        </div>
+                    </div>
+                    <div class="composer-footer">
+                        <div class="composer-tools">
+                            <button type="button" id="add-hashtag-btn" class="tool-btn" title="Add Hashtag">#</button>
+                            <button type="button" id="add-mention-btn" class="tool-btn" title="Mention">@</button>
+                            <div class="post-templates">
+                                <button type="button" id="templates-btn" class="tool-btn" title="Post Templates">📝</button>
+                                <div id="templates-dropdown" class="templates-dropdown">
+                                    <button type="button" data-template="pregame">Pregame Statement</button>
+                                    <button type="button" data-template="postgame">Postgame Reaction</button>
+                                    <button type="button" data-template="media">Media Interview</button>
+                                    <button type="button" data-template="team">Team Announcement</button>
                                 </div>
                             </div>
-                            <div class="composer-actions">
-                                <select id="post-visibility">
-                                    <option value="public">Public</option>
-                                    <option value="followers">Followers Only</option>
-                                    <option value="team">Team Only</option>
-                                </select>
-                                <button type="submit" id="post-submit-btn" class="btn btn-primary" disabled>Post</button>
-                            </div>
                         </div>
-                    </form>
-                </div>
+                        <div class="composer-actions">
+                            <select id="post-visibility">
+                                <option value="public">Public</option>
+                                <option value="followers">Followers Only</option>
+                                <option value="team">Team Only</option>
+                            </select>
+                            <button type="submit" id="post-submit-btn" class="btn btn-primary" disabled>Post</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
 
                 <div class="feed-tabs">
                     <button class="tab-btn active" data-feed="all">All Posts</button>
@@ -372,29 +387,6 @@
                         <input type="text" placeholder="Write a comment..." id="modal-comment-input">
                         <button type="submit">Post</button>
                     </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Image Preview Modal -->
-    <div id="image-preview-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Image to Post</h3>
-                <button id="close-image-modal" class="close-modal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="image-preview-container">
-                    <input type="url" id="image-url-input" placeholder="Enter image URL" class="form-control">
-                    <button id="preview-image-btn" class="btn btn-secondary">Preview</button>
-                </div>
-                <div class="image-preview">
-                    <img id="preview-image" src="/api/placeholder/400/300" alt="Image preview">
-                </div>
-                <div class="modal-actions">
-                    <button id="cancel-image-btn" class="btn btn-secondary">Cancel</button>
-                    <button id="add-image-to-post-btn" class="btn btn-primary">Add to Post</button>
                 </div>
             </div>
         </div>

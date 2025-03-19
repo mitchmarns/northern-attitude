@@ -1,4 +1,4 @@
-// public/js/social/post.js - Post creation and formatting
+// public/js/social/post.js - Post creation and formatting with multi-image support
 
 import * as api from './api.js';
 import * as feed from './feed.js';
@@ -6,21 +6,18 @@ import * as ui from './ui.js';
 
 // DOM elements
 const elements = {
-  // Existing elements...
   postForm: document.getElementById('post-form'),
   postContent: document.getElementById('post-content'),
   postPreview: document.getElementById('post-preview'),
   postSubmitBtn: document.getElementById('post-submit-btn'),
   postVisibility: document.getElementById('post-visibility'),
-  addImageBtn: document.getElementById('add-image-btn'),
   
-  // New elements for multi-image functionality
-  imageGallery: document.getElementById('image-gallery'),
+  // Image upload elements
   imageUrlInput: document.getElementById('image-url-input'),
   addToGalleryBtn: document.getElementById('add-to-gallery-btn'),
   imageCounter: document.getElementById('image-counter'),
   
-  // Existing elements continued...
+  // Existing elements
   addHashtagBtn: document.getElementById('add-hashtag-btn'),
   addMentionBtn: document.getElementById('add-mention-btn'),
   templatesBtn: document.getElementById('templates-btn'),
@@ -33,6 +30,15 @@ let isSubmitting = false;
 
 // Initialize the post module
 export function init(state) {
+  // Initialize post data if not exists
+  if (!state.postData) {
+    state.postData = {
+      content: '',
+      images: [],
+      visibility: 'public'
+    };
+  }
+  
   // Set up event listeners
   setupEventListeners(state);
 }
@@ -43,40 +49,261 @@ function setupEventListeners(state) {
   if (elements.postContent) {
     elements.postContent.addEventListener('input', () => {
       state.postData.content = elements.postContent.value;
-      
-      // Enable submit button if there's content
-      if (elements.postSubmitBtn) {
-        elements.postSubmitBtn.disabled = !state.postData.content.trim() && !state.postData.imageUrl;
-      }
-      
-      // Update preview if needed
+      updateSubmitButtonState(state);
       updatePostPreview(state);
     });
   }
   
-  // Attach click handler directly to the submit button instead of form submission
-  if (elements.postSubmitBtn) {
-    elements.postSubmitBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      
-      // Prevent double submission
-      if (isSubmitting) {
-        return;
+  // Image URL input and add to gallery
+  if (elements.imageUrlInput && elements.addToGalleryBtn) {
+    elements.addToGalleryBtn.addEventListener('click', () => {
+      const imageUrl = elements.imageUrlInput.value.trim();
+      if (imageUrl) {
+        addImageToGallery(imageUrl, state);
+        elements.imageUrlInput.value = ''; // Clear input
       }
-      
-      // Submit the post
+    });
+    
+    // Support Enter key in image URL input
+    elements.imageUrlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const imageUrl = elements.imageUrlInput.value.trim();
+        if (imageUrl) {
+          addImageToGallery(imageUrl, state);
+          elements.imageUrlInput.value = ''; // Clear input
+        }
+      }
+    });
+  }
+  
+  // Post form submission
+  if (elements.postForm) {
+    elements.postForm.addEventListener('submit', (e) => {
+      e.preventDefault();
       submitPost(state);
     });
   }
   
-  // Add image button
-  if (elements.addImageBtn) {
-    elements.addImageBtn.addEventListener('click', () => {
-      ui.showImageModal(state);
-    });
+  // Existing event listeners from the previous implementation
+  setupTemplateAndToolbarListeners(state);
+}
+
+// Add image to gallery
+export function addImageToGallery(imageUrl, state) {
+  // Validate URL (basic check)
+  const urlPattern = /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
+  if (!urlPattern.test(imageUrl)) {
+    ui.showMessage('Please enter a valid image URL', 'error');
+    return false;
   }
   
-  // Add hashtag button
+  // Initialize images array if not exists
+  if (!state.postData.images) {
+    state.postData.images = [];
+  }
+  
+  // Check maximum images
+  if (state.postData.images.length >= 10) {
+    ui.showMessage('Maximum of 10 images allowed', 'error');
+    return false;
+  }
+  
+  // Add image to array
+  state.postData.images.push(imageUrl);
+  
+  // Update counter and preview
+  updateImageCounter(state);
+  updatePostPreview(state);
+  updateSubmitButtonState(state);
+  
+  return true;
+}
+
+// Remove image from gallery
+export function removeImageFromGallery(index, state) {
+  if (!state.postData.images || index >= state.postData.images.length) return;
+  
+  // Remove image at index
+  state.postData.images.splice(index, 1);
+  
+  // Update counter and preview
+  updateImageCounter(state);
+  updatePostPreview(state);
+  updateSubmitButtonState(state);
+}
+
+// Update image counter
+function updateImageCounter(state) {
+  if (elements.imageCounter) {
+    const imageCount = state.postData.images ? state.postData.images.length : 0;
+    elements.imageCounter.textContent = `${imageCount}/10 images`;
+  }
+}
+
+// Update post preview
+export function updatePostPreview(state) {
+  if (!elements.postPreview) return;
+  
+  // Clear previous preview
+  elements.postPreview.innerHTML = '';
+  
+  // Hide preview if no content and no images
+  if ((!state.postData.content || state.postData.content.trim() === '') && 
+      (!state.postData.images || state.postData.images.length === 0)) {
+    elements.postPreview.style.display = 'none';
+    return;
+  }
+  
+  // Show preview container
+  elements.postPreview.style.display = 'block';
+  
+  // Add text content if exists
+  if (state.postData.content && state.postData.content.trim() !== '') {
+    const previewText = document.createElement('p');
+    previewText.innerHTML = formatPostContent(state.postData.content);
+    elements.postPreview.appendChild(previewText);
+  }
+  
+  // Add images if exist
+  if (state.postData.images && state.postData.images.length > 0) {
+    const galleryElement = createImageGallery(state.postData.images, true);
+    elements.postPreview.appendChild(galleryElement);
+  }
+}
+
+// Create image gallery element
+function createImageGallery(images, isEditable = false) {
+  const galleryElement = document.createElement('div');
+  galleryElement.className = `image-gallery image-count-${Math.min(images.length, 4)}`;
+  
+  // Add images to gallery
+  images.slice(0, 4).forEach((imageUrl, index) => {
+    const imageContainer = document.createElement('div');
+    imageContainer.className = 'gallery-image-container';
+    
+    const imageElement = document.createElement('img');
+    imageElement.src = imageUrl;
+    imageElement.alt = `Gallery image ${index + 1}`;
+    
+    // Add remove button if editable
+    if (isEditable) {
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'remove-image-btn';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.dataset.index = index;
+      removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        removeImageFromGallery(index, window.socialApp.state);
+      });
+      
+      imageContainer.appendChild(imageElement);
+      imageContainer.appendChild(removeBtn);
+    } else {
+      imageContainer.appendChild(imageElement);
+    }
+    
+    galleryElement.appendChild(imageContainer);
+  });
+  
+  // Add more images indicator
+  if (images.length > 4) {
+    const moreIndicator = document.createElement('div');
+    moreIndicator.className = 'more-images-indicator';
+    moreIndicator.textContent = `+${images.length - 4} more`;
+    galleryElement.appendChild(moreIndicator);
+  }
+  
+  return galleryElement;
+}
+
+// Update submit button state
+function updateSubmitButtonState(state) {
+  if (elements.postSubmitBtn) {
+    // Enable submit if there's content or images
+    const hasContent = state.postData.content && state.postData.content.trim() !== '';
+    const hasImages = state.postData.images && state.postData.images.length > 0;
+    
+    elements.postSubmitBtn.disabled = !(hasContent || hasImages);
+  }
+}
+
+// Submit post
+async function submitPost(state) {
+  // Ensure we have a selected character
+  if (!state.selectedCharacterId) {
+    ui.showMessage('Please select a character to post as', 'error');
+    return;
+  }
+
+  // Ensure we have content or images
+  if ((!state.postData.content || state.postData.content.trim() === '') && 
+      (!state.postData.images || state.postData.images.length === 0)) {
+    ui.showMessage('Please enter some content or add images', 'error');
+    return;
+  }
+
+  try {
+    // Prevent double submission
+    if (isSubmitting) return;
+    isSubmitting = true;
+    
+    // Disable submit button
+    if (elements.postSubmitBtn) {
+      elements.postSubmitBtn.disabled = true;
+      elements.postSubmitBtn.textContent = 'Posting...';
+    }
+    
+    // Create post
+    await api.createPost(
+      state.selectedCharacterId,
+      state.postData.content.trim(),
+      state.postData.images, // Send entire images array
+      elements.postVisibility ? elements.postVisibility.value : 'public'
+    );
+    
+    // Reset post data
+    state.postData.content = '';
+    state.postData.images = [];
+    
+    // Reset form
+    if (elements.postContent) {
+      elements.postContent.value = '';
+    }
+    
+    // Clear preview
+    if (elements.postPreview) {
+      elements.postPreview.innerHTML = '';
+      elements.postPreview.style.display = 'none';
+    }
+    
+    // Reset image counter
+    updateImageCounter(state);
+    
+    // Reload feed
+    feed.loadFeed(state.currentFeed, 1);
+    
+    // Show success message
+    ui.showMessage('Post created successfully!', 'success');
+    
+  } catch (error) {
+    console.error('Error creating post:', error);
+    ui.showMessage('Failed to create post. Please try again.', 'error');
+  } finally {
+    // Reset submission flag
+    isSubmitting = false;
+    
+    // Reset submit button
+    if (elements.postSubmitBtn) {
+      elements.postSubmitBtn.disabled = false;
+      elements.postSubmitBtn.textContent = 'Post';
+    }
+  }
+}
+
+// Setup template and toolbar listeners
+function setupTemplateAndToolbarListeners(state) {
+  // Hashtag button
   if (elements.addHashtagBtn) {
     elements.addHashtagBtn.addEventListener('click', () => {
       ui.insertTextAtCursor(elements.postContent, ' #');
@@ -84,7 +311,7 @@ function setupEventListeners(state) {
     });
   }
   
-  // Add mention button
+  // Mention button
   if (elements.addMentionBtn) {
     elements.addMentionBtn.addEventListener('click', () => {
       ui.insertTextAtCursor(elements.postContent, ' @');
@@ -127,270 +354,6 @@ function setupEventListeners(state) {
   });
 }
 
-// Update post preview
-export function updatePostPreview(state) {
-  if (!elements.postPreview) return;
-  
-  // Clear previous preview
-  elements.postPreview.innerHTML = '';
-  
-  // If there are images, create a gallery
-  if (state.postData.images && state.postData.images.length > 0) {
-    const galleryElement = createImageGallery(state.postData.images);
-    elements.postPreview.appendChild(galleryElement);
-  }
-  // For backward compatibility
-  else if (state.postData.imageUrl) {
-    const singleImage = document.createElement('img');
-    singleImage.src = state.postData.imageUrl;
-    singleImage.alt = 'Post preview image';
-    elements.postPreview.appendChild(singleImage);
-  }
-  
-  // If there's text content, show formatted text
-  if (state.postData.content) {
-    const previewText = document.createElement('p');
-    previewText.innerHTML = formatPostContent(state.postData.content);
-    elements.postPreview.appendChild(previewText);
-  }
-  
-  // Show or hide preview container based on content
-  elements.postPreview.style.display = 
-    (state.postData.images && state.postData.images.length > 0) || 
-    state.postData.imageUrl || 
-    state.postData.content.trim() 
-      ? 'block' 
-      : 'none';
-
-  if (elements.addToGalleryBtn) {
-    elements.addToGalleryBtn.addEventListener('click', () => {
-      const imageUrl = elements.imageUrlInput.value.trim();
-      if (imageUrl) {
-        if (addImageToGallery(imageUrl, state)) {
-          // Clear input after successful addition
-          elements.imageUrlInput.value = '';
-        }
-      }
-    });
-  }
-  
-  // Add keyboard support for image input
-  if (elements.imageUrlInput) {
-    elements.imageUrlInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const imageUrl = elements.imageUrlInput.value.trim();
-        if (imageUrl) {
-          if (addImageToGallery(imageUrl, state)) {
-            // Clear input after successful addition
-            elements.imageUrlInput.value = '';
-          }
-        }
-      }
-    });
-  }
-}
-
-// Create an image gallery element
-function createImageGallery(images) {
-  const galleryElement = document.createElement('div');
-  galleryElement.className = 'image-gallery';
-  
-  // Apply different layouts based on number of images
-  galleryElement.classList.add(`image-count-${Math.min(images.length, 4)}`);
-  
-  // Add images to gallery
-  images.slice(0, 4).forEach((imageUrl, index) => {
-    const imageContainer = document.createElement('div');
-    imageContainer.className = 'gallery-image-container';
-    
-    const imageElement = document.createElement('img');
-    imageElement.src = imageUrl;
-    imageElement.alt = `Gallery image ${index + 1}`;
-    
-    // Add remove button
-    const removeBtn = document.createElement('button');
-    removeBtn.className = 'remove-image-btn';
-    removeBtn.innerHTML = '&times;';
-    removeBtn.dataset.index = index;
-    removeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      removeImageFromGallery(index);
-    });
-    
-    imageContainer.appendChild(imageElement);
-    imageContainer.appendChild(removeBtn);
-    galleryElement.appendChild(imageContainer);
-  });
-  
-  // If there are more than 4 images, add a "+X more" indicator
-  if (images.length > 4) {
-    const moreIndicator = document.createElement('div');
-    moreIndicator.className = 'more-images-indicator';
-    moreIndicator.textContent = `+${images.length - 4} more`;
-    galleryElement.appendChild(moreIndicator);
-  }
-  
-  return galleryElement;
-}
-
-// Add image to gallery
-export function addImageToGallery(imageUrl, state) {
-  // Initialize images array if it doesn't exist
-  if (!state.postData.images) {
-    state.postData.images = [];
-  }
-  
-  // Maximum of 10 images per post
-  if (state.postData.images.length >= 10) {
-    ui.showMessage('Maximum of 10 images allowed per post', 'error');
-    return false;
-  }
-  
-  // Add image to array
-  state.postData.images.push(imageUrl);
-  
-  // Update counter if it exists
-  if (elements.imageCounter) {
-    elements.imageCounter.textContent = `${state.postData.images.length}/10 images`;
-  }
-  
-  // Update preview
-  updatePostPreview(state);
-  
-  // Enable submit button
-  if (elements.postSubmitBtn) {
-    elements.postSubmitBtn.disabled = false;
-  }
-  
-  return true;
-}
-
-// Remove image from gallery
-export function removeImageFromGallery(index, state) {
-  if (!state.postData.images || index >= state.postData.images.length) return;
-  
-  // Remove image at index
-  state.postData.images.splice(index, 1);
-  
-  // Update counter if it exists
-  if (elements.imageCounter) {
-    elements.imageCounter.textContent = `${state.postData.images.length}/10 images`;
-  }
-  
-  // Update preview
-  updatePostPreview(state);
-  
-  // Disable submit button if no content
-  if (elements.postSubmitBtn) {
-    elements.postSubmitBtn.disabled = 
-      !state.postData.content.trim() && 
-      state.postData.images.length === 0 && 
-      !state.postData.imageUrl;
-  }
-}
-
-// Format post content with hashtags, mentions, and links
-export function formatPostContent(content) {
-  if (!content) return '';
-  
-  // Escape HTML to prevent XSS
-  let safeContent = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-  
-  // Format hashtags
-  safeContent = safeContent.replace(/#(\w+)/g, '<a href="#" class="hashtag">#$1</a>');
-  
-  // Format mentions
-  safeContent = safeContent.replace(/@(\w+)/g, '<a href="#" class="mention">@$1</a>');
-  
-  // Format URLs
-  safeContent = safeContent.replace(
-    /(https?:\/\/[^\s]+)/g, 
-    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
-  );
-  
-  return safeContent;
-}
-
-// Submit a new post
-async function submitPost(state) {
-  // Ensure we have a selected character and some content
-  if (!state.selectedCharacterId) {
-    ui.showMessage('Please select a character to post as', 'error');
-    return;
-  }
-
-  if (!state.postData.content.trim() && 
-      (!state.postData.images || state.postData.images.length === 0) && 
-      !state.postData.imageUrl) {
-    ui.showMessage('Please enter some content or add images', 'error');
-    return;
-  }
-
-  try {
-    // Set submitting flag to prevent double submissions
-    isSubmitting = true;
-    
-    // Disable submit button and show loading state
-    if (elements.postSubmitBtn) {
-      elements.postSubmitBtn.disabled = true;
-      elements.postSubmitBtn.textContent = 'Posting...';
-    }
-
-    // Send post to server
-    // Note: The API will need to be updated to handle multiple images
-    await api.createPost(
-      state.selectedCharacterId,
-      state.postData.content.trim(),
-      state.postData.images || state.postData.imageUrl,  // Send the images array or fallback to single imageUrl
-      elements.postVisibility ? elements.postVisibility.value : 'public'
-    );
-
-    // Reset form and state
-    state.postData.content = '';
-    state.postData.imageUrl = null;
-    state.postData.images = [];
-    
-    if (elements.postContent) {
-      elements.postContent.value = '';
-    }
-    
-    if (elements.postPreview) {
-      elements.postPreview.innerHTML = '';
-      elements.postPreview.style.display = 'none';
-    }
-    
-    // Update image counter
-    if (elements.imageCounter) {
-      elements.imageCounter.textContent = '0/10 images';
-    }
-
-    // Reload feed
-    feed.loadFeed(state.currentFeed, 1);
-
-    // Show success message
-    ui.showMessage('Post created successfully!', 'success');
-
-  } catch (error) {
-    console.error('Error creating post:', error);
-    ui.showMessage('Failed to create post. Please try again.', 'error');
-  } finally {
-    // Reset submitting flag
-    isSubmitting = false;
-    
-    // Re-enable submit button
-    if (elements.postSubmitBtn) {
-      elements.postSubmitBtn.disabled = false;
-      elements.postSubmitBtn.textContent = 'Post';
-    }
-  }
-}
-
 // Apply a post template
 function applyTemplate(templateType, state) {
   if (!elements.postContent) return;
@@ -424,8 +387,33 @@ function applyTemplate(templateType, state) {
   // Update preview
   updatePostPreview(state);
   
-  // Enable submit button
-  if (elements.postSubmitBtn) {
-    elements.postSubmitBtn.disabled = false;
-  }
+  // Update submit button state
+  updateSubmitButtonState(state);
+}
+
+// Format post content with hashtags, mentions, and links
+export function formatPostContent(content) {
+  if (!content) return '';
+  
+  // Escape HTML to prevent XSS
+  let safeContent = content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+  
+  // Format hashtags
+  safeContent = safeContent.replace(/#(\w+)/g, '<a href="#" class="hashtag">#$1</a>');
+  
+  // Format mentions
+  safeContent = safeContent.replace(/@(\w+)/g, '<a href="#" class="mention">@$1</a>');
+  
+  // Format URLs
+  safeContent = safeContent.replace(
+    /(https?:\/\/[^\s]+)/g, 
+    '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
+  
+  return safeContent;
 }

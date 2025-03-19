@@ -1075,3 +1075,70 @@
 .gallery-image:hover img {
   transform: scale(1.05);
 }
+
+/* Image Input Container Styles */
+.image-input-container {
+  display: flex;
+  align-items: center;
+  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.image-input-container input {
+  flex-grow: 1;
+  margin-right: var(--spacing-sm);
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--border-radius);
+  background-color: var(--input-bg);
+  color: var(--text);
+}
+
+.image-input-container button {
+  background-color: var(--accent);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  text-align: center;
+}
+
+.image-input-container button:hover {
+  background-color: var(--header-hover);
+}
+
+.image-counter {
+  margin-left: var(--spacing-sm);
+  font-size: var(--text-xs);
+  color: var(--lighttext);
+}
+
+/* Ensure input and button have consistent height */
+.image-input-container input,
+.image-input-container button {
+  height: 38px;
+  line-height: 1.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .image-input-container {
+    flex-direction: column;
+  }
+  
+  .image-input-container input {
+    margin-right: 0;
+    margin-bottom: var(--spacing-sm);
+    width: 100%;
+  }
+  
+  .image-input-container button {
+    width: 100%;
+  }
+}
