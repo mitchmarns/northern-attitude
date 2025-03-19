@@ -7,6 +7,10 @@ import * as interactions from './interactions.js';
 import * as ui from './ui.js';
 import * as hashtags from './hashtags.js';
 
+// Import the required functions specifically
+import { formatPostContent } from './post.js'; // Import formatPostContent from post.js
+// The formatTimestamp function is imported via ui module
+
 // DOM elements
 const elements = {
   feedTabs: document.querySelectorAll('.tab-btn'),
@@ -178,6 +182,8 @@ export function loadMorePosts() {
   loadFeed(state.currentFeed, state.pagination.lastPage + 1);
 }
 
+// Note: We're using formatTimestamp from ui.js instead of defining it here
+
 // Create a post element from post data
 export function createPostElement(postData) {
   const postElement = document.createElement('article');
@@ -205,7 +211,7 @@ export function createPostElement(postData) {
   }
   
   // Format the timestamp for display
-  const formattedTime = formatTimestamp(timestamp);
+  const formattedTime = ui.formatTimestamp(timestamp);
   
   // Create image gallery HTML if we have multiple images
   let mediaHtml = '';
@@ -285,6 +291,8 @@ export function createPostElement(postData) {
   
   return postElement;
 }
+
+// Note: We're using formatPostContent from post.js instead of defining it here
 
 // Periodically refresh timestamps (every minute)
 setInterval(() => {
