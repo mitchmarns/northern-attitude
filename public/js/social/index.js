@@ -8,11 +8,13 @@ import * as comments from './comments.js';
 import * as interactions from './interactions.js';
 import * as ui from './ui.js';
 import * as api from './api.js';
+import * as hashtags from './hashtags.js';
 
 // Shared state - accessible to all modules
 export const state = {
   selectedCharacterId: null,
   currentFeed: 'all',
+  currentHashtag: null,
   postData: {
     content: '',
     imageUrl: null
@@ -37,6 +39,8 @@ export function init() {
   comments.init(state);
   interactions.init(state);
   ui.init(state);
+  hashtags.init(state);
+
   
   // Set up infinite scroll
   setupInfiniteScroll();

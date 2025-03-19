@@ -173,7 +173,7 @@ export function updatePostPreview(state) {
 }
 
 // Create image gallery element
-function createImageGallery(images, isEditable = false) {
+export function createImageGallery(images, isEditable = false) {
   const galleryElement = document.createElement('div');
   galleryElement.className = `image-gallery image-count-${Math.min(images.length, 4)}`;
   
@@ -302,20 +302,58 @@ async function submitPost(state) {
 }
 
 // Setup template and toolbar listeners
-function setupTemplateAndToolbarListeners(state) {
-  // Hashtag button
+export function setupTemplateAndToolbarListeners(state) {
+  // Hashtag button - FIXED to avoid inserting multiple hashtags
   if (elements.addHashtagBtn) {
     elements.addHashtagBtn.addEventListener('click', () => {
-      ui.insertTextAtCursor(elements.postContent, ' #');
-      elements.postContent.focus();
+      if (elements.postContent) {
+        // Get current cursor position and text
+        const cursorPos = elements.postContent.selectionStart;
+        const text = elements.postContent.value;
+        
+        // Check if we're already at a hashtag
+        if (cursorPos > 0 && text.charAt(cursorPos - 1) === '#') {
+          // We're already at a hashtag, don't add another one
+          elements.postContent.focus();
+          return;
+        }
+        
+        // Check if we need to add a space before the hashtag
+        let insertText = '#';
+        if (cursorPos > 0 && text.charAt(cursorPos - 1) !== ' ' && text.charAt(cursorPos - 1) !== '\n') {
+          insertText = ' #';
+        }
+        
+        ui.insertTextAtCursor(elements.postContent, insertText);
+        elements.postContent.focus();
+      }
     });
   }
   
-  // Mention button
+  // Mention button - IMPROVED similar to hashtag button
   if (elements.addMentionBtn) {
     elements.addMentionBtn.addEventListener('click', () => {
-      ui.insertTextAtCursor(elements.postContent, ' @');
-      elements.postContent.focus();
+      if (elements.postContent) {
+        // Get current cursor position and text
+        const cursorPos = elements.postContent.selectionStart;
+        const text = elements.postContent.value;
+        
+        // Check if we're already at a mention
+        if (cursorPos > 0 && text.charAt(cursorPos - 1) === '@') {
+          // We're already at a mention, don't add another one
+          elements.postContent.focus();
+          return;
+        }
+        
+        // Check if we need to add a space before the mention
+        let insertText = '@';
+        if (cursorPos > 0 && text.charAt(cursorPos - 1) !== ' ' && text.charAt(cursorPos - 1) !== '\n') {
+          insertText = ' @';
+        }
+        
+        ui.insertTextAtCursor(elements.postContent, insertText);
+        elements.postContent.focus();
+      }
     });
   }
   

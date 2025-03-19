@@ -425,3 +425,89 @@ export function formatDateTime(date) {
     minute: '2-digit'
   }).format(date);
 }
+
+/**
+ * Get posts by hashtag
+ * @param {string} hashtag - The hashtag to search for
+ * @param {number} characterId - Character ID for viewing permissions
+ * @param {number} page - Page number for pagination
+ * @param {number} limit - Results per page
+ */
+export async function getPostsByHashtag(hashtag, characterId, page = 1, limit = 10) {
+  const response = await fetch(`/api/social/hashtag/${hashtag}?characterId=${characterId}&page=${page}&limit=${limit}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch posts for hashtag #${hashtag}: ${response.status}`);
+  }
+  
+  return response.json();
+}
+
+/**
+ * Extract and format hashtags from post content
+ * @param {string} content - Post content
+ * @returns {string[]} - Array of extracted hashtags
+ */
+export function extractHashtags(content) {
+  if (!content) return [];
+  
+  const hashtagRegex = /#(\w+)/g;
+  const matches = content.match(hashtagRegex);
+  
+  if (!matches) return [];
+  
+  // Extract just the hashtag text without the # symbol
+  return matches.map(tag => tag.substring(1).toLowerCase());
+}
+
+/**
+ * Get trending hashtags with counts
+ * @param {number} limit - Number of hashtags to retrieve
+ * @param {number} days - Time period to consider
+ */
+export async function getTrendingHashtags(limit = 10, days = 7) {
+  const response = await fetch(`/api/social/trending-hashtags?limit=${limit}&days=${days}`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Accept': 'application/json'
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch trending hashtags');
+  }
+  
+  return response.json();
+}
+
+/**
+ * Add hashtags to a post through the API
+ * @param {number} postId - Post ID
+ * @param {string[]} hashtags - Array of hashtags
+ */
+export async function addHashtagsToPost(postId, hashtags) {
+  // If no hashtags, no need to make API call
+  if (!hashtags || hashtags.length === 0) return;
+  
+  const response = await fetch(`/api/social/posts/${postId}/hashtags`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ hashtags }),
+    credentials: 'include'
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to add hashtags to post');
+  }
+  
+  return response.json();
+}

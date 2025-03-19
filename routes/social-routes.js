@@ -286,4 +286,89 @@ router.post('/characters/:targetId/follow', authMiddleware.isAuthenticated, asyn
   }
 });
 
+// Get posts by hashtag
+router.get('/hashtag/:tag', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const hashtag = req.params.tag;
+    const characterId = req.query.characterId;
+    const page = parseInt(req.query.page || '1');
+    const limit = parseInt(req.query.limit || '10');
+    
+    if (!hashtag) {
+      return res.status(400).json({ message: 'Hashtag is required' });
+    }
+    
+    if (!characterId) {
+      return res.status(400).json({ message: 'Character ID is required' });
+    }
+    
+    // Check if character belongs to user
+    const isOwner = await characterOperations.isCharacterOwner(req.user.id, characterId);
+    if (!isOwner) {
+      return res.status(403).json({ message: 'You do not have permission to view this feed' });
+    }
+    
+    // Get posts with the hashtag
+    const posts = await socialOperations.getPostsByHashtag(hashtag, characterId, page, limit);
+    
+    res.status(200).json({
+      posts,
+      pagination: {
+        page,
+        limit,
+        hasMore: posts.length === limit
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching posts by hashtag:', error);
+    res.status(500).json({ message: 'Failed to load posts with this hashtag' });
+  }
+});
+
+// Get trending hashtags (already exists, updating to include count)
+router.get('/trending-hashtags', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit || '5');
+    const days = parseInt(req.query.days || '7');
+    
+    const hashtags = await socialOperations.getTrendingHashtags(limit, days);
+    
+    res.status(200).json(hashtags);
+  } catch (error) {
+    console.error('Error fetching trending hashtags:', error);
+    res.status(500).json({ message: 'Failed to load trending hashtags' });
+  }
+});
+
+// Add hashtags to a post
+router.post('/posts/:postId/hashtags', authMiddleware.isAuthenticated, async (req, res) => {
+  try {
+    const postId = req.params.postId;
+    const { hashtags } = req.body;
+    
+    if (!hashtags || !Array.isArray(hashtags)) {
+      return res.status(400).json({ message: 'Hashtags array is required' });
+    }
+    
+    // Verify post ownership
+    const post = await socialOperations.getPostById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    const character = await characterOperations.getCharacterById(post.character_id);
+    if (character.user_id !== req.user.id) {
+      return res.status(403).json({ message: 'You do not have permission to modify this post' });
+    }
+    
+    // Save hashtags
+    await socialOperations.saveHashtags(postId, hashtags);
+    
+    res.status(200).json({ message: 'Hashtags added successfully' });
+  } catch (error) {
+    console.error('Error adding hashtags to post:', error);
+    res.status(500).json({ message: 'Failed to add hashtags to post' });
+  }
+});
+
 module.exports = router;

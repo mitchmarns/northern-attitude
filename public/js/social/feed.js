@@ -5,6 +5,7 @@ import * as post from './post.js';
 import * as comments from './comments.js';
 import * as interactions from './interactions.js';
 import * as ui from './ui.js';
+import * as hashtags from './hashtags.js';
 
 // DOM elements
 const elements = {
@@ -45,15 +46,17 @@ export async function loadFeed(feedType = 'all', page = 1) {
   }
   
   // Show loading indicator
-  if (elements.feedLoading) {
-    elements.feedLoading.style.display = 'block';
+  const feedLoading = document.getElementById('feed-loading');
+  if (feedLoading) {
+    feedLoading.style.display = 'block';
   }
   
   // Set current feed type
   state.currentFeed = feedType;
   
   // Update active tab
-  elements.feedTabs.forEach(tab => {
+  const feedTabs = document.querySelectorAll('.tab-btn');
+  feedTabs.forEach(tab => {
     if (tab.dataset.feed === feedType) {
       tab.classList.add('active');
     } else {
@@ -62,34 +65,61 @@ export async function loadFeed(feedType = 'all', page = 1) {
   });
   
   try {
-    console.log(`Loading ${feedType} feed, page ${page} for character ${state.selectedCharacterId}`);
-    const data = await api.fetchFeed(feedType, state.selectedCharacterId, page);
+    let data;
+    
+    // Handle different feed types including hashtag filter
+    if (feedType === 'hashtag' && state.currentHashtag) {
+      data = await api.getPostsByHashtag(
+        state.currentHashtag, 
+        state.selectedCharacterId, 
+        page
+      );
+    } else {
+      // Existing feed types (all, following, team)
+      console.log(`Loading ${feedType} feed, page ${page} for character ${state.selectedCharacterId}`);
+      data = await api.fetchFeed(feedType, state.selectedCharacterId, page);
+    }
+    
     console.log("Feed data received:", data);
     
     // Hide loading indicator
-    if (elements.feedLoading) {
-      elements.feedLoading.style.display = 'none';
+    if (feedLoading) {
+      feedLoading.style.display = 'none';
     }
     
     // Clear feed or append based on page
-    if (page === 1) {
-      if (elements.socialFeed) {
-        elements.socialFeed.innerHTML = '';
-      }
+    const socialFeed = document.getElementById('social-feed');
+    if (page === 1 && socialFeed) {
+      socialFeed.innerHTML = '';
     }
     
     // Add posts to feed
     if (data.posts && data.posts.length > 0) {
       data.posts.forEach(post => {
         const postElement = createPostElement(post);
-        if (elements.socialFeed) {
-          elements.socialFeed.appendChild(postElement);
+        if (socialFeed) {
+          socialFeed.appendChild(postElement);
         }
       });
-    } else if (page === 1) {
+    } else if (page === 1 && socialFeed) {
       // Show empty state if no posts on first page
-      if (elements.socialFeed) {
-        elements.socialFeed.innerHTML = '<div class="empty-feed">No posts to show</div>';
+      if (feedType === 'hashtag' && state.currentHashtag) {
+        socialFeed.innerHTML = `
+          <div class="empty-feed">
+            <p>No posts found with hashtag #${state.currentHashtag}</p>
+            <button class="btn btn-secondary clear-filter-btn">Clear Filter</button>
+          </div>
+        `;
+        
+        // Add click handler for clear filter button
+        const clearFilterBtn = socialFeed.querySelector('.clear-filter-btn');
+        if (clearFilterBtn) {
+          clearFilterBtn.addEventListener('click', () => {
+            hashtags.clearHashtagFilter();
+          });
+        }
+      } else {
+        socialFeed.innerHTML = '<div class="empty-feed">No posts to show</div>';
       }
     }
     
@@ -100,13 +130,14 @@ export async function loadFeed(feedType = 'all', page = 1) {
     console.error('Error loading feed:', error);
     
     // Hide loading indicator
-    if (elements.feedLoading) {
-      elements.feedLoading.style.display = 'none';
+    if (feedLoading) {
+      feedLoading.style.display = 'none';
     }
     
     // Show error message
-    if (elements.socialFeed) {
-      elements.socialFeed.innerHTML = `<div class="error-feed">Failed to load feed: ${error.message}</div>`;
+    const socialFeed = document.getElementById('social-feed');
+    if (socialFeed) {
+      socialFeed.innerHTML = `<div class="error-feed">Failed to load feed: ${error.message}</div>`;
     }
     
     state.pagination.isLoadingMore = false;
@@ -148,18 +179,14 @@ export function loadMorePosts() {
 }
 
 // Create a post element from post data
-function createPostElement(postData) {
+export function createPostElement(postData) {
   const postElement = document.createElement('article');
   postElement.className = 'social-post';
   postElement.dataset.postId = postData.id;
   
-  // Debug the timestamp we're working with
-  console.log(`Post #${postData.id} timestamp raw:`, postData.created_at);
-  
-  // Ensure we have a proper date object for the timestamp
+  // Format timestamp
   let timestamp;
   try {
-    // Different APIs might return dates in different formats
     if (postData.created_at) {
       if (typeof postData.created_at === 'string') {
         timestamp = new Date(postData.created_at.replace(' ', 'T'));
@@ -178,8 +205,7 @@ function createPostElement(postData) {
   }
   
   // Format the timestamp for display
-  const formattedTime = ui.formatTimestamp(timestamp);
-  console.log(`Post #${postData.id} formatted time:`, formattedTime);
+  const formattedTime = formatTimestamp(timestamp);
   
   // Create image gallery HTML if we have multiple images
   let mediaHtml = '';
@@ -205,7 +231,7 @@ function createPostElement(postData) {
       </div>
     </div>
     <div class="post-content">
-      <p>${post.formatPostContent(postData.content || '')}</p>
+      <p>${formatPostContent(postData.content || '')}</p>
       ${mediaHtml}
     </div>
     <div class="post-footer">
@@ -249,7 +275,9 @@ function createPostElement(postData) {
       
       const commentInput = commentForm.querySelector('.comment-input');
       if (commentInput && commentInput.value.trim()) {
-        comments.addComment(postData.id, commentInput.value.trim(), postElement);
+        // We'll integrate this with our comments module
+        const state = window.socialApp.state;
+        window.socialApp.comments.addComment(postData.id, commentInput.value.trim(), postElement);
         commentInput.value = '';
       }
     });
