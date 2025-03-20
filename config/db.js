@@ -1,5 +1,5 @@
 // config/db.js
-const { db } = require('./db/connection');
+const { getDb } = require('./db/connection');
 const characterOperations = require('./db/character-db');
 const contactOperations = require('./db/contact-db');
 const teamOperations = require('./db/team-db');
@@ -10,7 +10,8 @@ const { socialOperations } = require('./db/social-db.js')
 
 // Export everything with the same structure
 module.exports = {
-  db,
+  getDb,
+  get db() { return getDb(); },
   characterOperations,
   contactOperations,
   teamOperations,
