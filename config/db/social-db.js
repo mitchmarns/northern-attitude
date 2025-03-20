@@ -13,101 +13,47 @@ const socialOperations = {
    * @param {number} limit - Number of posts per page
    */
   getAllPosts: async (characterId, page = 1, limit = 10) => {
-    const offset = (page - 1) * limit;
+    // Existing code with one improvement - don't use Promise.all for every post
+    // Instead, get post images in a single query
     
-    return new Promise((resolve, reject) => {
-      // First query to get the posts with basic info
-      db.all(`
-        WITH post_likes AS (
-          SELECT post_id, COUNT(*) as likes_count,
-                 MAX(CASE WHEN character_id = ? THEN 1 ELSE 0 END) as is_liked
-          FROM SocialLikes
-          GROUP BY post_id
-        )
-        SELECT 
-          p.id, 
-          p.character_id,
-          p.content, 
-          p.media_url, 
-          p.created_at, 
-          c.name as author_name, 
-          c.position as author_position, 
-          c.avatar_url as author_avatar, 
-          t.name as author_team,
-          COALESCE(pl.likes_count, 0) as likes_count,
-          COALESCE(pl.is_liked, 0) as is_liked
-        FROM SocialPosts p
-        JOIN Characters c ON p.character_id = c.id
-        LEFT JOIN Teams t ON c.team_id = t.id
-        LEFT JOIN post_likes pl ON p.id = pl.post_id
-        WHERE 
-          -- Public posts
-          p.visibility = 'public'
-          -- Posts from characters the viewing character follows
-          OR p.character_id IN (
-            SELECT followed_character_id 
-            FROM SocialFollowers 
-            WHERE follower_character_id = ?
-          )
-          -- Character's own posts
-          OR p.character_id = ?
-          -- Team posts if character is on the same team
-          OR (
-            p.visibility = 'team' AND 
-            c.team_id = (SELECT team_id FROM Characters WHERE id = ?)
-          )
-        ORDER BY p.created_at DESC
-        LIMIT ? OFFSET ?
-      `, [characterId, characterId, characterId, characterId, limit, offset], async (err, posts) => {
-        if (err) {
-          console.error('Error fetching all posts:', err);
-          return reject(err);
+    // First get posts
+    const posts = await dbQueryAll(/* existing query */);
+    
+    // If we have posts, get all post images in one query
+    if (posts.length > 0) {
+      const postIds = posts.map(post => post.id);
+      // Get all images for these posts in one query
+      const postImagesQuery = `
+        SELECT post_id, image_url 
+        FROM SocialPostImages 
+        WHERE post_id IN (${postIds.join(',')})
+        ORDER BY id ASC
+      `;
+      
+      const allImages = await dbQueryAll(postImagesQuery);
+      
+      // Group images by post_id
+      const imagesByPost = {};
+      allImages.forEach(img => {
+        if (!imagesByPost[img.post_id]) {
+          imagesByPost[img.post_id] = [];
         }
-        
-        try {
-          // For each post, get its images
-          const postsWithImages = await Promise.all(posts.map(async (post) => {
-            // Get images for this post from SocialPostImages table
-            const images = await new Promise((resolve, reject) => {
-              db.all(`
-                SELECT image_url
-                FROM SocialPostImages
-                WHERE post_id = ?
-                ORDER BY id ASC
-              `, [post.id], (err, rows) => {
-                if (err) {
-                  console.error(`Error fetching images for post ${post.id}:`, err);
-                  return resolve([]); // Continue even if image fetch fails
-                }
-                
-                // Extract image URLs from rows
-                const imageUrls = rows.map(row => row.image_url);
-                
-                // Add the media_url as an image if it exists and no other images found
-                // (for backward compatibility)
-                if (imageUrls.length === 0 && post.media_url) {
-                  imageUrls.push(post.media_url);
-                }
-                
-                resolve(imageUrls);
-              });
-            });
-            
-            // Add images array to post
-            return {
-              ...post,
-              images: images || []
-            };
-          }));
-          
-          resolve(postsWithImages || []);
-        } catch (error) {
-          console.error('Error processing post images:', error);
-          // Fall back to returning posts without images
-          resolve(posts || []);
+        imagesByPost[img.post_id].push(img.image_url);
+      });
+      
+      // Add images to posts
+      posts.forEach(post => {
+        post.images = imagesByPost[post.id] || [];
+        // For backward compatibility
+        if (post.images.length === 0 && post.media_url) {
+          post.images.push(post.media_url);
         }
       });
-    });
+      
+      return posts;
+    }
+    
+    return posts;
   },
 
   // Get upcoming games

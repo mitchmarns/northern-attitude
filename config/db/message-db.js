@@ -3,23 +3,41 @@ const { dbQuery, dbQueryAll, dbExecute, dbTransaction } = require('./utils');
 
 // SQL queries for character messages
 const SQL = {
-  getCharacterConversations: `
-    SELECT c.id, c.title, c.is_group, c.created_at, c.updated_at,
-           (SELECT COUNT(*) FROM CharacterMessages m 
-            WHERE m.conversation_id = c.id 
-            AND m.is_read = 0 
-            AND m.sender_character_id != ?) as unread_count,
-           (SELECT m.content FROM CharacterMessages m 
-            WHERE m.conversation_id = c.id 
-            ORDER BY m.created_at DESC LIMIT 1) as last_message,
-           (SELECT m.created_at FROM CharacterMessages m 
-            WHERE m.conversation_id = c.id 
-            ORDER BY m.created_at DESC LIMIT 1) as last_message_at
-    FROM CharacterConversations c
-    JOIN CharacterConversationParticipants cp ON c.id = cp.conversation_id
-    WHERE cp.character_id = ?
-    ORDER BY last_message_at DESC NULLS LAST
-  `,
+  getCharacterConversations: async (characterId) => {
+    // First get basic conversation data
+    const conversations = await dbQueryAll(`
+      SELECT c.id, c.title, c.is_group, c.created_at, c.updated_at
+      FROM CharacterConversations c
+      JOIN CharacterConversationParticipants cp ON c.id = cp.conversation_id
+      WHERE cp.character_id = ?
+      ORDER BY c.updated_at DESC
+    `, [characterId]);
+    
+    // Then get counts and last messages in separate queries
+    for (const conv of conversations) {
+      // Get unread count
+      const unreadCount = await dbQuery(`
+        SELECT COUNT(*) as count 
+        FROM CharacterMessages 
+        WHERE conversation_id = ? AND sender_character_id != ? AND is_read = 0
+      `, [conv.id, characterId]);
+      
+      // Get last message
+      const lastMessage = await dbQuery(`
+        SELECT content, created_at 
+        FROM CharacterMessages 
+        WHERE conversation_id = ? 
+        ORDER BY created_at DESC LIMIT 1
+      `, [conv.id]);
+      
+      // Add to conversation object
+      conv.unread_count = unreadCount ? unreadCount.count : 0;
+      conv.last_message = lastMessage ? lastMessage.content : null;
+      conv.last_message_at = lastMessage ? lastMessage.created_at : conv.created_at;
+    }
+    
+    return conversations;
+  },
   
   getConversationMessages: `
     SELECT m.id, m.conversation_id, m.sender_character_id, m.content, m.is_read, m.created_at,
