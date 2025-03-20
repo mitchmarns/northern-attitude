@@ -4,7 +4,7 @@
   "description": "Hockey roleplay community web application",
   "main": "server.js",
   "scripts": {
-    "start": "node --max-old-space-size=512 server.js",
+    "start": "node --max-old-space-size=256 minimal-server.js",
     "db:init": "NODE_ENV=production node database-init-prod.js",
     "db:backup": "sqlite3 $DATABASE_PATH .dump > backup.sql"
   },
