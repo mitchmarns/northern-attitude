@@ -2,9 +2,26 @@
   // Define handleImageError function early to prevent reference errors
   function handleImageError(img) {
     console.log('Image failed to load:', img.src);
+    // Try different fallback sources in order of preference
     const fallbackSrc = img.getAttribute('data-fallback') || '/img/default-character.svg';
+    
+    // Only change the source if it's different from current source
     if (img.src !== fallbackSrc) {
+      console.log('Setting fallback image:', fallbackSrc);
       img.src = fallbackSrc;
+      
+      // Add secondary fallback if needed
+      img.onerror = function() {
+        if (img.src !== '/img/default-character.svg') {
+          console.log('Using final fallback image');
+          img.src = '/img/default-character.svg';
+          img.onerror = null; // Prevent infinite loops
+        }
+      };
+    } else {
+      // If already using the fallback, try one last option
+      img.src = '/img/default-character.svg';
+      img.onerror = null; // Prevent infinite loops
     }
   }
   
@@ -421,55 +438,125 @@
       <div class="widget suggested-users card">
         <h4 class="widget-title">Suggested Characters</h4>
         <ul class="suggested-list">
+          <!-- Store client-side character ID in a variable that will be populated by JavaScript after page load -->
+          <input type="hidden" id="client-selected-character" value="0">
+          
+          <script>
+            // This will run in the browser after the page loads
+            document.addEventListener('DOMContentLoaded', function() {
+              // Get the currently selected character ID from session storage
+              const clientSelectedCharacterId = parseInt(sessionStorage.getItem('selectedCharacterId') || '0');
+              
+              // Set the hidden input value
+              document.getElementById('client-selected-character').value = clientSelectedCharacterId;
+              
+              console.log('Client-side selected character ID:', clientSelectedCharacterId);
+              
+              // Now filter the suggestions based on the selected character
+              filterSuggestedCharacters(clientSelectedCharacterId);
+              
+              // Also listen for character selection changes
+              const characterSelect = document.getElementById('character-select');
+              if (characterSelect) {
+                characterSelect.addEventListener('change', function() {
+                  // When character changes, update the hidden field
+                  const newCharId = parseInt(this.value) || 0;
+                  document.getElementById('client-selected-character').value = newCharId;
+                  
+                  // Filter suggestions based on new selection
+                  filterSuggestedCharacters(newCharId);
+                });
+              }
+            });
+            
+            // Function to filter suggested characters in the client side
+            function filterSuggestedCharacters(selectedCharId) {
+              if (!selectedCharId) return;
+              
+              console.log('Filtering suggested characters, hiding character ID:', selectedCharId);
+              
+              // Hide any suggestion items that match the selected character ID
+              let hiddenCount = 0;
+              let totalCount = 0;
+              const allItems = document.querySelectorAll('.suggested-item');
+              totalCount = allItems.length;
+              
+              allItems.forEach(item => {
+                const charId = parseInt(item.getAttribute('data-character-id'));
+                if (charId === selectedCharId) {
+                  console.log('Hiding suggestion for selected character:', charId);
+                  item.style.display = 'none';
+                  hiddenCount++;
+                } else {
+                  // Make sure other items are visible
+                  item.style.display = 'flex';
+                }
+              });
+              
+              // Check if we need to show the "no suggestions" message
+              if (hiddenCount === totalCount || totalCount === 0) {
+                console.log('All suggestions are hidden or none available, showing no suggestions message');
+                
+                // Check if we already have a no-suggestions element
+                if (!document.querySelector('.suggested-list .no-suggestions')) {
+                  const noSuggestionsItem = document.createElement('li');
+                  noSuggestionsItem.className = 'no-suggestions';
+                  noSuggestionsItem.innerHTML = `
+                    <p>No more character suggestions available.</p>
+                    <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
+                  `;
+                  
+                  // Add it to the list
+                  document.querySelector('.suggested-list').appendChild(noSuggestionsItem);
+                } else {
+                  // Make sure it's visible
+                  document.querySelector('.suggested-list .no-suggestions').style.display = 'block';
+                }
+              } else {
+                // Hide the no-suggestions message if it exists
+                const noSuggestions = document.querySelector('.suggested-list .no-suggestions');
+                if (noSuggestions) {
+                  noSuggestions.style.display = 'none';
+                }
+              }
+            }
+          </script>
+          
           <% if (suggestedUsers && suggestedUsers.length > 0) { %>
-            <% console.log('Rendering suggestedUsers:', suggestedUsers.length, 'items'); %>
-            <% suggestedUsers.forEach(character => { %>
-              <li class="suggested-item" data-character-id="<%= character.id %>">
-                <div class="suggested-avatar">
-                  <img src="<%= character.avatar_url || character.url || '/img/default-character.svg' %>" 
-                       alt="<%= character.name %>"
-                       onerror="this.src = '/img/default-character.svg';" />
-                </div>
-                <div class="suggested-info">
-                  <div class="suggested-name"><%= character.name %></div>
-                  <div class="suggested-meta">by @<%= character.creator_username %></div>
-                </div>
-                <button class="btn btn-sm <%= character.is_following ? 'btn-primary' : 'btn-outline' %> follow-character-btn" data-character-id="<%= character.id %>">
-                  <%= character.is_following ? 'Following' : 'Follow' %>
-                </button>
+            <% 
+            // Server-side filtering of already followed characters
+            const filteredSuggestions = suggestedUsers.filter(character => !character.is_following);
+            %>
+            
+            <% if (filteredSuggestions.length > 0) { %>
+              <% filteredSuggestions.forEach(character => { %>
+                <li class="suggested-item" data-character-id="<%= character.id %>">
+                  <div class="suggested-avatar">
+                    <img src="<%= character.avatar_url || character.url || '/img/default-character.svg' %>" 
+                         alt="<%= character.name %>"
+                         data-fallback="/img/default-character.svg"
+                         onerror="handleImageError(this)" />
+                  </div>
+                  <div class="suggested-info">
+                    <div class="suggested-name"><%= character.name %></div>
+                    <div class="suggested-meta">by @<%= character.creator_username %></div>
+                  </div>
+                  <button class="btn btn-sm btn-outline follow-character-btn" data-character-id="<%= character.id %>">
+                    Follow
+                  </button>
+                </li>
+              <% }); %>
+            <% } else { %>
+              <li class="no-suggestions">
+                <p>No more character suggestions available.</p>
+                <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
               </li>
-            <% }); %>
+            <% } %>
           <% } else { %>
             <li class="no-suggestions">
               <p>No suggested characters available yet.</p>
               <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
             </li>
-          <% } %>
-        </ul>
-      </div>
-      
-      <div class="suggested-characters card mt-3">
-        <h4>Characters You Might Like</h4>
-        <ul class="suggested-list">
-          <% if (suggestedCharacters && suggestedCharacters.length) { %>
-            <% suggestedCharacters.forEach(character => { %>
-              <li class="suggested-item">
-                <img src="<%= character.avatar_url || character.url || '/img/default-character.svg' %>" 
-                     alt="<%= character.name %>" 
-                     class="suggested-avatar"
-                     data-fallback="/img/default-character.svg"
-                     onerror="handleImageError(this)">
-                <div class="suggested-info">
-                  <h5><%= character.name %></h5>
-                  <span class="suggestion-meta"><%= character.team || character.job || '' %></span>
-                </div>
-                <button class="btn btn-sm btn-outline follow-character-btn" data-character-id="<%= character.id %>">
-                  Follow
-                </button>
-              </li>
-            <% }) %>
-          <% } else { %>
-            <li class="no-suggestions">No character suggestions available</li>
           <% } %>
         </ul>
       </div>

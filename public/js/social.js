@@ -127,250 +127,6 @@ document.addEventListener('DOMContentLoaded', function() {
   initializePollProgress();
   setTimeout(initializePollProgress, 300);
 
-  // Make Character Selection Available Globally
-  let characterSelect = document.getElementById('character-select');
-  const characterIdInput = document.getElementById('character-id');
-  const postAsDropdown = document.querySelector('select[name="postAs"]');
-  const postSubmitBtn = document.getElementById('post-submit-btn');
-  const postAsCharacterDisplay = document.querySelector('.post-as-character-display');
-  const noCharacterSelected = document.querySelector('.no-character-selected');
-  const activeCharacterAvatar = document.querySelector('.active-character-avatar');
-  const activeCharacterName = document.querySelector('.active-character-name');
-  const characterRequiredWarning = document.getElementById('character-required-warning');
-  const postForm = document.getElementById('post-form');
-
-  // Global variable to track the currently selected character
-  let currentlySelectedCharacterId = null;
-  
-  // Add debug function to expose current character info
-  window.debugCharacterInfo = function() {
-    console.log('Current character ID:', currentlySelectedCharacterId);
-    console.log('Character input value:', characterIdInput ? characterIdInput.value : 'No input element');
-    console.log('Character select value:', characterSelect ? characterSelect.value : 'No select element');
-    console.log('Stats elements found:', !!statPostsValue, !!statFollowersValue, !!statFollowingValue);
-  };
-  
-  // Initialize character selection first, then set up event handler
-  initializeCharacterSelection();
-  setupCharacterSelection();
-  
-  // Function to initialize character selection from session storage or URL params
-  function initializeCharacterSelection() {
-    console.log('Initializing character selection...');
-    // Check for character ID in session storage first
-    const storedCharacterId = sessionStorage.getItem('selectedCharacterId');
-    
-    if (!storedCharacterId) {
-      console.log('No stored character found in session');
-      if (characterRequiredWarning) characterRequiredWarning.style.display = 'block';
-      return;
-    }
-    
-    console.log('Found stored character ID:', storedCharacterId);
-    
-    // Set our tracking variable
-    currentlySelectedCharacterId = storedCharacterId;
-    
-    // Update input fields WITHOUT triggering change events
-    if (characterIdInput) characterIdInput.value = storedCharacterId;
-    if (characterSelect) {
-      // Set value without triggering change event
-      characterSelect.value = storedCharacterId;
-    }
-    
-    // Only fetch character details if needed
-    fetch(`/characters/api/${storedCharacterId}`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          updateCharacterDisplay(data.character);
-          
-          // Update server-side session if needed
-          if (!window.characterSessionUpdated) {
-            fetch('/social/set-active-character', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify({ characterId: storedCharacterId }),
-            })
-            .then(() => {
-              window.characterSessionUpdated = true;
-            })
-            .catch(error => console.error('Error setting active character:', error));
-          }
-        }
-      })
-      .catch(error => console.error('Error fetching character details:', error));
-  }
-  
-  // Function to update character display
-  function updateCharacterDisplay(character) {
-    if (!character) return;
-    
-    console.log('Updating character display with:', character);
-    
-    if (postAsCharacterDisplay) {
-      postAsCharacterDisplay.style.display = 'flex';
-      if (noCharacterSelected) noCharacterSelected.style.display = 'none';
-    }
-    
-    if (activeCharacterAvatar) {
-      const imageUrl = character.avatar_url || character.url || '/img/default-character.png';
-      activeCharacterAvatar.src = imageUrl;
-      activeCharacterAvatar.setAttribute('data-fallback', '/img/default-character.png');
-      activeCharacterAvatar.onerror = function() {
-        this.src = this.getAttribute('data-fallback');
-      };
-    }
-    
-    if (activeCharacterName) {
-      activeCharacterName.textContent = character.name;
-    }
-    
-    // Enable post submit buttons and comment buttons
-    if (postSubmitBtn) postSubmitBtn.disabled = false;
-    document.querySelectorAll('.submit-comment-btn').forEach(btn => btn.disabled = false);
-    
-    // Hide character required warnings
-    if (characterRequiredWarning) characterRequiredWarning.style.display = 'none';
-    
-    // Fetch and update character stats
-    fetchCharacterStats(character.id);
-  }
-  
-  // Function to fetch character stats
-  function fetchCharacterStats(characterId) {
-    if (!characterId) return;
-    
-    console.log('Fetching stats for character:', characterId);
-    
-    fetch(`/social/character/${characterId}/stats`)
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          updateStatsDisplay(data.stats, true);
-        } else {
-          console.error('Error fetching character stats:', data.error);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to fetch character stats:', error);
-      });
-  }
-  
-  // Function to update stats display
-  function updateStatsDisplay(stats, isCharacter = false) {
-    if (!stats) return;
-    
-    console.log('Updating stats display:', stats, isCharacter ? '(character stats)' : '(user stats)');
-    
-    // Update stat values - with fallback for missing elements
-    if (statPostsValue) statPostsValue.textContent = stats.posts;
-    if (statFollowersValue) statFollowersValue.textContent = stats.followers;
-    if (statFollowingValue) statFollowingValue.textContent = stats.following;
-    
-    // Update labels to indicate these are character stats
-    if (isCharacter) {
-      if (statPostsLabel) statPostsLabel.textContent = 'Character Posts';
-      if (statFollowersLabel) statFollowersLabel.textContent = 'Character Followers';
-      if (statFollowingLabel) statFollowingLabel.textContent = 'You Follow';
-    } else {
-      // Reset to original labels
-      if (statPostsLabel) statPostsLabel.textContent = originalLabels.posts;
-      if (statFollowersLabel) statFollowersLabel.textContent = originalLabels.followers;
-      if (statFollowingLabel) statFollowingLabel.textContent = originalLabels.following;
-    }
-  }
-  
-  // Fix the character selection event handler
-  function setupCharacterSelection() {
-    if (!characterSelect) return;
-    
-    console.log('Setting up character selection handler');
-    
-    // Direct event handler assignment without cloning
-    characterSelect.addEventListener('change', function(e) {
-      const characterId = this.value; // Use this.value instead of e.target.value for reliability
-      console.log('Character select changed to:', characterId);
-      
-      if (!characterId) {
-        clearCharacterSelection();
-        return;
-      }
-      
-      // Update our tracking variable and form fields
-      currentlySelectedCharacterId = characterId;
-      if (characterIdInput) characterIdInput.value = characterId;
-      
-      // Store in session storage
-      sessionStorage.setItem('selectedCharacterId', characterId);
-      
-      // Fetch character details
-      fetch(`/characters/api/${characterId}`)
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            updateCharacterDisplay(data.character);
-            
-            // Update server session
-            fetch('/social/set-active-character', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify({ characterId }),
-            })
-            .then(response => response.json())
-            .then(data => {
-              console.log('Server character session updated:', data);
-              window.characterSessionUpdated = true;
-            })
-            .catch(error => console.error('Error setting active character:', error));
-          }
-        })
-        .catch(error => console.error('Error fetching character details:', error));
-    });
-  }
-  
-  // Function to clear character selection
-  function clearCharacterSelection() {
-    // Clear stored character ID
-    sessionStorage.removeItem('selectedCharacterId');
-    currentlySelectedCharacterId = null;
-    
-    // Clear form fields
-    if (characterSelect) characterSelect.value = '';
-    if (characterIdInput) characterIdInput.value = '';
-    
-    // Update UI
-    if (postAsCharacterDisplay) postAsCharacterDisplay.style.display = 'none';
-    if (noCharacterSelected) noCharacterSelected.style.display = 'block';
-    
-    // Disable submission buttons
-    if (postSubmitBtn) postSubmitBtn.disabled = true;
-    document.querySelectorAll('.submit-comment-btn').forEach(btn => btn.disabled = true);
-    
-    // Show warning
-    if (characterRequiredWarning) characterRequiredWarning.style.display = 'block';
-    
-    // Reset stats to user stats
-    updateStatsDisplay(originalUserStats, false);
-    
-    // Also clear on server
-    fetch('/social/set-active-character', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({ characterId: null }),
-    })
-    .catch(error => console.error('Error clearing active character:', error));
-  }
-
   // Poll voting functionality
   function initializePollVoting() {
     console.log('Initializing poll voting functionality...');
@@ -577,47 +333,29 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add a "results" class to the poll container to allow styling voted polls
     pollContainer.classList.add('poll-results');
   }
-  
-  // Initialize poll voting functionality
-  initializePollVoting();
 
   // Add CSS for highlighted character selector
   function addDynamicStyles() {
-    const styleElement = document.createElement('style');
-    styleElement.textContent = `
-      @keyframes pulse-border {
-        0% { box-shadow: 0 0 0 0 rgba(var(--accent3-rgb), 0.7); }
-        70% { box-shadow: 0 0 0 10px rgba(var(--accent3-rgb), 0); }
-        100% { box-shadow: 0 0 0 0 rgba(var(--accent3-rgb), 0); }
-      }
-      
+    const style = document.createElement('style');
+    style.textContent = `
       .highlight-selector {
-        animation: pulse-border 2s ease-out;
-        border-radius: var(--radius-md);
+        animation: highlight-selector-animation 1s ease-in-out infinite;
       }
-      
-      .loading-spinner {
-        display: inline-block;
-        width: 12px;
-        height: 12px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top-color: #fff;
-        animation: spin 1s ease-in-out infinite;
-        margin-right: 6px;
-      }
-      
-      @keyframes spin {
-        to { transform: rotate(360deg); }
+      @keyframes highlight-selector-animation {
+        0%, 100% {
+          border-color: var(--accent1);
+          box-shadow: 0 0 10px var(--accent1);
+        }
+        50% {
+          border-color: var(--accent2);
+          box-shadow: 0 0 20px var(--accent2);
+        }
       }
     `;
-    document.head.appendChild(styleElement);
+    document.head.appendChild(style);
   }
   
-  // Initialize our dynamic styles
-  addDynamicStyles();
-
-  // Toast notification system with helper function for checking if element exists
+  // Toast notification system
   function showToast(message, type = 'error') {
     if (!message) return;
     
@@ -660,6 +398,682 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 300);
       }
     }, 5000);
+  }
+
+  // Make Character Selection Available Globally
+  let characterSelect = document.getElementById('character-select');
+  const characterIdInput = document.getElementById('character-id');
+  const postAsDropdown = document.querySelector('select[name="postAs"]');
+  const postSubmitBtn = document.getElementById('post-submit-btn');
+  const postAsCharacterDisplay = document.querySelector('.post-as-character-display');
+  const noCharacterSelected = document.querySelector('.no-character-selected');
+  const activeCharacterAvatar = document.querySelector('.active-character-avatar');
+  const activeCharacterName = document.querySelector('.active-character-name');
+  const characterRequiredWarning = document.getElementById('character-required-warning');
+  const postForm = document.getElementById('post-form');
+
+  // Global variable to track the currently selected character
+  let currentlySelectedCharacterId = null;
+  
+  // Add debug function to expose current character info
+  window.debugCharacterInfo = function() {
+    console.log('Current character ID:', currentlySelectedCharacterId);
+    console.log('Character input value:', characterIdInput ? characterIdInput.value : 'No input element');
+    console.log('Character select value:', characterSelect ? characterSelect.value : 'No select element');
+    console.log('Stats elements found:', !!statPostsValue, !!statFollowersValue, !!statFollowingValue);
+  };
+  
+  // Initialize character selection first, then set up event handler
+  initializeCharacterSelection();
+  setupCharacterSelection();
+  
+  // Function to initialize character selection from session storage or URL params
+  function initializeCharacterSelection() {
+    console.log('Initializing character selection...');
+    // Check for character ID in session storage first
+    const storedCharacterId = sessionStorage.getItem('selectedCharacterId');
+    
+    if (!storedCharacterId) {
+      console.log('No stored character found in session');
+      if (characterRequiredWarning) characterRequiredWarning.style.display = 'block';
+      return;
+    }
+    
+    console.log('Found stored character ID:', storedCharacterId);
+    
+    // Set our tracking variable
+    currentlySelectedCharacterId = storedCharacterId;
+    
+    // Update input fields WITHOUT triggering change events - with safety checks
+    if (characterIdInput) {
+      characterIdInput.value = storedCharacterId;
+    } else {
+      console.warn('Character ID input element not found during initialization');
+      // Create hidden input element if it doesn't exist but we need it
+      if (postForm) {
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.id = 'character-id';
+        hiddenInput.name = 'characterId';
+        hiddenInput.value = storedCharacterId;
+        postForm.appendChild(hiddenInput);
+        characterIdInput = hiddenInput;
+        console.log('Created missing character ID input element');
+      }
+    }
+    
+    if (characterSelect) {
+      // Set value without triggering change event
+      characterSelect.value = storedCharacterId;
+    }
+    
+    // Only fetch character details if needed
+    fetch(`/characters/api/${storedCharacterId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          updateCharacterDisplay(data.character);
+          
+          // Update server-side session if needed
+          if (!window.characterSessionUpdated) {
+            fetch('/social/set-active-character', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ characterId: storedCharacterId }),
+            })
+            .then(() => {
+              window.characterSessionUpdated = true;
+            })
+            .catch(error => console.error('Error setting active character:', error));
+          }
+        }
+      })
+      .catch(error => console.error('Error fetching character details:', error));
+  }
+  
+  // Function to fetch character stats
+  function fetchCharacterStats(characterId) {
+    if (!characterId) {
+      console.log('No character ID provided for stats');
+      return;
+    }
+    
+    console.log('Fetching stats for character:', characterId);
+    
+    fetch(`/social/character/${characterId}/stats`)
+      .then(response => {
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error('Character not found');
+          } else if (response.status === 403) {
+            throw new Error('Not authorized to view this character');
+          } else {
+            throw new Error('Failed to fetch character stats');
+          }
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success) {
+          updateStatsDisplay(data.stats, true);
+          
+          // If this is not the user's character, show a visual indicator
+          if (data.isOwnedByUser === false) {
+            // Just display stats but add a subtle indicator that these are another character's stats
+            if (statFollowingLabel) {
+              statFollowingLabel.textContent = 'Following';
+              statFollowingLabel.classList.add('other-character-stat');
+            }
+          }
+        } else {
+          console.error('Error in character stats response:', data.error);
+          // Revert to user stats on error
+          updateStatsDisplay(originalUserStats, false);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching character stats:', error);
+        // On error, show original user stats
+        updateStatsDisplay(originalUserStats, false);
+        // Show error toast for specific errors
+        if (error.message === 'Character not found') {
+          showToast('This character no longer exists', 'error');
+          // Clear character selection since it's invalid
+          clearCharacterSelection();
+        }
+      });
+  }
+  
+  // Function to update character display
+  function updateCharacterDisplay(character) {
+    if (!character) {
+      console.log('No character data provided');
+      return;
+    }
+    
+    console.log('Updating character display with:', character);
+    
+    if (postAsCharacterDisplay) {
+      postAsCharacterDisplay.style.display = 'flex';
+      if (noCharacterSelected) noCharacterSelected.style.display = 'none';
+    }
+    
+    if (activeCharacterAvatar) {
+      const imageUrl = character.avatar_url || character.url || '/img/default-character.png';
+      activeCharacterAvatar.src = imageUrl;
+      activeCharacterAvatar.setAttribute('data-fallback', '/img/default-character.png');
+      activeCharacterAvatar.onerror = function() {
+        this.src = this.getAttribute('data-fallback');
+      };
+    }
+    
+    if (activeCharacterName) {
+      activeCharacterName.textContent = character.name;
+    }
+    
+    // Enable post submit buttons and comment buttons
+    if (postSubmitBtn) postSubmitBtn.disabled = false;
+    document.querySelectorAll('.submit-comment-btn').forEach(btn => btn.disabled = false);
+    
+    // Hide character required warnings
+    if (characterRequiredWarning) characterRequiredWarning.style.display = 'none';
+    
+    // Only fetch stats if character has a valid ID
+    if (character.id) {
+      fetchCharacterStats(character.id);
+    } else {
+      console.warn('Character missing ID, cannot fetch stats');
+      updateStatsDisplay(originalUserStats, false);
+    }
+  }
+  
+  // Function to update stats display
+  function updateStatsDisplay(stats, isCharacter = false) {
+    if (!stats) return;
+    
+    console.log('Updating stats display:', stats, isCharacter ? '(character stats)' : '(user stats)');
+    
+    // Update stat values - with fallback for missing elements
+    if (statPostsValue) statPostsValue.textContent = stats.posts;
+    if (statFollowersValue) statFollowersValue.textContent = stats.followers;
+    
+    // For the "following" stat, we need to ensure it's particularly visible when showing character stats
+    if (statFollowingValue) {
+      statFollowingValue.textContent = stats.following;
+      
+      // Add a highlight effect when updating character following stats
+      if (isCharacter) {
+        statFollowingValue.classList.add('highlight-stat');
+        setTimeout(() => {
+          statFollowingValue.classList.remove('highlight-stat');
+        }, 2000);
+      }
+    }
+    
+    // Update labels to indicate these are character stats
+    if (isCharacter) {
+      if (statPostsLabel) statPostsLabel.textContent = 'Character Posts';
+      if (statFollowersLabel) statFollowersLabel.textContent = 'Character Followers';
+      if (statFollowingLabel) {
+        statFollowingLabel.textContent = 'You Follow';
+        statFollowingLabel.classList.add('highlight-label');
+      }
+    } else {
+      // Reset to original labels
+      if (statPostsLabel) statPostsLabel.textContent = originalLabels.posts;
+      if (statFollowersLabel) statFollowersLabel.textContent = originalLabels.followers;
+      if (statFollowingLabel) {
+        statFollowingLabel.textContent = originalLabels.following;
+        statFollowingLabel.classList.remove('highlight-label');
+      }
+    }
+  }
+  
+  // Function to set up character selection
+  function setupCharacterSelection() {
+    if (!characterSelect) {
+      console.log('Character select element not found');
+      return;
+    }
+    
+    console.log('Setting up character selection handler');
+    
+    // Direct event handler assignment without cloning
+    characterSelect.addEventListener('change', function(e) {
+      const characterId = this.value;
+      console.log('Character select changed to:', characterId);
+      
+      if (!characterId) {
+        clearCharacterSelection();
+        return;
+      }
+      
+      // Validate character ID before proceeding
+      if (isNaN(parseInt(characterId))) {
+        console.error('Invalid character ID:', characterId);
+        showToast('Invalid character selection', 'error');
+        return;
+      }
+      
+      // Update our tracking variable and form fields
+      currentlySelectedCharacterId = characterId;
+      
+      // Add safety check before attempting to set value
+      if (characterIdInput) {
+        characterIdInput.value = characterId;
+      } else {
+        console.warn('Character ID input element not found, but continuing with selection');
+        
+        // Try to create the input if it doesn't exist
+        if (postForm) {
+          console.log('Creating missing character ID input');
+          const newInput = document.createElement('input');
+          newInput.type = 'hidden';
+          newInput.id = 'character-id';
+          newInput.name = 'characterId';
+          newInput.value = characterId;
+          postForm.appendChild(newInput);
+        }
+      }
+      
+      // Store in session storage
+      sessionStorage.setItem('selectedCharacterId', characterId);
+      
+      // Show loading indicator for character
+      if (activeCharacterName) {
+        activeCharacterName.innerHTML = '<span class="loading-spinner"></span> Loading...';
+      }
+      
+      // Fetch character details
+      fetch(`/characters/api/${characterId}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Character not found');
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.success) {
+            updateCharacterDisplay(data.character);
+            
+            // Update server session
+            fetch('/social/set-active-character', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              body: JSON.stringify({ characterId }),
+            })
+            .then(response => response.json())
+            .then(data => {
+              console.log('Server character session updated:', data);
+              window.characterSessionUpdated = true;
+              
+              // Refresh suggested characters after changing character
+              refreshSuggestedCharacters(characterId);
+            })
+            .catch(error => {
+              console.error('Error setting active character:', error);
+              showToast('Error saving character selection', 'error');
+            });
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching character details:', error);
+          showToast('Could not load character details', 'error');
+          clearCharacterSelection();
+        });
+    });
+  }
+
+  // Function to refresh suggested characters when changing character
+  function refreshSuggestedCharacters(selectedCharacterId) {
+    console.log('Refreshing suggested characters for character ID:', selectedCharacterId);
+    
+    // First, show a loading state
+    const suggestedList = document.querySelector('.suggested-list');
+    if (!suggestedList) return;
+    
+    const originalContent = suggestedList.innerHTML;
+    suggestedList.innerHTML = `
+      <li class="loading-suggestions">
+        <div class="loading-spinner-container">
+          <div class="loading-spinner-large"></div>
+        </div>
+        <p class="text-center">Refreshing suggestions...</p>
+      </li>
+    `;
+    
+    // Fetch fresh suggestions that exclude the selected character
+    fetch(`/social/suggested-characters?exclude=${selectedCharacterId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to fetch suggestions');
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.success && data.characters && data.characters.length > 0) {
+          // Update the list with new suggestions
+          updateSuggestedCharactersList(data.characters);
+          
+          // Reinitialize follow buttons
+          initializeSuggestedUsers();
+        } else {
+          // If no suggestions or error, show no suggestions message
+          suggestedList.innerHTML = `
+            <li class="no-suggestions">
+              <p>No more character suggestions available.</p>
+              <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
+              <button class="btn btn-sm btn-outline refresh-suggestions-btn mt-2">Refresh Suggestions</button>
+            </li>
+          `;
+          
+          // Add click handler to the refresh button
+          const refreshBtn = suggestedList.querySelector('.refresh-suggestions-btn');
+          if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+              refreshSuggestedCharacters(selectedCharacterId);
+            });
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing suggestions:', error);
+        // Restore original content on error with a refresh button
+        suggestedList.innerHTML = originalContent + `
+          <li class="error-message">
+            <p>Error loading suggestions.</p>
+            <button class="btn btn-sm btn-outline refresh-suggestions-btn">Try Again</button>
+          </li>
+        `;
+        
+        // Add click handler to the refresh button
+        const refreshBtn = suggestedList.querySelector('.refresh-suggestions-btn');
+        if (refreshBtn) {
+          refreshBtn.addEventListener('click', function() {
+            refreshSuggestedCharacters(selectedCharacterId);
+          });
+        }
+      });
+  }
+
+  // Function to update the suggested characters list
+  function updateSuggestedCharactersList(characters) {
+    const suggestedList = document.querySelector('.suggested-list');
+    if (!suggestedList) return;
+    
+    // Clear the list except for the hidden input
+    const hiddenInput = suggestedList.querySelector('#client-selected-character');
+    suggestedList.innerHTML = '';
+    
+    // Add the hidden input back
+    if (hiddenInput) {
+      suggestedList.appendChild(hiddenInput);
+    }
+    
+    if (characters.length === 0) {
+      // No characters found
+      const emptyItem = document.createElement('li');
+      emptyItem.className = 'no-suggestions';
+      emptyItem.innerHTML = `
+        <p>No character suggestions available.</p>
+        <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
+        <button class="btn btn-sm btn-outline refresh-suggestions-btn mt-2">Refresh Suggestions</button>
+      `;
+      suggestedList.appendChild(emptyItem);
+      
+      // Add click handler to the refresh button
+      const refreshBtn = emptyItem.querySelector('.refresh-suggestions-btn');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+          refreshSuggestedCharacters(currentlySelectedCharacterId);
+        });
+      }
+      
+      return;
+    }
+    
+    // Add character items
+    characters.forEach(character => {
+      const listItem = document.createElement('li');
+      listItem.className = 'suggested-item';
+      listItem.setAttribute('data-character-id', character.id);
+      
+      // Add default image fallback
+      const avatarUrl = character.avatar_url || character.url || '/img/default-character.svg';
+      
+      listItem.innerHTML = `
+        <div class="suggested-avatar">
+          <img src="${avatarUrl}" 
+               alt="${character.name}"
+               data-fallback="/img/default-character.svg"
+               onerror="handleImageError(this)" />
+        </div>
+        <div class="suggested-info">
+          <div class="suggested-name">${character.name}</div>
+          <div class="suggested-meta">by @${character.creator_username || 'unknown'}</div>
+        </div>
+        <button class="btn btn-sm btn-outline follow-character-btn" data-character-id="${character.id}">
+          Follow
+        </button>
+      `;
+      suggestedList.appendChild(listItem);
+    });
+    
+    // Hide the currently selected character if any
+    const currentCharId = parseInt(currentlySelectedCharacterId);
+    if (currentCharId) {
+      const selectedItem = suggestedList.querySelector(`.suggested-item[data-character-id="${currentCharId}"]`);
+      if (selectedItem) {
+        selectedItem.style.display = 'none';
+      }
+    }
+  }
+
+  // Function to clear character selection - update to also refresh suggestions
+  function clearCharacterSelection() {
+    // Clear stored character ID
+    sessionStorage.removeItem('selectedCharacterId');
+    currentlySelectedCharacterId = null;
+    
+    // Clear form fields with added safety checks
+    if (characterSelect) {
+      characterSelect.value = '';
+    }
+    
+    if (characterIdInput) {
+      characterIdInput.value = '';
+    } else {
+      console.warn('Character ID input element not found during clear operation');
+    }
+    
+    // Update UI with safety checks
+    if (postAsCharacterDisplay) {
+      postAsCharacterDisplay.style.display = 'none';
+    }
+    
+    if (noCharacterSelected) {
+      noCharacterSelected.style.display = 'block';
+    }
+    
+    // Disable submission buttons
+    if (postSubmitBtn) {
+      postSubmitBtn.disabled = true;
+    }
+    
+    // Safely disable comment buttons
+    try {
+      document.querySelectorAll('.submit-comment-btn').forEach(btn => {
+        if (btn) btn.disabled = true;
+      });
+    } catch (err) {
+      console.warn('Error updating comment buttons:', err);
+    }
+    
+    // Show warning
+    if (characterRequiredWarning) {
+      characterRequiredWarning.style.display = 'block';
+    }
+    
+    // Reset stats to user stats
+    updateStatsDisplay(originalUserStats, false);
+    
+    // Also clear on server
+    fetch('/social/set-active-character', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ characterId: null }),
+    })
+    .catch(error => console.error('Error clearing active character:', error));
+    
+    // Refresh suggestions after clearing character
+    refreshSuggestedCharacters(null);
+  }
+
+  // Separate handler function for follow buttons - updated to send source character ID
+  async function followCharacterHandler(event) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    // Get the character ID from the button's data attribute
+    const btn = this;
+    const targetCharacterId = btn.getAttribute('data-character-id');
+    
+    if (!targetCharacterId) {
+      console.error('No target character ID found on follow button');
+      return;
+    }
+    
+    // Get the source character ID (character doing the following) with improved safety
+    let sourceCharacterId = '';
+    
+    // Try multiple ways to get the current character ID
+    if (characterIdInput && characterIdInput.value) {
+      sourceCharacterId = characterIdInput.value;
+    } else if (currentlySelectedCharacterId) {
+      sourceCharacterId = currentlySelectedCharacterId;
+    } else if (characterSelect && characterSelect.value) {
+      sourceCharacterId = characterSelect.value;
+    }
+    
+    if (!sourceCharacterId) {
+      showToast('Please select a character first before following', 'warning');
+      if (characterSelect) {
+        characterSelect.focus();
+        const selector = document.querySelector('.character-selector');
+        if (selector) {
+          selector.classList.add('highlight-selector');
+          setTimeout(() => {
+            selector.classList.remove('highlight-selector');
+          }, 2000);
+        }
+      }
+      return;
+    }
+    
+    // Determine current state from the button appearance
+    const isCurrentlyFollowing = btn.classList.contains('btn-primary');
+    console.log(`Follow button clicked: Character ${sourceCharacterId} following character ${targetCharacterId}`, 'Currently following:', isCurrentlyFollowing);
+    
+    // Show loading state
+    const originalText = btn.textContent;
+    btn.innerHTML = '<span class="loading-spinner"></span>';
+    btn.disabled = true;
+    
+    try {
+      // Make API request to follow/unfollow character with source character ID
+      console.log('Sending follow request to:', `/social/follow/character/${targetCharacterId}`);
+      
+      const response = await fetch(`/social/follow/character/${targetCharacterId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ sourceCharacterId })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Server responded with ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Follow response:', data);
+      
+      // Update button state based on follow status from server response
+      if (data.success) {
+        if (data.following) {
+          btn.textContent = 'Following';
+          btn.classList.remove('btn-outline');
+          btn.classList.add('btn-primary');
+          showToast('Character followed successfully', 'success');
+        } else {
+          btn.textContent = 'Follow';
+          btn.classList.add('btn-outline');
+          btn.classList.remove('btn-primary');
+          showToast('Character unfollowed', 'info');
+        }
+      }
+      
+      // Re-enable the button
+      btn.disabled = false;
+      
+      // If we just followed, remove from suggested list after a delay 
+      if (data.success && data.following) {
+        setTimeout(() => {
+          const listItem = btn.closest('.suggested-item');
+          if (listItem) {
+            listItem.style.opacity = '0';
+            setTimeout(() => {
+              listItem.remove();
+              
+              // Check if there are no more items
+              const suggestionsList = btn.closest('.suggested-list');
+              if (suggestionsList && suggestionsList.querySelectorAll('.suggested-item').length === 0) {
+                suggestionsList.innerHTML = '<li class="no-suggestions">No character suggestions available</li>';
+              }
+            }, 300);
+          }
+        }, 1000);
+      }
+      
+      // Update character stats after follow/unfollow action
+      if (currentlySelectedCharacterId) {
+        // Allow a small delay for the server to process the follow/unfollow action
+        setTimeout(() => {
+          fetchCharacterStats(currentlySelectedCharacterId);
+        }, 500);
+      }
+      
+    } catch (error) {
+      console.error('Error following/unfollowing character:', error);
+      // Reset button state
+      btn.textContent = originalText;
+      btn.disabled = false;
+      showToast('Failed to process follow request', 'error');
+    }
+  }
+
+  // Function to initialize right sidebar widgets
+  function initializeRightSidebar() {
+    console.log('Initializing right sidebar functionality');
+    
+    // Set up follow buttons for suggested users
+    initializeSuggestedUsers();
+    
+    // Set up character view buttons
+    initializeSuggestedCharacters();
+    
+    // Make upcoming events clickable
+    initializeUpcomingEvents();
   }
 
   // Event response functionality (Interested/Going buttons)
@@ -789,41 +1203,142 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Initialize event responses
-  initializeEventResponses();
-  
-  // Initialize video error handling
-  initializeVideoErrorHandling();
-  
-  // Initialize right sidebar functionality
-  initializeRightSidebar();
-  
-  // Function to initialize right sidebar widgets
-  function initializeRightSidebar() {
-    console.log('Initializing right sidebar functionality');
+  // Function to handle follow buttons for suggested users
+  function initializeSuggestedUsers() {
+    console.log('Looking for suggested character elements in:', document.querySelector('.suggested-users'));
     
-    // Set up follow buttons for suggested users
-    initializeSuggestedUsers();
+    // Get all follow buttons with a more specific selector
+    const followButtons = document.querySelectorAll('.suggested-users .follow-character-btn');
+    console.log('Found follow buttons:', followButtons.length);
     
-    // Set up character view buttons
-    initializeSuggestedCharacters();
+    // Add click event listeners to each button
+    followButtons.forEach(btn => {
+      const characterId = btn.getAttribute('data-character-id');
+      console.log('Setting up follow button for character ID:', characterId);
+      
+      // Remove any existing event handlers first
+      btn.removeEventListener('click', followCharacterHandler);
+      
+      // Add new event handler
+      btn.addEventListener('click', followCharacterHandler);
+    });
+
+    // Make character cards in the suggested users widget clickable
+    const characterItems = document.querySelectorAll('.suggested-users .suggested-item');
     
-    // Make upcoming events clickable
-    initializeUpcomingEvents();
+    characterItems.forEach(item => {
+      const characterId = item.getAttribute('data-character-id');
+      if (!characterId) return;
+      
+      // Make the entire item clickable except for the follow button
+      item.style.cursor = 'pointer';
+      
+      item.addEventListener('click', function(e) {
+        // Don't trigger if clicking on the follow button
+        if (e.target.closest('.follow-character-btn')) return;
+        
+        // Navigate to character page
+        window.location.href = `/characters/view/${characterId}`;
+      });
+    });
   }
-  
-  // Handle image errors to provide a consistent fallback
-  function handleImageError(img) {
-    console.log('Image failed to load:', img.src);
-    const fallbackSrc = img.getAttribute('data-fallback') || '/img/default-character.png';
-    if (img.src !== fallbackSrc) {
-      img.src = fallbackSrc;
+
+  // Function to set up character view buttons
+  function initializeSuggestedCharacters() {
+    console.log('Initializing suggested characters section...');
+    
+    // Make entire character card clickable, not just the View button
+    const characterItems = document.querySelectorAll('.suggested-characters .suggested-item');
+    console.log('Found suggested character items:', characterItems.length);
+    
+    characterItems.forEach(item => {
+      // Get the view button and its href
+      const viewBtn = item.querySelector('a.btn');
+      if (!viewBtn) return;
+      
+      const characterUrl = viewBtn.getAttribute('href');
+      if (!characterUrl) return;
+      
+      // Make the entire item clickable but exclude the follow button if present
+      item.style.cursor = 'pointer';
+      
+      item.addEventListener('click', function(e) {
+        // Don't trigger if clicking on buttons
+        if (e.target.closest('.btn')) return;
+        
+        // Navigate to character page
+        window.location.href = characterUrl;
+      });
+      
+      // Add follow functionality for characters if there's a follow button
+      const followBtn = item.querySelector('.follow-character-btn');
+      if (followBtn) {
+        const characterId = followBtn.getAttribute('data-character-id');
+        console.log('Setting up follow button for character:', characterId);
+        
+        // Remove any existing event listeners to prevent duplicates
+        followBtn.removeEventListener('click', followCharacterHandler);
+        
+        // Add event handler
+        followBtn.addEventListener('click', followCharacterHandler);
+      }
+    });
+    
+    // Also handle the follow buttons in the "Characters You Might Like" section 
+    // that might use a different structure
+    const additionalFollowButtons = document.querySelectorAll('.suggested-characters .follow-character-btn');
+    console.log('Found additional follow buttons:', additionalFollowButtons.length);
+    
+    additionalFollowButtons.forEach(btn => {
+      if (!btn._hasFollowHandler) {
+        const characterId = btn.getAttribute('data-character-id');
+        console.log('Setting up additional follow button for character:', characterId);
+        
+        // Remove any existing event listeners
+        btn.removeEventListener('click', followCharacterHandler);
+        
+        // Add event handler with capture of event to prevent bubbling
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          
+          followCharacterHandler.call(this, e);
+        });
+        
+        // Mark this button as having a handler attached
+        btn._hasFollowHandler = true;
+      }
+    });
+  }
+
+  // Function to make upcoming events clickable
+  function initializeUpcomingEvents() {
+    const eventItems = document.querySelectorAll('.upcoming-events .event-item');
+    
+    eventItems.forEach(item => {
+      // Find event ID or create a link to the event
+      const eventId = item.getAttribute('data-event-id') || item.getAttribute('data-post-id');
+      
+      if (eventId) {
+        item.style.cursor = 'pointer';
+        
+        item.addEventListener('click', function() {
+          // Navigate to the event detail page
+          window.location.href = `/social/event/${eventId}`;
+        });
+      }
+    });
+    
+    // Make "See All Events" button work if it exists
+    const seeAllEventsBtn = document.querySelector('.upcoming-events a[href="/social/events"]');
+    if (seeAllEventsBtn) {
+      seeAllEventsBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.location.href = '/social/events';
+      });
     }
   }
-  
-  // Add global image error handler to window
-  window.handleImageError = handleImageError;
-  
+
   // Initialize video error handling
   function initializeVideoErrorHandling() {
     console.log('Initializing video error handling');
@@ -875,6 +1390,18 @@ document.addEventListener('DOMContentLoaded', function() {
   window.initializeVideoErrorHandling = initializeVideoErrorHandling;
   window.initializeRightSidebar = initializeRightSidebar;
   window.handleImageError = handleImageError;
+  window.refreshSuggestedCharacters = refreshSuggestedCharacters;
+  
+  // Now we'll initialize everything in the correct order
+  // First our component initializations
+  initializePollProgress();
+  initializePollVoting();
+  addDynamicStyles();
+  
+  // Then our top-level features (after their functions are defined)
+  initializeEventResponses();
+  initializeVideoErrorHandling();
+  initializeRightSidebar();
   
   // Initialize all functionality when document is ready
   document.addEventListener('DOMContentLoaded', function() {

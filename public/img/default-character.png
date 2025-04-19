@@ -1,0 +1,4 @@
+// This should be a new PNG file uploaded to this path
+// Since I can't actually create a binary file here, you'll need to:
+// 1. Find a simple silhouette or avatar image
+// 2. Save it as default-character.png in the /public/img/ directory
