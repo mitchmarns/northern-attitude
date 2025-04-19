@@ -1,0 +1,513 @@
+<script>
+  // Define handleImageError function early to prevent reference errors
+  function handleImageError(img) {
+    console.log('Image failed to load:', img.src);
+    const fallbackSrc = img.getAttribute('data-fallback') || '/img/default-character.svg';
+    if (img.src !== fallbackSrc) {
+      img.src = fallbackSrc;
+    }
+  }
+  
+  // Make function globally available
+  window.handleImageError = handleImageError;
+</script>
+
+<div class="container">
+  <div class="row">
+    <!-- Left Sidebar -->
+    <div class="col-3 sidebar-left">
+      <div class="profile-summary card">
+        
+        <div class="profile-stats">
+          <div class="stat-item">
+            <span class="stat-value"><%= stats ? stats.posts : 0 %></span>
+            <span class="stat-label">Posts</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value"><%= stats ? stats.followers : 0 %></span>
+            <span class="stat-label">Followers</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value"><%= stats ? stats.following : 0 %></span>
+            <span class="stat-label">Following</span>
+          </div>
+        </div>
+        
+        <div class="character-selector">
+          <h4>Post as:</h4>
+          <% if (characters && characters.length > 0) { %>
+            <select id="character-select" class="form-control" required>
+              <option value="">Select a character</option>
+              <% characters.forEach(character => { %>
+                <option value="<%= character.id %>" data-avatar="<%= character.url || '/img/default-character.svg' %>"><%= character.name %></option>
+              <% }) %>
+            </select>
+            
+            <!-- Active posting identity display -->
+            <div class="active-posting-identity mt-3">
+              <div class="no-character-selected">
+                <p class="text-center text-muted">Select a character to post</p>
+              </div>
+              
+              <div class="post-as-character-display" style="display: none;">
+                <img src="/img/default-character.svg" 
+                     alt="Character" 
+                     class="active-character-avatar"
+                     data-fallback="/img/default-character.svg"
+                     onerror="handleImageError(this)">
+                <div class="posting-as-text">
+                  Posting as <strong class="active-character-name">Character</strong>
+                </div>
+              </div>
+            </div>
+          <% } else { %>
+            <div class="alert alert-info mt-2">
+              <p class="mb-0">You need to <a href="/characters/create">create a character</a> before posting.</p>
+            </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <div class="navigation-menu card mt-3">
+        <ul class="nav-list">
+          <li><a href="/social/feed" class="active"><i class="ph-duotone ph-list"></i> Home Feed</a></li>
+          <li><a href="/social/explore"><i class="ph-duotone ph-list-magnifying-glass"></i> Explore</a></li>
+          <li><a href="/social/notifications"><i class="ph-duotone ph-notification"></i> Notifications</a></li>
+          <li><a href="/social/bookmarks"><i class="ph-duotone ph-bookmarks"></i> Bookmarks</a></li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="col-6">
+      <div class="create-post-container card mb-3 <%= !characters || characters.length === 0 ? 'no-character' : '' %>">
+        <div class="create-post-header">
+          <h3>Create Post</h3>
+          <div class="current-posting-as">
+            <div class="post-type-selector">
+              <button class="type-btn active" data-type="text"><i class="ph-duotone ph-twitter-logo"></i> Text</button>
+              <button class="type-btn" data-type="image"><i class="ph-duotone ph-instagram-logo"></i> Image</button>
+              <button class="type-btn" data-type="video"><i class="ph-duotone ph-tiktok-logo"></i> Video</button>
+              <button class="type-btn" data-type="poll"><i class="ph-duotone ph-question"></i> Poll</button>
+              <button class="type-btn" data-type="event"><i class="ph-duotone ph-calendar-plus"></i> Event</button>
+            </div>
+          </div>
+        </div>
+        
+        <form id="post-form" action="/social/post/create" method="POST">
+          <input type="hidden" name="postType" id="post-type" value="text">
+          <input type="hidden" name="characterId" id="character-id" value="">
+          
+          <!-- Character selection warning -->
+          <div id="character-required-warning" class="alert alert-warning mb-3" style="display:none;">
+            <strong>Select a character</strong> - You must select a character before posting.
+          </div>
+          
+          <div class="form-group">
+            <input type="text" name="title" class="form-control" placeholder="Title (optional)" />
+          </div>
+          
+          <div class="text-styling-toolbar" id="post-toolbar">
+            <div class="toolbar-group">
+              <button type="button" class="toolbar-btn" data-command="bold"><i class="ph-duotone ph-text-b"></i></button>
+              <button type="button" class="toolbar-btn" data-command="italic"><i class="ph-duotone ph-text-italic"></i></button>
+              <button type="button" class="toolbar-btn" data-command="underline"><i class="ph-duotone ph-text-a-underline"></i></i></button>
+            </div>
+            <div class="toolbar-group">
+              <button type="button" class="toolbar-btn" data-command="h2"><i class="ph-duotone ph-text-h-two"></i></button>
+              <button type="button" class="toolbar-btn" data-command="h3"><i class="ph-duotone ph-text-h-three"></i></button>
+              <button type="button" class="toolbar-btn" data-command="quote"><i class="ph-duotone ph-quotes"></i></button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <textarea name="content" id="post-content" class="form-control" rows="4" placeholder="What's on your mind?"></textarea>
+          </div>
+          
+          <!-- Image URL Area (initially hidden) -->
+          <div class="form-group url-area" id="image-url-area" style="display:none;">
+            <label for="image-url">Image URLs</label>
+            <div class="input-group">
+              <input type="text" id="image-url" class="form-control" placeholder="Enter image URL">
+              <div class="input-group-append">
+                <button type="button" id="paste-image-url" class="btn btn-secondary" title="Paste from clipboard">
+                  <i class="ph-duotone ph-clipboard-text"></i>
+                </button>
+                <button type="button" id="add-image-url" class="btn btn-primary">Add</button>
+              </div>
+            </div>
+            <p class="form-text text-muted">Enter direct links to image files (.jpg, .png, .gif)</p>
+            <div id="image-urls-container" class="image-preview-container"></div>
+          </div>
+          
+          <!-- Video URL Area (initially hidden) -->
+          <div class="form-group url-area" id="video-url-area" style="display:none;">
+            <label for="video-url">Video URL</label>
+            <input type="text" id="video-url" name="videoUrl" class="form-control" placeholder="YouTube, Vimeo, or direct video URL">
+            <p class="form-text text-muted">Supports YouTube, Vimeo, or direct links to video files</p>
+            <div class="video-preview-container" id="video-preview"></div>
+          </div>
+          
+          <!-- Poll Creation Area (initially hidden) -->
+          <div class="form-group poll-area" id="poll-area" style="display:none;">
+            <label>Create Poll</label>
+            <div id="poll-options">
+              <div class="poll-option">
+                <div class="d-flex gap-2">
+                  <input type="text" name="pollOptions[]" class="form-control" placeholder="Option 1">
+                </div>
+              </div>
+              <div class="poll-option">
+                <div class="d-flex gap-2">
+                  <input type="text" name="pollOptions[]" class="form-control" placeholder="Option 2">
+                </div>
+              </div>
+            </div>
+            <button type="button" id="add-poll-option" class="btn btn-outline mt-2">+ Add Option</button>
+          </div>
+          
+          <!-- Event Creation Area (initially hidden) -->
+          <div class="form-group event-area" id="event-area" style="display:none;">
+            <div class="row">
+              <div class="col-6">
+                <label for="event-date">Date</label>
+                <input type="date" id="event-date" name="eventDate" class="form-control">
+              </div>
+              <div class="col-6">
+                <label for="event-time">Time</label>
+                <input type="time" id="event-time" name="eventTime" class="form-control">
+              </div>
+            </div>
+            <div class="form-group mt-2">
+              <label for="event-location">Location</label>
+              <input type="text" id="event-location" name="eventLocation" class="form-control" placeholder="Event location">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="post-tags">Tags (separated by comma)</label>
+            <input type="text" id="post-tags" name="tags" class="form-control" placeholder="hockey, toronto, etc.">
+          </div>
+          
+          <div class="post-form-actions d-flex justify-between">
+            <select name="privacy" class="form-control privacy-select">
+              <option value="public">Public</option>
+              <option value="followers">Followers Only</option>
+              <option value="private">Private</option>
+            </select>
+            <button type="submit" id="post-submit-btn" class="btn btn-primary" <%= !characters || characters.length === 0 ? 'disabled' : '' %>>Post</button>
+          </div>
+        </form>
+      </div>
+      
+      <div class="feed-filter-bar">
+        <button class="filter-btn active" data-filter="all">All Posts</button>
+        <button class="filter-btn" data-filter="following">Following</button>
+        <button class="filter-btn" data-filter="team">Team</button>
+      </div>
+      
+      <div class="posts-container">
+        <% if (posts && posts.length) { %>
+          <% posts.forEach(post => { %>
+            <div class="post-card card">
+              <div class="post-header">
+                <div class="post-author">
+                  <% if (post.character_id) { %>
+                    <img src="<%= post.character_avatar || post.url || '/img/default-character.svg' %>" 
+                         alt="<%= post.character_name %>" 
+                         class="post-avatar"
+                         data-fallback="/img/default-character.svg"
+                         onerror="handleImageError(this)">
+                    <div class="author-info">
+                      <h4><%= post.character_name %></h4>
+                      <p class="author-meta">@<%= post.username %> • <%= new Date(post.created_at).toLocaleString() %></p>
+                    </div>
+                  <% } else { %>
+                    <div class="post-avatar-placeholder">
+                      <i class="icon-user"></i>
+                    </div>
+                    <div class="author-info">
+                      <h4>@<%= post.username %></h4>
+                      <p class="author-meta"><%= new Date(post.created_at).toLocaleString() %></p>
+                    </div>
+                  <% } %>
+                </div>
+                <div class="post-options">
+                  <button class="options-btn"><i class="icon-options"></i></button>
+                </div>
+              </div>
+              
+              <% if (post.title) { %>
+                <h3 class="post-title"><%= post.title %></h3>
+              <% } %>
+              
+              <div class="post-content formatted-text">
+                <%- post.content %>
+              </div>
+              
+              <% if (post.media && post.media.length) { %>
+                <div class="post-media">
+                  <% if (post.post_type === 'image') { %>
+                    <div class="image-gallery">
+                      <% post.media.forEach(media => { %>
+                        <img src="<%= media.url %>" 
+                             alt="Post image" 
+                             class="post-image" 
+                             data-fallback="/img/broken-image.png"
+                             onerror="this.src='/img/broken-image.png'; console.error('Failed to load image:', this.src);">
+                        <% console.log("Rendering image URL:", media.url); %>
+                      <% }); %>
+                    </div>
+                  <% } else if (post.post_type === 'video') { %>
+                    <video controls class="post-video">
+                      <source src="<%= post.media[0].url %>" type="video/mp4">
+                      Your browser does not support the video tag.
+                    </video>
+                  <% } %>
+                </div>
+              <% } else if (post.post_type === 'image') { %>
+                <div class="post-media-missing">
+                  <p class="text-muted"><em>Image(s) unavailable</em></p>
+                </div>
+              <% } %>
+              
+              <% if (post.post_type === 'poll' && post.poll_options && Array.isArray(post.poll_options)) { %>
+                <div class="post-poll" data-post-id="<%= post.id %>">
+                  <% post.poll_options.forEach(option => { %>
+                    <div class="poll-option-result" data-option-id="<%= option.id %>" data-post-id="<%= post.id %>">
+                      <div class="poll-option-text"><%= option && option.text ? option.text : 'No option text' %></div>
+                      <div class="poll-progress-bar">
+                        <div class="poll-progress" data-percentage="<%= option && typeof option.percentage === 'number' ? option.percentage : 0 %>"></div>
+                      </div>
+                      <div class="poll-percentage"><%= option && typeof option.percentage === 'number' ? option.percentage : 0 %>%</div>
+                    </div>
+                  <% }); %>
+                  <div class="poll-votes-count"><%= post.total_votes || 0 %> votes</div>
+                  <div class="poll-vote-actions">
+                    <button class="btn btn-sm btn-outline poll-vote-btn" data-post-id="<%= post.id %>">Vote</button>
+                  </div>
+                </div>
+              <% } %>
+              
+              <% if (post.post_type === 'event') { %>
+                <div class="post-event" data-post-id="<%= post.id %>">
+                  <div class="event-details">
+                    <div class="event-date">
+                      <i class="ph-duotone ph-calendar-blank"></i> <%= new Date(post.event_date).toLocaleDateString() %>
+                    </div>
+                    <div class="event-time">
+                      <i class="ph-duotone ph-timer"></i> <%= post.event_time %>
+                    </div>
+                    <div class="event-location">
+                      <i class="ph-duotone ph-map-pin"></i> <%= post.event_location %>
+                    </div>
+                  </div>
+                  <div class="event-actions">
+                    <button class="btn btn-outline btn-sm event-interested-btn">
+                      <i class="ph-duotone ph-star"></i> Interested <span class="interested-count">0</span>
+                    </button>
+                    <button class="btn btn-primary btn-sm event-going-btn">
+                      <i class="ph-duotone ph-check"></i> Going <span class="going-count">0</span>
+                    </button>
+                  </div>
+                </div>
+              <% } %>
+              
+              <div class="post-tags">
+                <% if (post.tags && post.tags.length) { %>
+                  <% post.tags.forEach(tag => { %>
+                    <a href="/social/tag/<%= tag.name %>" class="post-tag">#<%= tag.name %></a>
+                  <% }) %>
+                <% } %>
+              </div>
+              
+              <div class="post-actions">
+                <button class="action-btn like-btn <%= post.liked ? 'active' : '' %>" data-post-id="<%= post.id %>">
+                  <i class="ph-duotone ph-thumbs-up"></i> <span class="like-count"><%= post.like_count || 0 %></span>
+                </button>
+                <button class="action-btn comment-btn" data-post-id="<%= post.id %>">
+                  <i class="ph-duotone ph-chat"></i> <span class="comment-count"><%= post.comment_count || 0 %></span>
+                </button>
+                <button class="action-btn share-btn" data-post-id="<%= post.id %>">
+                  <i class="ph-duotone ph-share"></i>
+                </button>
+                <button class="action-btn bookmark-btn <%= post.bookmarked ? 'active' : '' %>" data-post-id="<%= post.id %>">
+                  <i class="ph-duotone ph-bookmark"></i>
+                </button>
+              </div>
+              
+              <div class="post-comments">
+                <% if (post.comments && post.comments.length) { %>
+                  <div class="comments-header">
+                    <h4>Comments (<%= post.comments.length %>)</h4>
+                    <button class="toggle-comments-btn">Show Comments</button>
+                  </div>
+                  <div class="comments-list" style="display: none;">
+                    <% post.comments.forEach(comment => { %>
+                      <div class="comment">
+                        <div class="comment-avatar">
+                          <% if (comment.character_id) { %>
+                            <img src="<%= comment.character_avatar || comment.url || '/img/default-character.svg' %>" 
+                                 alt="<%= comment.character_name %>"
+                                 data-fallback="/img/default-character.svg"
+                                 onerror="handleImageError(this)">
+                          <% } else { %>
+                            <div class="comment-avatar-placeholder">
+                              <i class="icon-user"></i>
+                            </div>
+                          <% } %>
+                        </div>
+                        <div class="comment-content">
+                          <div class="comment-header">
+                            <% if (comment.character_id) { %>
+                              <h5><%= comment.character_name %> <span class="comment-username">@<%= comment.username %></span></h5>
+                            <% } else { %>
+                              <h5>@<%= comment.username %></h5>
+                            <% } %>
+                            <span class="comment-date"><%= new Date(comment.created_at).toLocaleString() %></span>
+                          </div>
+                          <p><%= comment.content %></p>
+                          <div class="comment-actions">
+                            <button class="comment-action-btn reply-btn" data-comment-id="<%= comment.id %>">Reply</button>
+                            <button class="comment-action-btn like-btn" data-comment-id="<%= comment.id %>">Like</button>
+                          </div>
+                        </div>
+                      </div>
+                    <% }) %>
+                  </div>
+                <% } %>
+                
+                <div class="add-comment-form">
+                  <div class="comment-form-header">
+                    <div class="comment-form-avatar comment-avatar-container">
+                      <% if (!characters || characters.length === 0) { %>
+                        <div class="character-select-required">
+                          Create a character first
+                        </div>
+                      <% } %>
+                      <div class="comment-avatar-placeholder">
+                        <i class="ph-duotone ph-user"></i>
+                      </div>
+                    </div>
+                    <textarea class="form-control comment-input" placeholder="Write a comment as your character..." data-post-id="<%= post.id %>"></textarea>
+                  </div>
+                  <div class="comment-form-footer">
+                    <button class="btn btn-primary btn-sm submit-comment-btn" data-post-id="<%= post.id %>" <%= !characters || characters.length === 0 ? 'disabled' : '' %>>Comment</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="empty-feed card">
+            <div class="empty-feed-message">
+              <i class="ph-duotone ph-chat-circle"></i>
+              <h3>No Posts Yet</h3>
+              <p>Be the first to create a post or follow people to see their posts here!</p>
+            </div>
+          </div>
+        <% } %>
+      </div>
+      
+      <% if (posts && posts.length && hasMore) { %>
+        <div class="load-more mb-3">
+          <button id="load-more-btn" class="btn btn-outline" data-page="1">Load More</button>
+        </div>
+      <% } %>
+    </div>
+    
+    <!-- Right Sidebar -->
+    <div class="col-3 sidebar-right">
+      <div class="widget suggested-users card">
+        <h4 class="widget-title">Suggested Characters</h4>
+        <ul class="suggested-list">
+          <% if (suggestedUsers && suggestedUsers.length > 0) { %>
+            <% console.log('Rendering suggestedUsers:', suggestedUsers.length, 'items'); %>
+            <% suggestedUsers.forEach(character => { %>
+              <li class="suggested-item" data-character-id="<%= character.id %>">
+                <div class="suggested-avatar">
+                  <img src="<%= character.avatar_url || character.url || '/img/default-character.svg' %>" 
+                       alt="<%= character.name %>"
+                       onerror="this.src = '/img/default-character.svg';" />
+                </div>
+                <div class="suggested-info">
+                  <div class="suggested-name"><%= character.name %></div>
+                  <div class="suggested-meta">by @<%= character.creator_username %></div>
+                </div>
+                <button class="btn btn-sm <%= character.is_following ? 'btn-primary' : 'btn-outline' %> follow-character-btn" data-character-id="<%= character.id %>">
+                  <%= character.is_following ? 'Following' : 'Follow' %>
+                </button>
+              </li>
+            <% }); %>
+          <% } else { %>
+            <li class="no-suggestions">
+              <p>No suggested characters available yet.</p>
+              <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
+            </li>
+          <% } %>
+        </ul>
+      </div>
+      
+      <div class="suggested-characters card mt-3">
+        <h4>Characters You Might Like</h4>
+        <ul class="suggested-list">
+          <% if (suggestedCharacters && suggestedCharacters.length) { %>
+            <% suggestedCharacters.forEach(character => { %>
+              <li class="suggested-item">
+                <img src="<%= character.avatar_url || character.url || '/img/default-character.svg' %>" 
+                     alt="<%= character.name %>" 
+                     class="suggested-avatar"
+                     data-fallback="/img/default-character.svg"
+                     onerror="handleImageError(this)">
+                <div class="suggested-info">
+                  <h5><%= character.name %></h5>
+                  <span class="suggestion-meta"><%= character.team || character.job || '' %></span>
+                </div>
+                <button class="btn btn-sm btn-outline follow-character-btn" data-character-id="<%= character.id %>">
+                  Follow
+                </button>
+              </li>
+            <% }) %>
+          <% } else { %>
+            <li class="no-suggestions">No character suggestions available</li>
+          <% } %>
+        </ul>
+      </div>
+      
+      <div class="upcoming-events card mt-3">
+        <h4>Upcoming Events</h4>
+        <% if (upcomingEvents && upcomingEvents.length) { %>
+          <ul class="events-list">
+            <% upcomingEvents.forEach(event => { %>
+              <li class="event-item">
+                <div class="event-date-badge">
+                  <% if (event.date) { %>
+                    <span class="event-month"><%= new Date(event.date).toLocaleString('default', { month: 'short' }) %></span>
+                    <span class="event-day"><%= new Date(event.date).getDate() %></span>
+                  <% } else { %>
+                    <span class="event-month">TBD</span>
+                    <span class="event-day">--</span>
+                  <% } %>
+                </div>
+                <div class="event-details">
+                  <h5><%= event.title %></h5>
+                  <% if (event.time) { %>
+                    <p><i class="icon-time"></i> <%= event.time %></p>
+                  <% } %>
+                  <% if (event.location) { %>
+                    <p><i class="icon-location"></i> <%= event.location %></p>
+                  <% } %>
+                </div>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="no-events">No upcoming events</p>
+        <% } %>
+        <a href="/social/events" class="btn btn-outline btn-sm mt-2">See All Events</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/js/social.js"></script>

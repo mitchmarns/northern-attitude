@@ -1,0 +1,154 @@
+<!-- views/partials/header.ejs -->
+<header class="site-header">
+  <nav class="navbar">
+    <a href="/" class="navbar-brand">northern attitude</a>
+    
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a href="/characters" class="nav-link">Characters</a>
+      </li>
+      <li class="nav-item">
+        <a href="/teams" class="nav-link">Teams</a>
+      </li>
+      <li class="nav-item">
+        <a href="/writing/threads" class="nav-link">Threads</a>
+      </li>
+      <li class="nav-item">
+        <a href="/social/feed" class="nav-link">Social</a>
+      </li>
+      
+      <% if (user) { %>
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link dropdown-toggle" id="navbarDropdown">
+            <%= user.username %>
+            <% if ((typeof pendingRequests !== 'undefined' && pendingRequests > 0) || 
+                  (typeof unreadMessages !== 'undefined' && unreadMessages > 0)) { %>
+              <span class="notification-badge"><%= pendingRequests + (unreadMessages || 0) %></span>
+            <% } %>
+            <i class="ph-duotone ph-caret-down"></i>
+          </a>
+          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <a class="dropdown-item" href="/dashboard">
+              <i class="ph-duotone ph-gauge"></i> Dashboard
+            </a>
+            <a class="dropdown-item" href="/characters/my-characters">
+              <i class="ph-duotone ph-user"></i> My Characters
+            </a>
+            
+            <a class="dropdown-item" href="/messages">
+              <i class="ph-duotone ph-chat-text"></i> Direct Messages
+              <% if (typeof unreadMessages !== 'undefined' && unreadMessages > 0) { %>
+                <span class="notification-badge-small"><%= unreadMessages %></span>
+              <% } %>
+            </a>
+            
+            <a class="dropdown-item" href="/characters/relationship-requests">
+              <i class="ph-duotone ph-users"></i> Relationship Requests
+              <% if (typeof pendingRequests !== 'undefined' && pendingRequests > 0) { %>
+                <span class="notification-badge-small"><%= pendingRequests %></span>
+              <% } %>
+            </a>
+            
+            <a class="dropdown-item" href="/writing/my-threads">
+              <i class="ph-duotone ph-book-open"></i> My Threads
+            </a>
+            
+            <% if (user.isAdmin) { %>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="/teams/admin/teams">
+                <i class="ph-duotone ph-shield"></i> Manage Teams
+              </a>
+            <% } %>
+            
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="/auth/profile">
+              <i class="ph-duotone ph-gear"></i> Profile Settings
+            </a>
+            <a class="dropdown-item" href="/auth/logout">
+              <i class="ph-duotone ph-sign-out"></i> Logout
+            </a>
+          </div>
+        </li>
+      <% } else { %>
+        <li class="nav-item">
+          <a href="/auth/login" class="navbar-btn">Login</a>
+        </li>
+        <li class="nav-item">
+          <a href="/auth/register" class="navbar-btn">Register</a>
+        </li>
+      <% } %>
+    </ul>
+  </nav>
+</header>
+
+<style>
+  .dropdown-divider {
+    height: 0;
+    margin: 0.5rem 0;
+    overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .notification-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    background-color: var(--danger);
+    color: white;
+    border-radius: 50%;
+    font-size: var(--text-xs);
+    padding: 0 4px;
+    margin-left: 5px;
+  }
+  
+  .notification-badge-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    background-color: var(--danger);
+    color: white;
+    border-radius: 50%;
+    font-size: var(--text-xs);
+    padding: 0 3px;
+    margin-left: 5px;
+  }
+  
+  .dropdown-item {
+    display: flex;
+    align-items: center;
+  }
+  
+  .dropdown-item i {
+    margin-right: 8px;
+    opacity: 0.8;
+  }
+</style>
+
+<script>
+  // Dropdown toggle
+  document.addEventListener('DOMContentLoaded', function() {
+    const dropdownToggle = document.querySelector('.dropdown-toggle');
+    if (dropdownToggle) {
+      dropdownToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.querySelector('.dropdown-menu').classList.toggle('show');
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!e.target.matches('.dropdown-toggle') && !e.target.closest('.dropdown-menu')) {
+          const dropdowns = document.querySelectorAll('.dropdown-menu');
+          dropdowns.forEach(dropdown => {
+            if (dropdown.classList.contains('show')) {
+              dropdown.classList.remove('show');
+            }
+          });
+        }
+      });
+    }
+  });
+</script>

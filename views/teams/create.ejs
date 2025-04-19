@@ -1,0 +1,13 @@
+<div class="container p-4">
+  <h1 class="text-center mb-4">Create New Team</h1>
+  <form action="/teams/create" method="POST" class="form form-aligned">
+    <div id="form-fields" class="form-grid"></div>
+    <button type="submit" class="btn mt-4">Create Team</button>
+  </form>
+  <script src="/js/teamForm.js"></script>
+  <script>
+    // Render the form fields with no pre-filled data
+    document.getElementById('form-fields').innerHTML = renderTeamFormFields();
+  </script>
+  
+</div>

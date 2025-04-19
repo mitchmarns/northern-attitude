@@ -1,0 +1,13 @@
+<div class="container p-4">
+  <h1 class="text-center mb-4">Edit Team</h1>
+  <form action="/teams/<%= team.id %>/edit" method="POST" class="form">
+    <div id="form-fields"></div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+  </form>
+  <script src="/js/teamForm.js"></script>
+  <script>
+    // Render the form fields with pre-filled data
+    const team = JSON.parse('<%- JSON.stringify(team) %>');
+    document.getElementById('form-fields').innerHTML = renderTeamFormFields(team);
+  </script>
+</div>

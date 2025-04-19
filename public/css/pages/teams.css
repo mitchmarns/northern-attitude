@@ -1,0 +1,232 @@
+/* Card styling */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  background-color: var(--card-bg);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  height: 100%; /* Make all cards the same height */
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Logo styling */
+.card-img-top {
+  width: 100%;
+  height: 180px;
+  object-fit: contain; /* Changed from 'cover' to 'contain' to prevent logo from being cut off */
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: var(--spacing-md); /* Added padding to give logos some breathing room */
+  transition: transform var(--transition-medium);
+}
+
+.card:hover .card-img-top {
+  transform: scale(1.05);
+}
+
+/* Card body styling */
+.card-body {
+  padding: var(--spacing-md);
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 180px); /* Adjust based on card-img-top height */
+}
+
+.card-title {
+  font-size: var(--text-xl);
+  font-weight: var(--semibold);
+  margin-bottom: var(--spacing-sm);
+  color: var(--lighttext);
+  font-family: var(--decorfont); /* Changed from accentfont to decorfont */
+}
+
+.card-text {
+  margin-bottom: var(--spacing-sm);
+  color: var(--lighttext);
+  flex-grow: 1;
+}
+
+.card-info-label {
+  font-weight: var(--medium);
+  color: var(--header);
+}
+
+/* Button styling */
+.btn-primary {
+  background-color: var(--accent1);
+  border: none;
+  color: var(--lighttext);
+  padding: var(--spacing-xs) var(--spacing-md);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+  font-weight: var(--medium);
+}
+
+.btn-primary:hover {
+  background-color: var(--header);
+}
+
+.btn-success {
+  background-color: var(--accent2);
+  border: none;
+  color: var(--lighttext);
+  padding: var(--spacing-xs) var(--spacing-md);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast);
+  font-weight: var(--medium);
+}
+
+.btn-success:hover {
+  background-color: var(--success);
+}
+
+/* Page title styling */
+.page-title {
+  font-family: var(--decorfont); /* Changed from accentfont to decorfont */
+  color: var(--lighttext);
+  font-size: var(--text-3xl);
+  margin-bottom: var(--spacing-lg);
+  position: relative;
+  display: inline-block;
+}
+
+.page-title:after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 25%;
+  right: 25%;
+  height: 3px;
+  background: var(--gradient1);
+}
+
+/* Create team button styling */
+.btn-create {
+  background-color: var(--accent2);
+  color: var(--lighttext);
+  border: none;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: var(--medium);
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: inline-block;
+  margin-bottom: var(--spacing-lg);
+  font-family: var(--mainfont); /* Added font family */
+}
+
+.btn-create:hover {
+  background-color: var(--success);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* No teams message */
+.no-content-message {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--lighttext);
+  border: 1px dashed var(--border);
+}
+
+.color-input-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.color-input-group label {
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+  color: var(--lighttext);
+}
+
+.form-control-color {
+  width: 100%;
+  height: 40px;
+  padding: 0;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.form-control-color:hover {
+  transform: scale(1.05);
+}
+
+/* Color display in team profile */
+.team-colors {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.color-swatch {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.color-display {
+  width: 100%;
+  height: 20px;
+  margin: 8px 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background-image: linear-gradient(to right, 
+                     var(--primary-color, var(--accent1)) 0%, 
+                     var(--secondary-color, var(--accent2)) 50%, 
+                     var(--accent-color, var(--accent3)) 100%);
+  position: relative;
+}
+
+/* Remove the color-box class as we won't need separate divs */
+.color-box {
+  display: none; /* Hide existing color boxes since we're using a gradient */
+}
+
+/* Team Profile Icon Badge */
+.team-icon-badge {
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  background-color: var(--primary-color, #3498db);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+}
+
+.team-profile-icon {
+  font-size: 1.5rem;
+  color: white;
+}
+
+/* Update team-header to have position relative to host the absolute positioned badge */
+.team-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}

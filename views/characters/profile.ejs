@@ -1,0 +1,192 @@
+<div class="container p-4">
+  <div class="d-flex profile-header mb-5" style="gap: var(--spacing-lg);">
+    <div class="profile-header-content">
+      <h1 class="mb-2"><%= character.name %></h1>
+      <% if (character.nickname) { %>
+        <p class="nickname mb-3">"<%= character.nickname %>"</p>
+      <% } %>
+      <div class="character-meta d-flex flex-wrap gap-2">
+        <span><i class="ph-duotone ph-user"></i> <%= character.role || 'Civilian' %></span>
+        <% if (character.teamId && character.team) { %>
+          <span><i class="ph-duotone ph-users"></i> <%= character.team %></span>
+        <% } %>
+        <% if (character.position) { %>
+          <span><i class="ph-duotone ph-hockey"></i> <%= character.position %></span>
+        <% } %>
+        <% if (character.jerseyNumber) { %>
+          <i class="ph-duotone ph-t-shirt"></i> #<%= character.jerseyNumber %></span>
+        <% } %>
+      </div>
+    </div>
+    <div class="profile-avatar">
+      <% if (character.url) { %>
+        <img src="<%= character.url %>" alt="<%= character.name %>" onerror="this.onerror=null; this.src='/img/default-avatar.png';">
+      <% } else { %>
+        <div class="avatar-placeholder d-flex align-items-center justify-content-center">
+          <i class="ph-duotone ph-user"></i>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  
+  <div class="character-tabs mb-4">
+    <div class="character-tab-links">
+      <a href="#tab-basic" class="character-tab-link active">Basic Info</a>
+      <a href="#tab-personality" class="character-tab-link">Personality</a>
+      <a href="#tab-appearance" class="character-tab-link">Appearance</a>
+      <a href="#tab-background" class="character-tab-link">Background</a>
+      <a href="#tab-details" class="character-tab-link">Details</a>
+    </div>
+    
+    <div class="character-tab-content p-3">
+      <!-- Basic Info Tab -->
+      <div id="tab-basic" class="character-tab-pane">
+        <div class="info-grid mb-4">
+          <div class="info-item">
+            <h3>Age</h3>
+            <p><%= character.age || 'Not specified' %></p>
+          </div>
+          <div class="info-item">
+            <h3>Gender</h3>
+            <p><%= character.gender || 'Not specified' %></p>
+          </div>
+          <% if (character.faceclaim) { %>
+          <div class="info-item">
+            <h3>Faceclaim</h3>
+            <p><%= character.faceclaim %></p>
+          </div>
+          <% } %>
+          <% if (character.role === 'Player') { %>
+          <div class="info-item">
+            <h3>Position</h3>
+            <p><%= character.position || 'Not specified' %></p>
+          </div>
+          <div class="info-item">
+            <h3>Team</h3>
+            <p><%= character.team || 'Not specified' %></p>
+          </div>
+          <div class="info-item">
+            <h3>Jersey Number</h3>
+            <p><%= character.jerseyNumber || 'Not specified' %></p>
+          </div>
+          <% } else if (character.role === 'Staff') { %>
+          <div class="info-item">
+            <h3>Position</h3>
+            <p><%= character.position || 'Not specified' %></p>
+          </div>
+          <div class="info-item">
+            <h3>Team</h3>
+            <p><%= character.team || 'Not specified' %></p>
+          </div>
+          <% } %>
+        </div>
+        
+        <% if (character.bio) { %>
+        <div class="bio-section mt-4">
+          <h3 class="mb-2">Bio</h3>
+          <p><%= character.bio %></p>
+        </div>
+        <% } %>
+      </div>
+      
+      <!-- Personality Tab -->
+      <div id="tab-personality" class="character-tab-pane">
+        <% if (character.personality) { %>
+        <div class="info-section mb-4">
+          <h3 class="mb-2">Personality</h3>
+          <p><%= character.personality %></p>
+        </div>
+        <% } %>
+        
+        <div class="info-grid">
+          <% if (character.likes) { %>
+          <div class="info-item">
+            <h3>Likes</h3>
+            <p><%= character.likes %></p>
+          </div>
+          <% } %>
+          
+          <% if (character.dislikes) { %>
+          <div class="info-item">
+            <h3>Dislikes</h3>
+            <p><%= character.dislikes %></p>
+          </div>
+          <% } %>
+          
+          <% if (character.fears) { %>
+          <div class="info-item">
+            <h3>Fears</h3>
+            <p><%= character.fears %></p>
+          </div>
+          <% } %>
+          
+          <% if (character.goals) { %>
+          <div class="info-item">
+            <h3>Goals</h3>
+            <p><%= character.goals %></p>
+          </div>
+          <% } %>
+        </div>
+      </div>
+      
+      <!-- Appearance Tab -->
+      <div id="tab-appearance" class="character-tab-pane">
+        <% if (character.appearance) { %>
+        <div class="info-section">
+          <h3 class="mb-2">Physical Appearance</h3>
+          <p><%= character.appearance %></p>
+        </div>
+        <% } else { %>
+        <div class="empty-state p-5 text-center">
+          <p class="m-0">No appearance information available.</p>
+        </div>
+        <% } %>
+      </div>
+      
+      <!-- Background Tab -->
+      <div id="tab-background" class="character-tab-pane">
+        <% if (character.background) { %>
+        <div class="info-section">
+          <h3 class="mb-2">Character Background</h3>
+          <p><%= character.background %></p>
+        </div>
+        <% } else { %>
+        <div class="empty-state p-5 text-center">
+          <p class="m-0">No background information available.</p>
+        </div>
+        <% } %>
+      </div>
+      
+      <!-- Additional Details Tab -->
+      <div id="tab-details" class="character-tab-pane">
+        <% if (character.skills || character.fullBio) { %>
+          <% if (character.skills) { %>
+          <div class="info-section mb-4">
+            <h3 class="mb-2">Skills & Abilities</h3>
+            <p><%= character.skills %></p>
+          </div>
+          <% } %>
+          
+          <% if (character.fullBio) { %>
+          <div class="info-section">
+            <h3 class="mb-2">Full Biography</h3>
+            <p><%= character.fullBio %></p>
+          </div>
+          <% } %>
+        <% } else { %>
+        <div class="empty-state p-5 text-center">
+          <p class="m-0">No additional details available.</p>
+        </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+  
+  <div class="d-flex gap-3 mt-4">
+    <a href="/characters/<%= character.id %>/edit" class="btn btn-secondary">Edit Character</a>
+    <a href="/characters" class="btn btn-outline">Back to Characters</a>
+  </div>
+</div>
+
+<link rel="stylesheet" href="/css/pages/characterProfile.css">
+<script src="/js/characterProfile.js"></script>

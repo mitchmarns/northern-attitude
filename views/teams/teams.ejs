@@ -1,0 +1,43 @@
+<div class="container p-4">
+  <h1 class="page-title text-center mb-4">Team Directory</h1>
+  
+  <!-- Create Team Button -->
+  <div class="text-center mb-4">
+    <a href="/teams/create" class="btn-create">Create New Team</a>
+  </div>
+
+  <% if (teams.length > 0) { %>
+    <div class="row">
+      <% teams.forEach(team => { %>
+        <div class="col-md-4 col-6 mb-4">
+          <div class="card">
+            <% if (team.logo_url) { %>
+              <img src="<%= team.logo_url %>" class="card-img-top" alt="<%= team.name %> Logo">
+            <% } else { %>
+              <img src="/images/default-logo.png" class="card-img-top" alt="Default Logo">
+            <% } %>
+            <div class="card-body">
+              <h5 class="card-title"><%= team.name %></h5>
+              <div class="card-text">
+                <p><span class="card-info-label">City:</span> <%= team.city || 'Not specified' %></p>
+                <p><span class="card-info-label">Mascot:</span> <%= team.mascot || 'Not specified' %></p>
+                <div class="color-display" style="--primary-color: <%= team.primary_color || '#ccc' %>; --secondary-color: <%= team.secondary_color || '#eee' %>; --accent-color: <%= team.accent_color || '#ddd' %>;"></div>
+              </div>
+              <div class="d-flex justify-content-between mt-3">
+                <a href="/teams/<%= team.id %>" class="btn">View Team</a>
+                <% if (locals.user) { %>
+                  <a href="/teams/<%= team.id %>/edit" class="btn">Edit</a>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  <% } else { %>
+    <div class="no-content-message">
+      <p>No teams found in the system yet.</p>
+      <p>Click "Create New Team" to add the first team!</p>
+    </div>
+  <% } %>
+</div>

@@ -1,0 +1,119 @@
+:root {
+  /* Colors */
+  --bg: #2a2b2a; /* Darkened for better contrast */
+  --card-bg: #3a3b3a; /* Adjusted to be closer to bg color */
+  --navbar-bg: #EBEBEB;
+  --overlay: rgba(42, 43, 42, 0.85); /* Made consistent with bg */
+  --shadow: #1e1f1e;
+  --border: #3a3b3a; /* Matched with card-bg for consistency */
+  
+  /* Gradient Colors - Modern & Soft */
+  --gradient1: rgba(125, 145, 190, 0.7); /* Soft lavender blue */
+  --gradient2: rgba(144, 173, 198, 0.7); /* Soft sky blue */
+  --gradient3: rgba(173, 186, 217, 0.7); /* Soft periwinkle */
+  --gradient-bg: radial-gradient(
+      circle closest-side,
+      rgba(247, 249, 252, 1) 50%,
+      rgba(236, 242, 248, 0.8) 300% /* Subtle clean gradient */
+  );
+  
+  --graypicture: grayscale(40%) contrast(105%) sepia(3%); /* Modern vintage feel */
+  
+  /* Text Colors */
+  --header: #4a5568; /* Modern charcoal for headers */
+  --header-hover: #2d3748; /* Darker hover state */
+  --lighttext: #f0f2f5; /* Softer off-white that's easier on the eyes */
+  --darktext: #2d3748; /* Deep slate for body text */
+  --muted-text: #718096; /* Modern muted text */
+  
+  /* Accent Colors - Harmonized */
+  --accent1: #b3aac2; /* Muted lavender */
+  --accent2: #9cbfbc; /* Muted teal */
+  --accent3: #a2afc0; /* Muted blue */
+  --accent4: #d1c2ab; /* Muted peach */
+  
+  /* State Colors */
+  --success: #68d391; /* Fresh green */
+  --success-bg: rgba(104, 211, 145, 0.1);
+  --danger: #fc8181; /* Soft red */
+  --danger-bg: rgba(252, 129, 129, 0.1);
+  --warning: #f6e05e; /* Soft yellow */
+  --warning-bg: rgba(246, 224, 94, 0.1);
+  --info: #5badea; /* Matched to accent3 for consistency */
+  --info-bg: rgba(91, 173, 234, 0.1);
+
+  /* Spacing */
+  --spacing-xxs: 3px; /* Extra small spacing option */
+  --spacing-xs: 5px;
+  --spacing-sm: 10px;
+  --spacing-md: 20px;
+  --spacing-lg: 40px;
+  --spacing-xl: 60px; /* Extra large spacing */
+  --spacing-2xl: 100px; /* Double extra large spacing */
+
+  /* Typography */
+  --mainfont: 'proxima-nova', system-ui, sans-serif; /* Added system-ui as fallback */
+  --decorfont: 'industry-inc-base', sans-serif;
+  --monofont: 'SFMono-Regular', Consolas, monospace; /* New monospace font for code */
+  --accentfont: var(--decorfont); /* Add accentfont variable for compatibility */
+
+  /* Font Weights */
+  --light: 300;
+  --regular: 400;
+  --medium: 500;
+  --semibold: 600;
+  --bold: 700;
+
+  /* Font Size */
+  --text-6xl: 3.5rem; /* Added larger text size */
+  --text-5xl: 3rem;
+  --text-4xl: 2.5rem;
+  --text-3xl: 2rem;
+  --text-2xl: 1.625rem;
+  --text-xl: 1.375rem;
+  --text-lg: 1.125rem;
+  --text-base: 1rem;
+  --text-sm: 0.875rem;
+  --text-xs: 0.75rem;
+
+   /* Line Height */
+  --leading-none: 1; /* Added extra line height option */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75; /* Added more relaxed line height */
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-round: 50%;
+
+  /* Transitions */
+  --transition-fast: 0.3s ease-in-out;
+  --transition-medium: 0.5s ease-in-out;
+  --transition-slow: 1s ease-in-out;
+
+  /* Shadows */
+  --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.3);
+
+  /* Z-indices */
+  --z-backdrop: 10;
+  --z-modal: 20;
+  --z-dropdown: 30;
+  --z-tooltip: 40;
+  
+  /* Container Width */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  
+  /* Opacity levels */
+  --opacity-0: 0;
+  --opacity-25: 0.25;
+  --opacity-50: 0.5;
+  --opacity-75: 0.75;
+  --opacity-100: 1;
+}

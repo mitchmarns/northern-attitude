@@ -1,0 +1,86 @@
+<div class="container p-4">
+  <div class="profile-container">
+    <!-- Team Header Section -->
+    <div class="team-header">
+      <% if (team.logo_url) { %>
+        <img src="<%= team.logo_url %>" class="team-logo" alt="<%= team.name %> Logo">
+      <% } else { %>
+        <img src="/images/default-logo.png" class="team-logo" alt="Default Logo">
+      <% } %>
+      <div class="team-header-text">
+        <div class="team-name"><%= team.name %></div>
+        <% if (team.city) { %>
+          <p class="team-city"><%= team.city %></p>
+        <% } %>
+      </div>
+    </div>
+    
+    <!-- Team Details Section -->
+    <div class="team-details">
+      <!-- Description Section -->
+      <div class="team-description">
+        <h2 class="description-title">About the Team</h2>
+        <div class="description-content">
+          <%= team.description || 'No description available for this team.' %>
+        </div>
+      </div>
+      
+      <!-- Mascot Info -->
+      <div class="mascot-info">
+        <div class="mascot-icon">
+          <i class="ph-duotone ph-horse"></i>
+        </div>
+        <div class="mascot-details">
+          <h3 class="mascot-name">Team Mascot</h3>
+          <p><%= team.mascot || 'This team has not specified a mascot.' %></p>
+        </div>
+      </div>
+      
+      <!-- Additional Info Cards -->
+      <div class="row mt-4">
+        <div class="col-md-6">
+          <div class="team-info-card">
+            <span class="info-label">Location</span>
+            <div class="info-value"><%= team.city || 'Location not specified' %></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="team-info-card">
+            <span class="info-label">Players</span>
+            <div class="info-value">View team roster</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Team Colors Section -->
+      <div class="team-info-card mt-3">
+        <span class="info-label">Team Colors</span>
+        <div class="team-colors" style="--primary-color: <%= team.primary_color || '#ccc' %>; --secondary-color: <%= team.secondary_color || '#eee' %>; --accent-color: <%= team.accent_color || '#ddd' %>;">
+          <div class="color-swatch-container">
+            <div class="color-swatch" style="background-color: var(--primary-color);" title="Primary Color"></div>
+            <span class="swatch-label">Primary</span>
+          </div>
+          <div class="color-swatch-container">
+            <div class="color-swatch" style="background-color: var(--secondary-color);" title="Secondary Color"></div>
+            <span class="swatch-label">Secondary</span>
+          </div>
+          <div class="color-swatch-container">
+            <div class="color-swatch" style="background-color: var(--accent-color);" title="Accent Color"></div>
+            <span class="swatch-label">Accent</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Timestamp Info -->
+      <div class="timestamp-info">
+        <p>Created: <%= new Date(team.created_at).toLocaleDateString() %> | Last updated: <%= new Date(team.updated_at).toLocaleDateString() %></p>
+      </div>
+    </div>
+    
+    <!-- Team Actions -->
+    <div class="team-actions">
+      <a href="/teams/<%= team.id %>/edit" class="btn btn-secondary">Edit Team</a>
+      <a href="/teams" class="btn btn-outline">Back to Teams</a>
+    </div>
+  </div>
+</div>

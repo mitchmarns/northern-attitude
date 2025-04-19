@@ -1,0 +1,216 @@
+-- Database Schema for Northern Attitude
+
+-- Create database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS northern_attitude;
+
+-- Use the database
+USE northern_attitude;
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  first_name VARCHAR(50),
+  last_name VARCHAR(50),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS teams (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE, -- e.g., "Toronto Maple Leafs"
+  description TEXT,
+  city VARCHAR(100), -- e.g., "Toronto"
+  mascot VARCHAR(100), -- e.g., "Carlton the Bear"
+  logo_url VARCHAR(255), -- URL for the team's logo image
+  primary_color VARCHAR(7), -- Primary team color (hex code) e.g., "#0066CC"
+  secondary_color VARCHAR(7), -- Secondary team color (hex code) e.g., "#FFFFFF"
+  accent_color VARCHAR(7), -- Accent team color (hex code) e.g., "#969696"
+  created_by INT NOT NULL, -- Links to the user who created the team
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS characters (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  nickname VARCHAR(100),
+  age INT,
+  gender VARCHAR(50),
+  url VARCHAR(255), -- URL for the player's image
+  role ENUM('Player', 'Staff', 'Civilian') NOT NULL, -- Role of the character
+  position VARCHAR(50) NULL, -- Position for Players
+  jersey_number INT,
+  team VARCHAR(100) NULL, -- Team for Players or Staff
+  job VARCHAR(100), -- Job for Staff or Civilian
+  bio TEXT, -- A short biography or description of the character
+  faceclaim VARCHAR(255),
+  avatar_url VARCHAR(255),
+  personality TEXT,
+  likes TEXT,
+  dislikes TEXT,
+  fears TEXT,
+  goals TEXT,
+  appearance TEXT,
+  background TEXT,
+  skills TEXT,
+  full_bio TEXT,
+  is_private BOOLEAN DEFAULT FALSE,
+  created_by INT NOT NULL, -- Links to the user who created the character
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (team) REFERENCES teams(name) ON DELETE SET NULL -- Ensure team references the teams table
+);
+
+CREATE TABLE IF NOT EXISTS posts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL, -- Title of the post or scene
+  content TEXT NOT NULL, -- The actual roleplay content
+  post_type ENUM('text', 'image', 'video', 'poll', 'event', 'scene', 'story') NOT NULL DEFAULT 'text',
+  author_id INT NOT NULL, -- Links to the user who wrote the post
+  character_id INT, -- Optional: Links to the character featured in the post
+  privacy ENUM('public', 'followers', 'private') NOT NULL DEFAULT 'public',
+  view_count INT DEFAULT 0,
+  event_date DATE NULL, -- Date of the event
+  event_time TIME NULL, -- Time of the event
+  event_location VARCHAR(255) NULL, -- Location of the event
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (author_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS post_likes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  character_id INT, -- Optional: Like can come from a character
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
+  UNIQUE KEY (post_id, user_id, character_id) -- Prevent duplicate likes
+);
+
+CREATE TABLE IF NOT EXISTS comments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  character_id INT, -- Optional: Comment can come from a character
+  content TEXT NOT NULL,
+  parent_id INT, -- For threaded comments, reference to parent comment
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE SET NULL,
+  FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS relationships (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  character1_id INT NOT NULL, -- Links to the first character
+  character2_id INT NOT NULL, -- Links to the second character
+  relationship_type VARCHAR(50), -- e.g., "Friend", "Rival", "Teammate"
+  description TEXT, -- Optional: A description of the relationship
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (character1_id) REFERENCES characters(id) ON DELETE CASCADE,
+  FOREIGN KEY (character2_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS tags (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE -- e.g., "Hockey", "Drama", "Romance"
+);
+
+CREATE TABLE IF NOT EXISTS post_tags (
+  post_id INT NOT NULL,
+  tag_id INT NOT NULL,
+  PRIMARY KEY (post_id, tag_id),
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS media (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  url VARCHAR(255) NOT NULL, -- URL to the media file
+  type ENUM('image', 'video', 'audio') NOT NULL, -- Type of media
+  post_id INT, -- Optional: Links to a post
+  character_id INT, -- Optional: Links to a character
+  uploaded_by INT NOT NULL, -- Links to the user who uploaded the media
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
+  FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_media (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_id INT NOT NULL,
+  media_id INT NOT NULL,
+  display_order INT DEFAULT 0, -- For ordering multiple media in a post
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS follows (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  follower_id INT NOT NULL, -- User doing the following
+  following_id INT, -- User being followed (NULL if following a character)
+  character_id INT, -- Character being followed (NULL if following a user)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (follower_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (following_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
+  UNIQUE KEY (follower_id, following_id, character_id) -- Prevent duplicate follows
+);
+
+-- Poll options table for poll-type posts
+CREATE TABLE IF NOT EXISTS poll_options (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_id INT NOT NULL,
+  text VARCHAR(255) NOT NULL,
+  votes INT DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
+);
+
+-- Poll votes table for tracking individual votes on poll options
+CREATE TABLE IF NOT EXISTS poll_votes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  option_id INT NOT NULL,
+  user_id INT NOT NULL,
+  character_id INT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY vote_once (option_id, user_id, character_id),
+  FOREIGN KEY (option_id) REFERENCES poll_options(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+-- Event responses table for tracking user responses to events
+CREATE TABLE IF NOT EXISTS event_responses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  character_id INT NOT NULL,
+  response_type ENUM('interested', 'going') NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_response (post_id, user_id, character_id),
+  FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+-- Add index for faster poll option queries
+CREATE INDEX poll_options_post_id_idx ON poll_options(post_id);
+CREATE INDEX poll_votes_option_id_idx ON poll_votes(option_id);
+CREATE INDEX poll_votes_user_character_idx ON poll_votes(user_id, character_id);
+CREATE INDEX event_responses_post_id_idx ON event_responses(post_id);
+CREATE INDEX event_responses_user_character_idx ON event_responses(user_id, character_id);

@@ -1,0 +1,145 @@
+/* Hero Section */
+.hero-section {
+  background: linear-gradient(135deg, 
+                rgba(72, 114, 153, 0.8), 
+                rgba(86, 130, 124, 0.8), 
+                rgba(106, 122, 137, 0.8)), 
+                url('/images/NYC_Skyline_Silhouette.png'); 
+  background-size: cover;
+  background-position: center;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg) var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--shadow-lg), 0 10px 30px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.2));
+  z-index: 1;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-lg) 0;
+  animation: fadeIn 1.2s ease-out;
+}
+
+.hero-title {
+  font-family: var(--decorfont);
+  font-size: calc(var(--text-5xl) * 1.5);
+  color: var(--lighttext);
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-sm);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.2);
+  letter-spacing: 2px; 
+  animation: slideIn 1s ease-out;
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: calc(var(--text-5xl) * 1.2); 
+  }
+}
+
+.hero-subtitle {
+  font-size: var(--text-sm); 
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: var(--spacing-lg);
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+  animation: slideIn 1s ease-out 0.3s both;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  font-style: italic; 
+  background-color: rgba(0, 0, 0, 0.25); 
+  display: inline-block; 
+  padding: 8px 16px; 
+  border-radius: var(--radius-sm); 
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+  max-width: 80%; 
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-buttons {
+  animation: fadeIn 1s ease-out 0.6s both;
+}
+
+.hero-buttons a, .hero-buttons button {
+  background-color: var(--navbar-bg);
+  color: var(--darktext);
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 0 8px;
+  font-weight: 500;
+}
+
+.hero-buttons a:hover, .hero-buttons button:hover {
+  background-color: var(--navbar-bg);
+  color: var(--darktext);
+  transform: scale(1.05); 
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.hero-buttons a:active, .hero-buttons button:active {
+  background-color: var(--navbar-bg);
+  color: var(--darktext);
+  transform: scale(0.95); 
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px); 
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0); 
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: calc(var(--text-5xl) * 1.2); 
+  }
+  
+  .hero-buttons a, .hero-buttons button {
+    display: inline-block;
+    margin: 5px;
+    padding: 8px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+  
+  .hero-content {
+    padding: var(--spacing-md) 0;
+  }
+}

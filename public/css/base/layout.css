@@ -1,0 +1,114 @@
+/* Layout */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+  box-sizing: border-box;
+}
+
+.container-fluid {
+  width: 100%;
+  padding: 0 var(--spacing-md);
+  box-sizing: border-box;
+}
+
+.main-content {
+  padding: var(--spacing-lg) 0;
+  min-height: calc(100vh - 60px - 80px); /* subtract header and footer height */
+}
+
+/* Improved grid system */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 calc(-1 * var(--spacing-sm));
+}
+
+.col {
+  flex: 1;
+  padding: 0 var(--spacing-sm);
+  box-sizing: border-box;
+}
+
+/* Column size variations */
+.col-wide {
+  flex: 0 0 60%;
+  max-width: 60%;
+}
+
+.col-narrow {
+  flex: 0 0 40%;
+  max-width: 40%;
+}
+
+/* 12-column grid system */
+.col-1 { flex: 0 0 8.333%; max-width: 8.333%; }
+.col-2 { flex: 0 0 16.666%; max-width: 16.666%; }
+.col-3 { flex: 0 0 25%; max-width: 25%; }
+.col-4 { flex: 0 0 33.333%; max-width: 33.333%; }
+.col-5 { flex: 0 0 41.666%; max-width: 41.666%; }
+.col-6 { flex: 0 0 50%; max-width: 50%; }
+.col-7 { flex: 0 0 58.333%; max-width: 58.333%; }
+.col-8 { flex: 0 0 66.666%; max-width: 66.666%; }
+.col-9 { flex: 0 0 75%; max-width: 75%; }
+.col-10 { flex: 0 0 83.333%; max-width: 83.333%; }
+.col-11 { flex: 0 0 91.666%; max-width: 91.666%; }
+.col-12 { flex: 0 0 100%; max-width: 100%; }
+
+/* Responsive adjustments with multiple breakpoints */
+@media (max-width: 1024px) {
+  .container {
+    max-width: 960px;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 720px;
+  }
+  
+  .col-wide,
+  .col-narrow,
+  .col-3, .col-4, 
+  .col-5, .col-6, 
+  .col-7, .col-8, .col-9 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* Show/hide based on screen size */
+  .hide-md { display: none; }
+  .show-md { display: block; }
+}
+
+@media (max-width: 576px) {
+  .container {
+    max-width: 540px;
+  }
+  
+  .col-1, .col-2 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  /* Show/hide based on screen size */
+  .hide-sm { display: none; }
+  .show-sm { display: block; }
+}
+
+/* Print styles */
+@media print {
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  .main-content {
+    padding: 0;
+  }
+  
+  .no-print {
+    display: none;
+  }
+}

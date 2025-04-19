@@ -1,0 +1,79 @@
+<div class="d-flex justify-between align-center mb-4">
+  <h1>Edit Character: <%= character.name %></h1>
+  <a href="/characters/<%= character.id %>" class="btn btn-outline">
+    <i class="ph-duotone ph-arrow-left"></i> Back to Character
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <form action="/characters/<%= character.id %>/edit" method="POST">
+      <div id="form-fields"></div>
+      
+      <div class="form-group text-right">
+        <a href="/characters/<%= character.id %>" class="btn btn-outline mr-2">Cancel</a>
+        <button type="submit" class="btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="/js/characterForm.js"></script>
+<script>
+  // Render the form fields with pre-filled data
+  const character = JSON.parse('<%- JSON.stringify(character || {}) %>');
+  
+  // Map the url field from database to avatarUrl for the form
+  if (character.url && !character.avatarUrl) {
+    character.avatarUrl = character.url;
+  }
+
+  // Add teams data to character object
+  try {
+    // Parse teams data safely
+    character.teams = JSON.parse('<%- JSON.stringify(teams || []) %>');
+    console.log("Teams loaded:", character.teams); // Debug output
+    
+    // Map team name to teamId for the form
+    if (character.team && character.teams && character.teams.length > 0) {
+      const teamMatch = character.teams.find(t => t.name === character.team);
+      if (teamMatch) {
+        character.teamId = teamMatch.id;
+        console.log("Selected team:", teamMatch.name, "with ID:", teamMatch.id); // Debug output
+      }
+    }
+  } catch (e) {
+    console.error("Error parsing teams data:", e);
+    character.teams = [];
+  }
+  
+  // Map jersey_number to jerseyNumber for the form
+  if (character.jersey_number) {
+    character.jerseyNumber = character.jersey_number;
+  }
+  
+  // Map is_private to isPrivate for the form
+  character.isPrivate = Boolean(character.is_private);
+  
+  // Map full_bio to fullBio for the form
+  if (character.full_bio) {
+    character.fullBio = character.full_bio;
+  }
+  
+  // Debugging output
+  console.log("Character data for form:", {
+    role: character.role,
+    team: character.team,
+    teamId: character.teamId,
+    teamsCount: character.teams ? character.teams.length : 0
+  });
+  
+  document.getElementById('form-fields').innerHTML = renderCharacterFormFields(character);
+  
+  // Initialize the form after rendering with short delay to ensure DOM is ready
+  setTimeout(() => {
+    initializeCharacterForm();
+    // Make sure team fields are shown correctly based on role
+    toggleTeamFields();
+  }, 100);
+</script>

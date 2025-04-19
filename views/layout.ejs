@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/base/variables.css">
+  <link rel="stylesheet" href="/css/base/layout.css">
+  <link rel="stylesheet" href="/css/base/utilities.css">
+  <link rel="stylesheet" href="/css/base/mobile.css">
+  <link rel="stylesheet" href="/css/base/reset.css">
+  <link rel="stylesheet" href="/css/base/typography.css">
+
+  <link rel="stylesheet" href="/css/components/auth.css">
+  <link rel="stylesheet" href="/css/components/buttons.css">
+  <link rel="stylesheet" href="/css/components/form.css">
+  <link rel="stylesheet" href="/css/components/header.css">
+
+  <link rel="stylesheet" href="/css/pages/characterProfile.css">
+  <link rel="stylesheet" href="/css/pages/characters.css">
+  <link rel="stylesheet" href="/css/pages/index.css">
+  <link rel="stylesheet" href="/css/pages/profile.css">
+  <link rel="stylesheet" href="/css/pages/social.css">
+  <link rel="stylesheet" href="/css/pages/team-profile.css">
+  <link rel="stylesheet" href="/css/pages/teams.css">
+
+  <!-- Fonts -->
+<link rel="stylesheet" href="https://use.typekit.net/ian2oem.css">
+<link rel="stylesheet" href="https://use.typekit.net/ian2oem.css">
+<link rel="stylesheet" href="https://use.typekit.net/ian2oem.css">
+  <!-- Phosphor Icons -->
+  <link
+  rel="stylesheet"
+  type="text/css"
+  href="https://cdn.jsdelivr.net/npm/@phosphor-icons/web@2.1.1/src/duotone/style.css"
+/>
+
+</head>
+<body>
+    <!-- Header -->
+    <%- include('partials/header') %>
+</body>
+
+  <!-- Flash Messages -->
+  <div class="container">
+    <% if(typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+      <div class="alert alert-success">
+        <%= success_msg %>
+      </div>
+    <% } %>
+
+    <% if(typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+      <div class="alert alert-danger">
+        <%= error_msg %>
+      </div>
+    <% } %>
+
+    <% if(typeof error !== 'undefined' && error.length > 0) { %>
+      <div class="alert alert-danger">
+        <%= error %>
+      </div>
+    <% } %>
+
+    <% if(typeof errors !== 'undefined' && errors.length > 0) { %>
+      <% errors.forEach(function(error) { %>
+        <div class="alert alert-danger">
+          <%= error.msg %>
+        </div>
+      <% }); %>
+    <% } %>
+  </div>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <%- body %>
+    </div>
+  </main>
+
+  <!-- JavaScript -->
+  <script src="/js/teamForm.js"></script>
+  <!-- Scripts -->
+  <script src="/js/utils/image-utils.js"></script>
+</html>

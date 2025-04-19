@@ -1,0 +1,175 @@
+.profile-header {
+  display: flex;
+  flex-direction: row;
+  margin-bottom: var(--spacing-lg);
+  gap: 2rem;
+  align-items: center;
+}
+
+.profile-header-content {
+  flex: 1;
+}
+
+.profile-avatar {
+  width: 200px;
+  height: 200px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 3px solid var(--accent1);
+  box-shadow: var(--shadow-md);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--card-bg);
+  color: var(--muted-text);
+  font-size: var(--text-4xl);
+}
+
+.nickname {
+  font-style: italic;
+  color: var(--muted-text);
+  margin-bottom: 0.8rem;
+}
+
+.character-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 0.5rem;
+}
+
+.character-meta span {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: var(--spacing-xxs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  display: inline-flex;
+  align-items: center;
+}
+
+.character-meta span i {
+  margin-right: var(--spacing-xs);
+}
+
+/* Tabs Styling */
+.character-tabs {
+  margin-top: 2rem;
+  border-radius: var(--radius-md);
+  background-color: rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+
+.character-tab-links {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.character-tab-link {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-decoration: none;
+  color: var(--lighttext);
+  font-weight: var(--medium);
+  transition: var(--transition-fast);
+}
+
+.character-tab-link:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--lighttext);
+}
+
+.character-tab-link.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--accent1);
+  border-bottom: 2px solid var(--accent1);
+}
+
+.character-tab-content {
+  padding: 1.5rem;
+}
+
+.character-tab-pane {
+  display: none;
+}
+
+.character-tab-pane.active {
+  display: block;
+}
+
+/* Content Layout */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: var(--spacing-md);
+  margin-bottom: 1.5rem;
+}
+
+.info-item {
+  margin-bottom: 0.5rem;
+}
+
+.info-item h3 {
+  font-size: var(--text-base);
+  color: var(--accent1);
+  margin-bottom: var(--spacing-xxs);
+}
+
+.info-item p {
+  margin: 0;
+}
+
+.info-section {
+  margin-bottom: 1.5rem;
+}
+
+.info-section h3 {
+  font-size: var(--text-lg);
+  color: var(--accent1);
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: var(--spacing-xs);
+}
+
+.empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: var(--muted-text);
+  background-color: rgba(255, 255, 255, 0.02);
+  border-radius: var(--radius-md);
+}
+
+.bio-section {
+  margin-top: 1rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column-reverse;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .character-meta {
+    justify-content: center;
+  }
+  
+  .character-tab-links {
+    flex-wrap: wrap;
+  }
+  
+  .character-tab-link {
+    padding: var(--spacing-sm) var(--spacing-sm);
+    font-size: var(--text-sm);
+  }
+}

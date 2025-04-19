@@ -1,0 +1,77 @@
+<div class="profile-container">
+  <h1 class="profile-title">Profile Settings</h1>
+  
+  <!-- Display messages -->
+  <% if (messages.success) { %>
+    <div class="alert alert-success">
+      <%= messages.success %>
+    </div>
+  <% } %>
+  
+  <% if (messages.error) { %>
+    <div class="alert alert-danger">
+      <%= messages.error %>
+    </div>
+  <% } %>
+
+  <div class="profile-section">
+    <h2>Account Information</h2>
+    <div class="profile-info">
+      <p><strong>Username:</strong> <%= user.username %></p>
+      <p><strong>Email:</strong> <%= user.email %></p>
+      <p><strong>Member since:</strong> 
+        <% if (user.created_at) { %>
+          <%= new Date(user.created_at).toLocaleDateString() %>
+        <% } else { %>
+          Not available
+        <% } %>
+      </p>
+    </div>
+  </div>
+  
+  <div class="profile-section">
+    <h2>Update Username</h2>
+    <form action="/auth/profile/update-username" method="POST" class="profile-form">
+      <div class="form-group">
+        <label for="newUsername">New Username</label>
+        <input type="text" id="newUsername" name="newUsername" required minlength="3">
+      </div>
+      
+      <div class="form-group">
+        <button type="submit" class="btn">Save Username</button>
+      </div>
+    </form>
+  </div>
+  
+  <div class="profile-section">
+    <h2>Change Password</h2>
+    <form action="/auth/profile/update-password" method="POST" class="profile-form">
+      <div class="form-group">
+        <label for="currentPassword">Current Password</label>
+        <input type="password" id="currentPassword" name="currentPassword" required>
+      </div>
+      
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <input type="password" id="newPassword" name="newPassword" required minlength="6">
+      </div>
+      
+      <div class="form-group">
+        <label for="confirmPassword">Confirm New Password</label>
+        <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6">
+      </div>
+      
+      <div class="form-group">
+        <button type="submit" class="btn">Change Password</button>
+      </div>
+    </form>
+  </div>
+  
+  <div class="profile-section">
+    <h2>Account Security</h2>
+    <p class="profile-note">
+      <i class="ph-shield-duotone"></i>
+      For security reasons, you'll need to re-enter your current password when changing your password.
+    </p>
+  </div>
+</div>

@@ -1,0 +1,98 @@
+.container {
+  max-width: var(--container-width, 1200px); /* Use a fallback if --container-width is undefined */
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+/* Character List Styles */
+.character-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.character-card {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+}
+
+.character-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Character Image Styles */
+.character-image {
+  text-align: center;
+  margin: 0 auto var(--spacing-sm);
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.character-avatar {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: var(--radius-round);
+  border: 3px solid var(--accent1);
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-fast);
+  filter: var(--graypicture);
+}
+
+.character-avatar:hover {
+  transform: scale(1.05);
+  border-color: var(--accent3);
+  filter: none; /* Remove the filter on hover for a color reveal effect */
+}
+
+.character-card h2 {
+  color: var(--lighttext);
+  font-family: var(--decorfont);
+  font-size: var(--text-xl);
+  margin-bottom: var(--spacing-sm);
+  text-align: center;
+}
+
+.character-card p {
+  color: var(--lighttext);
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--text-sm);
+}
+
+.character-card .btn-primary {
+  margin-top: var(--spacing-sm);
+  background: var(--accent3);
+  color: var(--lighttext);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  text-align: center;
+  font-weight: var(--medium);
+  transition: var(--transition-fast);
+  margin-top: auto;
+}
+
+.character-card .btn-primary:hover {
+  background: var(--accent1);
+  transform: translateY(-2px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .character-list {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+
+  .character-avatar {
+    width: 120px;
+    height: 120px;
+  }
+}

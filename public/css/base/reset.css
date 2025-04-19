@@ -1,0 +1,167 @@
+/* 
+ * Base Reset & Typography
+ * A modern CSS reset with typography improvements
+ */
+
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Set core body defaults */
+body {
+  font-family: var(--mainfont);
+  font-size: var(--text-base);
+  font-weight: var(--regular);
+  line-height: var(--leading-normal);
+  color: var(--lighttext);
+  background-color: var(--bg);
+  min-height: 100vh;
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+  transition: background-color var(--transition-medium);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--header);
+  margin-top: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  line-height: var(--leading-tight);
+  letter-spacing: 0.02em;
+  text-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+  font-weight: var(--semibold);
+}
+
+h1 {
+  font-family: var(--decorfont);
+  font-size: var(--text-5xl);
+  letter-spacing: 0.01em;
+  color: var(--header); /* Fallback for browsers that don't support gradients */
+  background: linear-gradient(70deg, var(--gradient1), var(--gradient2), var(--gradient3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+h2 {
+  font-family: var(--mainfont);
+  font-size: var(--text-3xl);
+  color: var(--lighttext);
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--accent1);
+  padding-bottom: 0.2em;
+  display: inline-block;
+  font-weight: var(--bold);
+}
+
+h3 {
+  font-family: var(--mainfont);
+  font-size: var(--text-2xl);
+  position: relative;
+}
+
+h3::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background-color: var(--header-hover);
+  opacity: 0.7;
+}
+
+h4 {
+  font-family: var(--mainfont);
+  font-size: var(--text-xl);
+  font-style: italic;
+}
+
+h5 {
+  font-family: var(--mainfont);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+p {
+  margin-bottom: var(--spacing-md);
+}
+
+/* Links */
+a {
+  color: var(--header);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+  position: relative;
+}
+
+a:hover {
+  color: var(--header-hover);
+}
+
+/* Accessibility improvements */
+a:focus {
+  outline: 2px solid var(--header);
+  outline-offset: 2px;
+}
+
+a:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Remove list styles */
+ul[role="list"],
+ol[role="list"] {
+  list-style: none;
+}
+
+/* Media defaults */
+img, 
+picture,
+video {
+  max-width: 100%;
+  display: block;
+}
+
+/* Form elements */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Remove animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  body {
+    background: none;
+    color: #000;
+  }
+  
+  a {
+    color: #000;
+    text-decoration: underline;
+  }
+}
