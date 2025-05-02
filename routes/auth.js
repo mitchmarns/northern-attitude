@@ -28,8 +28,8 @@ router.post('/register', async (req, res) => {
       return res.redirect('/auth/register');
     }
     
-    // Check if user already exists
-    const [existingUsers] = await db.promise().query(
+    // Check if user already exists - use db.query directly
+    const [existingUsers] = await db.query(
       'SELECT * FROM users WHERE username = ? OR email = ?',
       [username, email]
     );
@@ -42,8 +42,8 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // Insert user into database
-    const [result] = await db.promise().query(
+    // Insert user into database - use db.query directly
+    const [result] = await db.query(
       'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
       [username, email, hashedPassword]
     );
@@ -79,8 +79,8 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Fetch user from database
-    const [users] = await db.promise().query(
+    // Fetch user from database - use db.query directly
+    const [users] = await db.query(
       'SELECT * FROM users WHERE email = ?',
       [email]
     );

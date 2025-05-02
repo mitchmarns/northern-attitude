@@ -7,6 +7,7 @@ const mysql = require('mysql2/promise'); // Using promise-based version
 const dotenv = require('dotenv');
 const expressLayouts = require('express-ejs-layouts');
 const { addDbToRequest } = require('./middleware/auth');
+// Remove the MySQLStore import until the package is installed
 dotenv.config();
 const port = 3000;
 
@@ -48,13 +49,14 @@ async function testDbConnection() {
 
 testDbConnection();
 
-// Session configuration
+// Setup session middleware with in-memory store instead of MySQL
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  secret: process.env.SESSION_SECRET || 'default_secret_change_this',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    maxAge: 1000 * 60 * 60 * 24 // 1 day
+  cookie: {
+    maxAge: 86400000, // 24 hours
+    httpOnly: true
   }
 }));
 
@@ -71,6 +73,14 @@ app.use((req, res, next) => {
   res.locals.error = req.flash('error');
   next();
 });
+
+// Authentication middleware
+const ensureAuthenticated = (req, res, next) => {
+  if (req.session.user) {
+    return next();
+  }
+  res.redirect('/users/login');
+};
 
 // Body parser middleware - update these configurations
 app.use(express.json({ 
@@ -112,35 +122,46 @@ const dashboardRoutes = require('./routes/dashboard');
 const profileRoutes = require('./routes/profile');
 const socialRoutes = require('./routes/social');
 const threadsRouter = require('./routes/threads');
+const apiRouter = require('./routes/api'); // This might be undefined - check this
 const writingRouter = require('./routes/writing');
-const apiRouter = require('./routes/api'); // Add this line
+const usersRoutes = require('./routes/users');
 
-// API routes
+// Route registration - fix the order and conflicts
 app.use('/', indexRoutes);
 app.use('/auth', authRoutes);
 app.use('/characters', characterRoutes);
 app.use('/teams', teamRoutes);
-app.use('/dashboard', dashboardRoutes);
+app.use('/dashboard', ensureAuthenticated, dashboardRoutes);
 app.use('/profile', profileRoutes);
 app.use('/social', socialRoutes);
-app.use('/writing/threads', threadsRouter);
-app.use('/writing', writingRouter);
-app.use('/api', apiRouter); // Add this line
+app.use('/writing', require('./routes/writing'));
+app.use('/users', usersRoutes);
+// Mount the API routes
+if (apiRouter) {
+  app.use('/api', apiRouter); // Only use if it exists
+}
+// Since we're using threadsRouter for both pages and API, make sure API has priority
+app.use('/api/threads', require('./routes/threads'));
 
-// Error handling
-app.use((req, res, next) => {
-  res.status(404).render('error', { 
-    title: '404 - Page Not Found',
-    message: 'The page you requested could not be found.'
-  });
+
+
+// catch 404 and forward to error handler
+app.use(function(req, res, next) {
+  const err = new Error('Not Found');
+  err.status = 404;
+  next(err);
 });
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render('error', { 
-    title: '500 - Server Error',
-    message: 'Something went wrong on our side.'
-  });
+// error handler
+app.use(function(err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  res.locals.title = err.status === 404 ? 'Page Not Found' : 'Error';
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
 });
 
 // Start the server

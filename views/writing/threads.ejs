@@ -108,7 +108,11 @@
       <button class="close-modal">&times;</button>
     </div>
     <div class="modal-body">
-      <form id="create-thread-form" action="/api/threads" method="POST">
+      <!-- Change form action to empty to ensure JS handles the submission -->
+      <form id="create-thread-form" action="" method="POST">
+        <!-- Add error display area -->
+        <div class="alert alert-danger" id="create-thread-error" style="display: none;"></div>
+        
         <div class="form-group">
           <label for="thread-title">Title</label>
           <input type="text" id="thread-title" name="title" class="form-control" required>
@@ -183,44 +187,72 @@
 <script>
   // Format date helper function
   function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInMs = now - date;
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-    
-    if (diffInDays === 0) {
-      return 'Today at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    } else if (diffInDays === 1) {
-      return 'Yesterday at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    } else if (diffInDays < 7) {
-      return diffInDays + ' days ago';
-    } else {
-      return date.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      const now = new Date();
+      const diffInMs = now - date;
+      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+      
+      if (diffInDays === 0) {
+        return 'Today at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      } else if (diffInDays === 1) {
+        return 'Yesterday at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      } else if (diffInDays < 7) {
+        return diffInDays + ' days ago';
+      } else {
+        return date.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
+      }
+    } catch (e) {
+      console.error('Date formatting error:', e);
+      return 'Unknown date';
     }
   }
   
   // Check if user is a participant helper function
   function isParticipant(userId, threadId) {
     // This would normally be determined by server data
-    // For now just return a placeholder
-    return false; // Would be filled in with actual data from the server
+    return false; // Placeholder
   }
   
   document.addEventListener('DOMContentLoaded', function() {
+    console.log('Threads page loaded');
+    
+    // UI elements
     const createThreadBtn = document.getElementById('create-thread-btn');
     const emptyCreateThreadBtn = document.getElementById('empty-create-thread-btn');
     const createThreadModal = document.getElementById('create-thread-modal');
     const closeModal = document.querySelector('.close-modal');
     const cancelModal = document.querySelector('.cancel-modal');
+    const createThreadForm = document.getElementById('create-thread-form');
+    const threadFilter = document.getElementById('thread-filter');
+    const threadSearch = document.getElementById('thread-search');
+    const searchBtn = document.querySelector('.search-btn');
+    const threadsList = document.querySelector('.threads-list');
     
+    // Retry configuration
+    const MAX_RETRIES = 3;
+    let retryCount = 0;
+    let retryTimeout = 2000; // Start with 2 seconds, will increase exponentially
+    
+    // Get user ID from the page
+    const userId = document.querySelector('body').dataset.userId || 1;
+    
+    // Modal functions
     function showModal() {
+      console.log('Showing create thread modal');
       createThreadModal.style.display = 'flex';
     }
     
     function hideModal() {
+      console.log('Hiding create thread modal');
       createThreadModal.style.display = 'none';
     }
     
+    // Modal event listeners
     if (createThreadBtn) {
       createThreadBtn.addEventListener('click', showModal);
     }
@@ -237,39 +269,499 @@
       cancelModal.addEventListener('click', hideModal);
     }
     
-    // Close modal when clicking outside of it
     window.addEventListener('click', function(event) {
       if (event.target === createThreadModal) {
         hideModal();
       }
     });
     
-    // Thread filter functionality
-    const threadFilter = document.getElementById('thread-filter');
+    // Fetch threads from the API - update to handle missing success property
+    function fetchThreads() {
+      console.log('Fetching threads...');
+      threadsList.innerHTML = '<div class="loading-spinner">Loading threads...</div>';
+      
+      const filter = threadFilter ? threadFilter.value : 'all';
+      const search = threadSearch ? threadSearch.value : '';
+      
+      console.log(`Fetching with filter: ${filter}, search: ${search}`);
+      
+      // Use the correct API endpoint that returns JSON
+      fetch(`/api/threads?filter=${encodeURIComponent(filter)}&search=${encodeURIComponent(search)}`)
+        .then(response => {
+          console.log('API response status:', response.status);
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log('API response data:', data);
+          // Reset retry counter on success
+          retryCount = 0;
+          retryTimeout = 2000;
+          
+          // More flexible handling of the response format
+          if (data) {
+            let threadsData = [];
+            
+            // Check different possible response formats
+            if (data.success && Array.isArray(data.threads)) {
+              threadsData = data.threads;
+            } else if (Array.isArray(data.threads)) {
+              threadsData = data.threads;
+            } else if (Array.isArray(data)) {
+              threadsData = data;
+            }
+            
+            updateThreadsList(threadsData);
+          } else {
+            console.error('Invalid API response format:', data);
+            showErrorState('Could not load threads. Invalid server response.');
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching threads:', error);
+          
+          // Check if it's a connection timeout error
+          if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT') || error.message.includes('network') || error.code === 'ETIMEDOUT') {
+            handleConnectionError();
+          } else {
+            showErrorState('Failed to load threads. Please try again.');
+          }
+        });
+    }
+    
+    // Handle connection errors with retry mechanism
+    function handleConnectionError() {
+      if (retryCount < MAX_RETRIES) {
+        retryCount++;
+        const waitTime = retryTimeout;
+        retryTimeout *= 2; // Exponential backoff
+        
+        showConnectionErrorState(retryCount, MAX_RETRIES, Math.round(waitTime/1000));
+        
+        console.log(`Connection error. Retrying (${retryCount}/${MAX_RETRIES}) in ${waitTime}ms...`);
+        setTimeout(fetchThreads, waitTime);
+      } else {
+        showConnectionErrorState(retryCount, MAX_RETRIES, 0, true);
+        console.error('Max retries reached. Giving up.');
+      }
+    }
+    
+    // Show connection error state with retry information
+    function showConnectionErrorState(currentRetry, maxRetries, waitSeconds, maxRetriesReached = false) {
+      let errorHtml = `
+        <div class="connection-error">
+          <div class="error-icon">
+            <i class="ph-duotone ph-database"></i>
+          </div>
+          <h3>Database Connection Error</h3>
+          <p>We're having trouble connecting to our database.</p>
+      `;
+      
+      if (maxRetriesReached) {
+        errorHtml += `
+          <p>We've tried multiple times but couldn't establish a connection.</p>
+          <div class="error-actions">
+            <button class="btn btn-primary retry-btn">Try Again</button>
+            <a href="/" class="btn btn-outline">Return to Home</a>
+          </div>
+        `;
+      } else {
+        errorHtml += `
+          <p>Retrying in ${waitSeconds} seconds... (Attempt ${currentRetry}/${maxRetries})</p>
+          <div class="retry-progress">
+            <div class="retry-progress-bar" style="width: ${(currentRetry/maxRetries) * 100}%"></div>
+          </div>
+          <div class="error-actions">
+            <button class="btn btn-primary retry-now-btn">Retry Now</button>
+            <button class="btn btn-outline cancel-retry-btn">Cancel</button>
+          </div>
+        `;
+      }
+      
+      errorHtml += `</div>`;
+      threadsList.innerHTML = errorHtml;
+      
+      // Add event listeners to buttons
+      const retryBtn = threadsList.querySelector('.retry-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', function() {
+          retryCount = 0;
+          retryTimeout = 2000;
+          fetchThreads();
+        });
+      }
+      
+      const retryNowBtn = threadsList.querySelector('.retry-now-btn');
+      if (retryNowBtn) {
+        retryNowBtn.addEventListener('click', function() {
+          fetchThreads();
+        });
+      }
+      
+      const cancelRetryBtn = threadsList.querySelector('.cancel-retry-btn');
+      if (cancelRetryBtn) {
+        cancelRetryBtn.addEventListener('click', function() {
+          retryCount = MAX_RETRIES; // Prevent further auto-retries
+          showConnectionErrorState(MAX_RETRIES, MAX_RETRIES, 0, true);
+        });
+      }
+    }
+    
+    // Show general error state
+    function showErrorState(message) {
+      threadsList.innerHTML = `
+        <div class="error-message">
+          <div class="error-icon">
+            <i class="ph-duotone ph-warning"></i>
+          </div>
+          <p>${message}</p>
+          <button class="btn btn-primary retry-btn">Try Again</button>
+        </div>
+      `;
+      
+      const retryBtn = threadsList.querySelector('.retry-btn');
+      if (retryBtn) {
+        retryBtn.addEventListener('click', fetchThreads);
+      }
+    }
+    
+    // Update the threads list with new data
+    function updateThreadsList(threads) {
+      console.log('Updating threads list with', threads.length, 'threads');
+      
+      if (!threadsList) {
+        console.error('Threads list element not found');
+        return;
+      }
+      
+      if (!threads || threads.length === 0) {
+        threadsList.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i class="ph-duotone ph-chat-teardrop-text"></i>
+            </div>
+            <h3>No threads found</h3>
+            <p>Start a new thread to begin collaborative writing</p>
+            <button class="btn btn-primary" id="empty-create-thread-btn">Create Thread</button>
+          </div>
+        `;
+        
+        const newEmptyBtn = document.getElementById('empty-create-thread-btn');
+        if (newEmptyBtn) {
+          newEmptyBtn.addEventListener('click', showModal);
+        }
+        return;
+      }
+      
+      // Build HTML for each thread
+      let threadsHtml = '';
+      
+      threads.forEach(thread => {
+        try {
+          threadsHtml += `
+            <div class="thread-card">
+              <div class="thread-card-header">
+                <h3 class="thread-title">
+                  <a href="/writing/threads/${thread.id}">${thread.title || 'Untitled Thread'}</a>
+                </h3>
+                <span class="thread-status ${thread.status || 'unknown'}">${thread.status || 'unknown'}</span>
+              </div>
+              
+              <div class="thread-card-body">
+                <p class="thread-description">${thread.description || 'No description'}</p>
+                
+                <div class="thread-meta">
+                  <div class="thread-participants">
+                    <span class="meta-label">Participants:</span>
+                    <span class="meta-value">${thread.participant_count || 0}</span>
+                  </div>
+                  
+                  <div class="thread-messages">
+                    <span class="meta-label">Messages:</span>
+                    <span class="meta-value">${thread.message_count || 0}</span>
+                  </div>
+                  
+                  <div class="thread-activity">
+                    <span class="meta-label">Last activity:</span>
+                    <span class="meta-value">${formatDate(thread.updated_at || new Date())}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="thread-card-footer">
+                <div class="thread-creator">
+                  <span>Created by: </span>
+                  <a href="/profile/${thread.creator_id || 0}">
+                    ${thread.creator_name || 'Unknown User'}
+                  </a>
+                  ${thread.character_id ? 
+                    `as <a href="/characters/${thread.character_id}">${thread.character_name || 'Character'}</a>` : 
+                    ''}
+                </div>
+                
+                <div class="thread-actions">
+                  ${isParticipant(userId, thread.id) ? 
+                    `<a href="/writing/threads/${thread.id}" class="btn btn-outline btn-sm">Continue</a>` : 
+                    (thread.privacy !== 'private' ? 
+                      `<button class="btn btn-primary btn-sm join-thread-btn" data-thread-id="${thread.id}">Join</button>` : 
+                      '')}
+                </div>
+              </div>
+            </div>
+          `;
+        } catch (e) {
+          console.error('Error building thread HTML:', e, thread);
+          threadsHtml += `<div class="thread-card error">Error displaying thread</div>`;
+        }
+      });
+      
+      threadsList.innerHTML = threadsHtml;
+      attachJoinListeners();
+    }
+    
+    // Attach event listeners to join buttons
+    function attachJoinListeners() {
+      const joinButtons = document.querySelectorAll('.join-thread-btn');
+      joinButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const threadId = this.getAttribute('data-thread-id');
+          joinThread(threadId);
+        });
+      });
+    }
+    
+    // Join a thread
+    function joinThread(threadId) {
+      console.log('Joining thread:', threadId);
+      
+      fetch(`/api/threads/${threadId}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log('Join thread response:', data);
+        if (data.success && data.redirect) {
+          window.location.href = data.redirect;
+        } else {
+          console.error('Error joining thread:', data.message);
+          alert('Could not join thread: ' + (data.message || 'Unknown error'));
+        }
+      })
+      .catch(error => {
+        console.error('Error joining thread:', error);
+        alert('Could not join thread. Please try again.');
+      });
+    }
+    
+    // Add event listeners for filter and search
     if (threadFilter) {
-      threadFilter.addEventListener('change', function() {
-        // Implementation would use AJAX to filter threads
-        console.log('Filter changed to:', this.value);
+      threadFilter.addEventListener('change', fetchThreads);
+    }
+    
+    if (searchBtn) {
+      searchBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        fetchThreads();
       });
     }
     
-    // Thread search functionality
-    const threadSearch = document.getElementById('thread-search');
     if (threadSearch) {
-      threadSearch.addEventListener('input', function() {
-        // Implementation would use AJAX to search threads
-        console.log('Searching for:', this.value);
+      threadSearch.addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+          fetchThreads();
+        }
       });
     }
     
-    // Join thread functionality
-    const joinButtons = document.querySelectorAll('.join-thread-btn');
-    joinButtons.forEach(button => {
-      button.addEventListener('click', function() {
-        const threadId = this.getAttribute('data-thread-id');
-        // Implementation would use AJAX to join thread
-        console.log('Joining thread:', threadId);
+    // Handle thread creation form submission
+    if (createThreadForm) {
+      createThreadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('Creating new thread');
+        
+        // Get the error display element
+        const errorDisplay = document.getElementById('create-thread-error');
+        errorDisplay.style.display = 'none';
+        errorDisplay.textContent = '';
+        
+        const formData = new FormData(this);
+        const threadData = {
+          title: formData.get('title'),
+          description: formData.get('description'),
+          privacy: formData.get('privacy'),
+          character_id: formData.get('character_id')
+        };
+        
+        console.log('Thread data:', threadData);
+        
+        // Basic form validation
+        if (!threadData.title || threadData.title.trim() === '') {
+          errorDisplay.textContent = 'Thread title is required';
+          errorDisplay.style.display = 'block';
+          return;
+        }
+        
+        // Disable submit button
+        const submitButton = this.querySelector('button[type="submit"]');
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = 'Creating...';
+        }
+        
+        // Show loading indicator inside the modal
+        const modalBody = this.closest('.modal-body');
+        const loadingIndicator = document.createElement('div');
+        loadingIndicator.className = 'loading-indicator';
+        loadingIndicator.innerHTML = 'Creating your thread...';
+        loadingIndicator.style.textAlign = 'center';
+        loadingIndicator.style.padding = '10px';
+        modalBody.appendChild(loadingIndicator);
+        
+        // Use the correct API endpoint for thread creation with explicit full URL
+        fetch('/api/threads', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json' // Explicitly request JSON response
+          },
+          body: JSON.stringify(threadData)
+        })
+        .then(response => {
+          console.log('Create thread response status:', response.status);
+          // Log the actual response text for debugging
+          return response.text().then(text => {
+            console.log('Raw response:', text);
+            try {
+              // Try to parse as JSON
+              return text ? JSON.parse(text) : {};
+            } catch (e) {
+              console.error('Error parsing response as JSON:', e);
+              throw new Error('Invalid server response format');
+            }
+          });
+        })
+        .then(data => {
+          console.log('Create thread response data:', data);
+          
+          // Check for success property first, then fall back to checking message
+          if ((data.success === true) || (data.message === 'Thread created')) {
+            // Handle successful thread creation
+            console.log('Thread created successfully!');
+            if (data.redirect) {
+              console.log('Redirecting to:', data.redirect);
+              window.location.href = data.redirect;
+            } else {
+              // Fallback if no redirect URL is provided
+              console.log('No redirect URL provided, refreshing page');
+              window.location.href = '/writing/threads';
+            }
+          } else {
+            // Handle error
+            console.error('Error creating thread:', data.message);
+            errorDisplay.textContent = data.message || 'Unknown error creating thread';
+            errorDisplay.style.display = 'block';
+            
+            // Re-enable submit button
+            if (submitButton) {
+              submitButton.disabled = false;
+              submitButton.textContent = 'Create Thread';
+            }
+            // Remove loading indicator
+            if (loadingIndicator.parentNode) {
+              loadingIndicator.parentNode.removeChild(loadingIndicator);
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error creating thread:', error);
+          
+          let errorMessage = 'Could not create thread. Please try again.';
+          
+          // Check if it's a connection error
+          if (error.message.includes('timeout') || error.message.includes('ETIMEDOUT') || error.message.includes('network')) {
+            errorMessage = 'Database connection error. Please try again later.';
+          }
+          
+          // Display error in form
+          errorDisplay.textContent = errorMessage;
+          errorDisplay.style.display = 'block';
+          
+          // Re-enable submit button
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.textContent = 'Create Thread';
+          }
+          
+          // Remove loading indicator
+          if (loadingIndicator.parentNode) {
+            loadingIndicator.parentNode.removeChild(loadingIndicator);
+          }
+        });
       });
-    });
+    }
+    
+    // Initialize
+    console.log('Initializing threads page');
+    fetchThreads();
+    attachJoinListeners();
+    
+    // Add some CSS for the connection error state
+    const style = document.createElement('style');
+    style.textContent = `
+      .connection-error {
+        text-align: center;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 2rem 0;
+      }
+      
+      .error-icon {
+        font-size: 3rem;
+        color: #dc3545;
+        margin-bottom: 1rem;
+      }
+      
+      .retry-progress {
+        height: 8px;
+        background: #e9ecef;
+        border-radius: 4px;
+        margin: 1rem 0;
+        overflow: hidden;
+      }
+      
+      .retry-progress-bar {
+        height: 100%;
+        background: #007bff;
+        transition: width 0.3s ease;
+      }
+      
+      .error-actions {
+        margin-top: 1.5rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+      }
+      
+      .error-message {
+        text-align: center;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin: 2rem 0;
+      }
+    `;
+    document.head.appendChild(style);
   });
 </script>

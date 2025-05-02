@@ -1,5 +1,19 @@
 const db = require('../config/database');
-const { validationResult } = require('express-validator');
+let validationResult;
+
+// Try to load express-validator
+try {
+  const expressValidator = require('express-validator');
+  validationResult = expressValidator.validationResult;
+  console.log('Express validator loaded in controller');
+} catch (error) {
+  console.error('Error loading express-validator in controller:', error.message);
+  // Fallback validation if express-validator is not available
+  validationResult = () => ({
+    isEmpty: () => true,
+    array: () => []
+  });
+}
 
 // Add error handling in case express-validator is still not available
 const validateRequest = (req) => {
@@ -23,9 +37,13 @@ const validateRequest = (req) => {
   }
 };
 
+// Log the controller object to ensure methods are defined
+console.log('Initializing ThreadsController with methods');
+
 const ThreadsController = {
   // Get all threads
   getAllThreads: async (req, res) => {
+    console.log('getAllThreads method called');
     try {
       // Get user's characters for the character selector
       const [characters] = await db.query(
@@ -67,6 +85,7 @@ const ThreadsController = {
 
   // Get specific thread by ID
   getThreadById: async (req, res) => {
+    console.log('getThreadById method called');
     try {
       const threadId = req.params.id;
       
@@ -149,35 +168,77 @@ const ThreadsController = {
   // Create new thread
   createThread: async (req, res) => {
     try {
-      const errors = validateRequest(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+      console.log('Controller createThread called with:', req.body);
+      
+      if (!req.body.title) {
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+          return res.status(400).json({ success: false, message: 'Thread title is required' });
+        }
+        return res.status(400).render('error', { message: 'Thread title is required', error: {} });
       }
       
-      const { title, description, privacy, character_id } = req.body;
+      // Try using direct queries that match the schema exactly
+      console.log('Inserting thread with simplified approach');
       
-      // Insert thread into database
-      const [result] = await db.query(`
-        INSERT INTO threads 
-        (title, description, creator_id, character_id, privacy, status)
+      // First insert the thread - match schema exactly
+      const [threadResult] = await db.query(`
+        INSERT INTO threads (title, description, creator_id, character_id, privacy, status)
         VALUES (?, ?, ?, ?, ?, 'active')
-      `, [title, description, req.user.id, character_id || null, privacy]);
+      `, [
+        req.body.title, 
+        req.body.description || '', 
+        req.user.id, 
+        req.body.character_id || null,
+        req.body.privacy || 'public'
+      ]);
       
-      const threadId = result.insertId;
+      const threadId = threadResult.insertId;
+      console.log(`Thread inserted with ID: ${threadId}`);
       
-      // Add creator as participant and admin
+      // Now insert the participant - match schema exactly
       await db.query(`
-        INSERT INTO thread_participants 
-        (thread_id, user_id, character_id, is_admin, joined_at, last_read_at)
-        VALUES (?, ?, ?, true, NOW(), NOW())
-      `, [threadId, req.user.id, character_id || null]);
+        INSERT INTO thread_participants (thread_id, user_id, character_id, is_admin)
+        VALUES (?, ?, ?, true)
+      `, [threadId, req.user.id, req.body.character_id || null]);
       
+      console.log('Participant added successfully');
+      
+      // Verify the thread exists
+      const [checkThread] = await db.query('SELECT * FROM threads WHERE id = ?', [threadId]);
+      console.log('Verification result:', checkThread.length ? 'Thread exists' : 'Thread not created');
+      
+      if (checkThread.length === 0) {
+        throw new Error('Thread was not created in the database');
+      }
+      
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.json({ 
+          success: true, 
+          message: 'Thread created successfully',
+          thread: checkThread[0],
+          threadId,
+          redirect: `/writing/threads/${threadId}`
+        });
+      }
+      
+      // For normal requests
       req.flash('success_msg', 'Thread created successfully');
-      res.redirect(`/writing/threads/${threadId}`);
+      return res.redirect(`/writing/threads/${threadId}`);
     } catch (error) {
-      console.error('Error creating thread:', error);
+      console.error('Controller error creating thread:', error);
+      console.error('SQL message:', error.sqlMessage || 'No SQL message');
+      
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Failed to create thread', 
+          error: error.message,
+          sqlMessage: error.sqlMessage || 'No SQL message'
+        });
+      }
+      
       req.flash('error_msg', 'Failed to create thread');
-      res.redirect('/writing/threads');
+      return res.redirect('/writing/threads');
     }
   },
 
@@ -690,5 +751,8 @@ const ThreadsController = {
     }
   }
 };
+
+// Log the methods to ensure they're defined
+console.log('ThreadsController methods:', Object.keys(ThreadsController));
 
 module.exports = ThreadsController;

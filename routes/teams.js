@@ -11,11 +11,14 @@ const isAuthenticated = (req, res, next) => {
 };
 
 // List all teams
-router.get('/', isAuthenticated, (req, res) => {
-  db.query('SELECT * FROM teams', (err, results) => {
-    if (err) throw err;
+router.get('/', isAuthenticated, async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM teams');
     res.render('teams/teams', { title: 'All Teams', teams: results });
-  });
+  } catch (err) {
+    console.error('Error fetching teams:', err);
+    res.status(500).send('Server Error');
+  }
 });
 
 // Create team form
@@ -24,26 +27,29 @@ router.get('/create', isAuthenticated, (req, res) => {
 });
 
 // Handle team creation
-router.post('/create', isAuthenticated, (req, res) => {
-  const { name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color } = req.body; // Include color fields
+router.post('/create', isAuthenticated, async (req, res) => {
+  const { name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color } = req.body;
   const createdBy = req.session.user.id;
 
-  db.query(
-    'INSERT INTO teams (name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color, createdBy], // Add color fields
-    (err) => {
-      if (err) throw err;
-      res.redirect('/teams');
-    }
-  );
+  try {
+    await db.query(
+      'INSERT INTO teams (name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color, createdBy]
+    );
+    res.redirect('/teams');
+  } catch (err) {
+    console.error('Error creating team:', err);
+    res.status(500).send('Server Error');
+  }
 });
 
 // View team profile
-router.get('/:id', isAuthenticated, (req, res) => {
+router.get('/:id', isAuthenticated, async (req, res) => {
   const teamId = req.params.id;
 
-  db.query('SELECT * FROM teams WHERE id = ?', [teamId], (err, results) => {
-    if (err) throw err;
+  try {
+    const [results] = await db.query('SELECT * FROM teams WHERE id = ?', [teamId]);
+    
     if (results.length === 0) {
       return res.status(404).send('Team not found');
     }
@@ -81,35 +87,43 @@ router.get('/:id', isAuthenticated, (req, res) => {
     }
     
     res.render('teams/profile', { title: 'Team Profile', team: team });
-  });
+  } catch (err) {
+    console.error('Error fetching team:', err);
+    res.status(500).send('Server Error');
+  }
 });
 
 // Edit team form
-router.get('/:id/edit', isAuthenticated, (req, res) => {
+router.get('/:id/edit', isAuthenticated, async (req, res) => {
   const teamId = req.params.id;
 
-  db.query('SELECT * FROM teams WHERE id = ?', [teamId], (err, results) => {
-    if (err) throw err;
+  try {
+    const [results] = await db.query('SELECT * FROM teams WHERE id = ?', [teamId]);
     if (results.length === 0) {
       return res.status(404).send('Team not found');
     }
     res.render('teams/edit', { title: 'Edit Team', team: results[0] });
-  });
+  } catch (err) {
+    console.error('Error fetching team for edit:', err);
+    res.status(500).send('Server Error');
+  }
 });
 
 // Handle team update
-router.post('/:id/edit', isAuthenticated, (req, res) => {
+router.post('/:id/edit', isAuthenticated, async (req, res) => {
   const teamId = req.params.id;
-  const { name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color } = req.body; // Include color fields
+  const { name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color } = req.body;
 
-  db.query(
-    'UPDATE teams SET name = ?, description = ?, city = ?, mascot = ?, logo_url = ?, primary_color = ?, secondary_color = ?, accent_color = ? WHERE id = ?',
-    [name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color, teamId], // Add color fields
-    (err) => {
-      if (err) throw err;
-      res.redirect(`/teams/${teamId}`);
-    }
-  );
+  try {
+    await db.query(
+      'UPDATE teams SET name = ?, description = ?, city = ?, mascot = ?, logo_url = ?, primary_color = ?, secondary_color = ?, accent_color = ? WHERE id = ?',
+      [name, description, city, mascot, logo_url, primary_color, secondary_color, accent_color, teamId]
+    );
+    res.redirect(`/teams/${teamId}`);
+  } catch (err) {
+    console.error('Error updating team:', err);
+    res.status(500).send('Server Error');
+  }
 });
 
 module.exports = router;
