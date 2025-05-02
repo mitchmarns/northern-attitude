@@ -208,9 +208,100 @@ CREATE TABLE IF NOT EXISTS event_responses (
   FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
 );
 
--- Add index for faster poll option queries
+-- Threads table for organizing conversations
+CREATE TABLE IF NOT EXISTS threads (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  creator_id INT NOT NULL,
+  character_id INT, -- Optional: Thread can be created by a character
+  privacy ENUM('public', 'private', 'invite-only') NOT NULL DEFAULT 'public',
+  status ENUM('active', 'locked', 'archived') NOT NULL DEFAULT 'active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE SET NULL
+);
+
+-- Thread participants table
+CREATE TABLE IF NOT EXISTS thread_participants (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  thread_id INT NOT NULL,
+  user_id INT NOT NULL,
+  character_id INT, -- Optional: Participant can be a character
+  is_admin BOOLEAN DEFAULT FALSE, -- Thread administrators can manage the thread
+  joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE SET NULL,
+  UNIQUE KEY (thread_id, user_id, character_id) -- Prevent duplicate participants
+);
+
+-- Thread messages table
+CREATE TABLE IF NOT EXISTS thread_messages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  thread_id INT NOT NULL,
+  sender_id INT NOT NULL,
+  character_id INT, -- Optional: Message can be from a character
+  content TEXT NOT NULL,
+  has_media BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE,
+  FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE SET NULL
+);
+
+-- Thread message media table
+CREATE TABLE IF NOT EXISTS thread_message_media (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  message_id INT NOT NULL,
+  media_id INT NOT NULL,
+  display_order INT DEFAULT 0,
+  FOREIGN KEY (message_id) REFERENCES thread_messages(id) ON DELETE CASCADE,
+  FOREIGN KEY (media_id) REFERENCES media(id) ON DELETE CASCADE
+);
+
+-- Thread reactions table
+CREATE TABLE IF NOT EXISTS thread_message_reactions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  message_id INT NOT NULL,
+  user_id INT NOT NULL,
+  character_id INT, -- Optional: Reaction can be from a character
+  reaction_type VARCHAR(50) NOT NULL, -- e.g., "like", "love", "laugh"
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (message_id) REFERENCES thread_messages(id) ON DELETE CASCADE,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE SET NULL,
+  UNIQUE KEY (message_id, user_id, character_id, reaction_type) -- Prevent duplicate reactions
+);
+
+-- Thread invitations table
+CREATE TABLE IF NOT EXISTS thread_invitations (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  thread_id INT NOT NULL,
+  inviter_id INT NOT NULL,
+  invitee_id INT NOT NULL,
+  status ENUM('pending', 'accepted', 'declined') NOT NULL DEFAULT 'pending',
+  invited_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  responded_at TIMESTAMP NULL,
+  FOREIGN KEY (thread_id) REFERENCES threads(id) ON DELETE CASCADE,
+  FOREIGN KEY (inviter_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (invitee_id) REFERENCES users(id) ON DELETE CASCADE,
+  UNIQUE KEY (thread_id, inviter_id, invitee_id) -- Prevent duplicate invitations
+);
+
 CREATE INDEX poll_options_post_id_idx ON poll_options(post_id);
 CREATE INDEX poll_votes_option_id_idx ON poll_votes(option_id);
 CREATE INDEX poll_votes_user_character_idx ON poll_votes(user_id, character_id);
 CREATE INDEX event_responses_post_id_idx ON event_responses(post_id);
 CREATE INDEX event_responses_user_character_idx ON event_responses(user_id, character_id);
+
+CREATE INDEX thread_participants_thread_id_idx ON thread_participants(thread_id);
+CREATE INDEX thread_participants_user_character_idx ON thread_participants(user_id, character_id);
+CREATE INDEX thread_messages_thread_id_idx ON thread_messages(thread_id);
+CREATE INDEX thread_messages_sender_idx ON thread_messages(sender_id, character_id);
+CREATE INDEX thread_message_reactions_message_id_idx ON thread_message_reactions(message_id);
+CREATE INDEX thread_invitations_thread_id_idx ON thread_invitations(thread_id);
+CREATE INDEX thread_invitations_invitee_id_idx ON thread_invitations(invitee_id);

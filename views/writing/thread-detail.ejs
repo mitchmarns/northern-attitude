@@ -1,0 +1,683 @@
+<div class="thread-detail-container">
+  <div class="thread-header">
+    <div class="thread-header-content">
+      <h1><%= thread.title %></h1>
+      <div class="thread-subtitle">
+        <span class="thread-creator">
+          Created by 
+          <a href="/profile/<%= thread.creator_id %>"><%= thread.creator_name %></a>
+          <% if (thread.character_id) { %>
+            as <a href="/characters/<%= thread.character_id %>"><%= thread.character_name %></a>
+          <% } %>
+        </span>
+        <span class="thread-status <%= thread.status %>"><%= thread.status %></span>
+        <span class="thread-privacy <%= thread.privacy %>"><%= thread.privacy %></span>
+      </div>
+      <p class="thread-description">
+        <%= thread.description %>
+      </p>
+    </div>
+    
+    <div class="thread-header-actions">
+      <button class="btn btn-outline btn-sm" id="thread-info-btn">
+        <i class="ph-duotone ph-info"></i> Thread Info
+      </button>
+      <% if (thread.creator_id === user.id || participants.some(p => p.user_id === user.id && p.is_admin)) { %>
+        <button class="btn btn-outline btn-sm" id="edit-thread-btn">
+          <i class="ph-duotone ph-pencil-simple"></i> Edit
+        </button>
+      <% } %>
+    </div>
+  </div>
+  
+  <div class="thread-content">
+    <div class="thread-messages">
+      <% if (messages && messages.length > 0) { %>
+        <% messages.forEach(message => { %>
+          <div class="message <%= message.sender_id === user.id ? 'own-message' : '' %>" data-message-id="<%= message.id %>">
+            <div class="message-avatar">
+              <% if (message.avatar_url) { %>
+                <img src="<%= message.avatar_url %>" alt="<%= message.character_name || message.username %>">
+              <% } else { %>
+                <div class="avatar-placeholder">
+                  <%= (message.character_name || message.username).charAt(0) %>
+                </div>
+              <% } %>
+            </div>
+            
+            <div class="message-content">
+              <div class="message-header">
+                <% if (message.character_id) { %>
+                  <span class="message-sender character">
+                    <a href="/characters/<%= message.character_id %>"><%= message.character_name %></a>
+                    <span class="by-user">(<%= message.username %>)</span>
+                  </span>
+                <% } else { %>
+                  <span class="message-sender">
+                    <a href="/profile/<%= message.sender_id %>"><%= message.username %></a>
+                  </span>
+                <% } %>
+                <span class="message-time">
+                  <%= new Date(message.created_at).toLocaleString() %>
+                  <% if (message.created_at !== message.updated_at) { %>
+                    (edited)
+                  <% } %>
+                </span>
+              </div>
+              
+              <div class="message-body formatted-text">
+                <%= message.content %>
+              </div>
+              
+              <div class="message-actions">
+                <% if (message.reaction_count > 0) { %>
+                  <div class="message-reactions">
+                    <span class="reaction-count">
+                      <i class="ph-duotone ph-heart"></i> <%= message.reaction_count %>
+                    </span>
+                  </div>
+                <% } %>
+                
+                <div class="message-buttons">
+                  <button class="action-btn react-btn">
+                    <i class="ph-duotone ph-smiley"></i>
+                  </button>
+                  
+                  <% if (message.sender_id === user.id) { %>
+                    <button class="action-btn edit-btn">
+                      <i class="ph-duotone ph-pencil-simple"></i>
+                    </button>
+                    <button class="action-btn delete-btn">
+                      <i class="ph-duotone ph-trash"></i>
+                    </button>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="empty-messages">
+          <div class="empty-state-icon">
+            <i class="ph-duotone ph-chat-centered-text"></i>
+          </div>
+          <h3>No messages yet</h3>
+          <p>Start the conversation by posting a message.</p>
+        </div>
+      <% } %>
+    </div>
+    
+    <div class="message-composer">
+      <% if (thread.status === 'active') { %>
+        <form id="message-form" action="/api/threads/<%= thread.id %>/messages" method="POST">
+          <div class="character-selector-compact">
+            <select name="character_id" id="character-select" class="form-control">
+              <option value="">Post as Yourself</option>
+              <% if (characters && characters.length > 0) { %>
+                <% characters.forEach(character => { %>
+                  <option value="<%= character.id %>"><%= character.name %></option>
+                <% }); %>
+              <% } %>
+            </select>
+          </div>
+          
+          <div class="text-styling-toolbar">
+            <div class="toolbar-group">
+              <button type="button" class="toolbar-btn" data-format="bold">B</button>
+              <button type="button" class="toolbar-btn" data-format="italic">I</button>
+              <button type="button" class="toolbar-btn" data-format="underline">U</button>
+            </div>
+            <div class="toolbar-group">
+              <button type="button" class="toolbar-btn" data-format="quote">Quote</button>
+              <button type="button" class="toolbar-btn" data-format="divider">Divider</button>
+            </div>
+          </div>
+          
+          <textarea name="content" id="message-content" class="form-control" rows="4" placeholder="Write your message here..."></textarea>
+          
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Send Message</button>
+            <button type="button" class="btn btn-outline" id="preview-btn">Preview</button>
+          </div>
+        </form>
+      <% } else { %>
+        <div class="thread-locked-message">
+          <i class="ph-duotone ph-lock"></i>
+          <p>This thread is <%= thread.status %>. New messages cannot be added.</p>
+        </div>
+      <% } %>
+    </div>
+  </div>
+  
+  <div class="thread-sidebar">
+    <div class="sidebar-section">
+      <h3>Participants (<%= participants.length %>)</h3>
+      <div class="participants-list">
+        <% participants.forEach(participant => { %>
+          <div class="participant-item">
+            <div class="participant-avatar">
+              <% if (participant.avatar_url) { %>
+                <img src="<%= participant.avatar_url %>" alt="<%= participant.character_name || participant.username %>">
+              <% } else { %>
+                <div class="avatar-placeholder">
+                  <%= (participant.character_name || participant.username).charAt(0) %>
+                </div>
+              <% } %>
+            </div>
+            <div class="participant-info">
+              <% if (participant.character_id) { %>
+                <span class="participant-name">
+                  <a href="/characters/<%= participant.character_id %>"><%= participant.character_name %></a>
+                </span>
+                <span class="participant-username">
+                  <a href="/profile/<%= participant.user_id %>"><%= participant.username %></a>
+                </span>
+              <% } else { %>
+                <span class="participant-name">
+                  <a href="/profile/<%= participant.user_id %>"><%= participant.username %></a>
+                </span>
+              <% } %>
+              <% if (participant.is_admin) { %>
+                <span class="admin-badge">Admin</span>
+              <% } %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+    
+    <% if (thread.privacy === 'invite-only' && (thread.creator_id === user.id || participants.some(p => p.user_id === user.id && p.is_admin))) { %>
+      <div class="sidebar-section">
+        <h3>Invite Users</h3>
+        <form id="invite-form" class="compact-form">
+          <div class="form-group">
+            <input type="text" class="form-control" id="invite-username" placeholder="Enter username">
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Send Invite</button>
+        </form>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<div class="modal" id="thread-info-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Thread Information</h2>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-section">
+        <h3>About this Thread</h3>
+        <div class="info-item">
+          <span class="info-label">Title:</span>
+          <span class="info-value"><%= thread.title %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Created by:</span>
+          <span class="info-value">
+            <a href="/profile/<%= thread.creator_id %>"><%= thread.creator_name %></a>
+            <% if (thread.character_id) { %>
+              as <a href="/characters/<%= thread.character_id %>"><%= thread.character_name %></a>
+            <% } %>
+          </span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Created:</span>
+          <span class="info-value"><%= new Date(thread.created_at).toLocaleString() %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Last activity:</span>
+          <span class="info-value"><%= new Date(thread.updated_at).toLocaleString() %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Status:</span>
+          <span class="info-value thread-status <%= thread.status %>"><%= thread.status %></span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Privacy:</span>
+          <span class="info-value thread-privacy <%= thread.privacy %>"><%= thread.privacy %></span>
+        </div>
+      </div>
+      
+      <div class="info-section">
+        <h3>Description</h3>
+        <p><%= thread.description || 'No description provided.' %></p>
+      </div>
+      
+      <div class="info-section">
+        <h3>Rules & Guidelines</h3>
+        <ul class="thread-rules">
+          <li>Be respectful to all participants</li>
+          <li>Stay in character when posting as a character</li>
+          <li>Respect the thread's theme and setting</li>
+          <li>Notify others if you'll be absent for a while</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="edit-thread-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Edit Thread</h2>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="edit-thread-form" action="/api/threads/<%= thread.id %>" method="PUT">
+        <div class="form-group">
+          <label for="edit-title">Title</label>
+          <input type="text" id="edit-title" name="title" class="form-control" value="<%= thread.title %>" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-description">Description</label>
+          <textarea id="edit-description" name="description" class="form-control" rows="4"><%= thread.description %></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-privacy">Privacy</label>
+          <select id="edit-privacy" name="privacy" class="form-control">
+            <option value="public" <%= thread.privacy === 'public' ? 'selected' : '' %>>Public - Anyone can view and join</option>
+            <option value="invite-only" <%= thread.privacy === 'invite-only' ? 'selected' : '' %>>Invite Only - Only invited users can join</option>
+            <option value="private" <%= thread.privacy === 'private' ? 'selected' : '' %>>Private - Only visible to participants</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-status">Status</label>
+          <select id="edit-status" name="status" class="form-control">
+            <option value="active" <%= thread.status === 'active' ? 'selected' : '' %>>Active - Open for participation</option>
+            <option value="locked" <%= thread.status === 'locked' ? 'selected' : '' %>>Locked - No new messages allowed</option>
+            <option value="archived" <%= thread.status === 'archived' ? 'selected' : '' %>>Archived - Read-only</option>
+          </select>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+          <button type="button" class="btn btn-outline cancel-modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Thread info modal functionality
+    const threadInfoBtn = document.getElementById('thread-info-btn');
+    const threadInfoModal = document.getElementById('thread-info-modal');
+    const infoCloseModal = threadInfoModal.querySelector('.close-modal');
+    
+    threadInfoBtn.addEventListener('click', function() {
+      threadInfoModal.style.display = 'flex';
+    });
+    
+    infoCloseModal.addEventListener('click', function() {
+      threadInfoModal.style.display = 'none';
+    });
+    
+    // Edit thread modal functionality
+    const editThreadBtn = document.getElementById('edit-thread-btn');
+    const editThreadModal = document.getElementById('edit-thread-modal');
+    const editCloseModal = editThreadModal.querySelector('.close-modal');
+    const editCancelModal = editThreadModal.querySelector('.cancel-modal');
+    
+    if (editThreadBtn) {
+      editThreadBtn.addEventListener('click', function() {
+        editThreadModal.style.display = 'flex';
+      });
+    }
+    
+    if (editCloseModal) {
+      editCloseModal.addEventListener('click', function() {
+        editThreadModal.style.display = 'none';
+      });
+    }
+    
+    if (editCancelModal) {
+      editCancelModal.addEventListener('click', function() {
+        editThreadModal.style.display = 'none';
+      });
+    }
+    
+    // Close modals when clicking outside of them
+    window.addEventListener('click', function(event) {
+      if (event.target === threadInfoModal) {
+        threadInfoModal.style.display = 'none';
+      }
+      if (event.target === editThreadModal) {
+        editThreadModal.style.display = 'none';
+      }
+    });
+    
+    // Message form submission
+    const messageForm = document.getElementById('message-form');
+    if (messageForm) {
+      messageForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(messageForm);
+        const content = formData.get('content');
+        const characterId = formData.get('character_id');
+        
+        if (!content.trim()) {
+          alert('Please enter a message');
+          return;
+        }
+        
+        // Send message using fetch
+        fetch(messageForm.action, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: content,
+            character_id: characterId || null
+          }),
+          credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            // Clear form and add message to thread
+            messageForm.reset();
+            location.reload(); // For simplicity, just reload the page
+          }
+        })
+        .catch(error => {
+          console.error('Error sending message:', error);
+          alert('Failed to send message. Please try again.');
+        });
+      });
+    }
+    
+    // Edit thread form submission
+    const editThreadForm = document.getElementById('edit-thread-form');
+    if (editThreadForm) {
+      editThreadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(editThreadForm);
+        
+        // Send update using fetch
+        fetch(editThreadForm.action, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: formData.get('title'),
+            description: formData.get('description'),
+            privacy: formData.get('privacy'),
+            status: formData.get('status')
+          }),
+          credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            // Hide modal and reload page to show changes
+            editThreadModal.style.display = 'none';
+            location.reload();
+          }
+        })
+        .catch(error => {
+          console.error('Error updating thread:', error);
+          alert('Failed to update thread. Please try again.');
+        });
+      });
+    }
+    
+    // Message edit functionality
+    const editButtons = document.querySelectorAll('.edit-btn');
+    editButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const messageElement = this.closest('.message');
+        const messageId = messageElement.getAttribute('data-message-id');
+        const messageBody = messageElement.querySelector('.message-body');
+        const originalContent = messageBody.textContent.trim();
+        
+        // Create edit form
+        const editForm = document.createElement('form');
+        editForm.className = 'edit-message-form';
+        editForm.innerHTML = `
+          <textarea class="form-control" rows="3">${originalContent}</textarea>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <button type="button" class="btn btn-outline btn-sm cancel-edit">Cancel</button>
+          </div>
+        `;
+        
+        // Replace message content with edit form
+        messageBody.innerHTML = '';
+        messageBody.appendChild(editForm);
+        
+        // Focus textarea
+        const textarea = editForm.querySelector('textarea');
+        textarea.focus();
+        
+        // Cancel edit
+        const cancelBtn = editForm.querySelector('.cancel-edit');
+        cancelBtn.addEventListener('click', function() {
+          messageBody.innerHTML = originalContent;
+        });
+        
+        // Submit edit
+        editForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const newContent = textarea.value.trim();
+          
+          if (!newContent) {
+            alert('Message cannot be empty');
+            return;
+          }
+          
+          // Update message using fetch
+          fetch(`/api/threads/<%= thread.id %>/messages/${messageId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: newContent
+            }),
+            credentials: 'same-origin'
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.message) {
+              // Update message content
+              messageBody.innerHTML = newContent;
+              
+              // Update timestamp to show edited
+              const timeElement = messageElement.querySelector('.message-time');
+              if (!timeElement.textContent.includes('(edited)')) {
+                timeElement.textContent += ' (edited)';
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error updating message:', error);
+            alert('Failed to update message. Please try again.');
+            messageBody.innerHTML = originalContent;
+          });
+        });
+      });
+    });
+    
+    // Message delete functionality
+    const deleteButtons = document.querySelectorAll('.delete-btn');
+    deleteButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        if (!confirm('Are you sure you want to delete this message? This action cannot be undone.')) {
+          return;
+        }
+        
+        const messageElement = this.closest('.message');
+        const messageId = messageElement.getAttribute('data-message-id');
+        
+        // Delete message using fetch
+        fetch(`/api/threads/<%= thread.id %>/messages/${messageId}`, {
+          method: 'DELETE',
+          credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            // Remove message from DOM
+            messageElement.remove();
+          }
+        })
+        .catch(error => {
+          console.error('Error deleting message:', error);
+          alert('Failed to delete message. Please try again.');
+        });
+      });
+    });
+    
+    // Text formatting toolbar
+    const toolbar = document.querySelector('.text-styling-toolbar');
+    const messageContent = document.getElementById('message-content');
+    
+    if (toolbar && messageContent) {
+      const formatButtons = toolbar.querySelectorAll('.toolbar-btn');
+      
+      formatButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const format = this.getAttribute('data-format');
+          const textarea = messageContent;
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const selectedText = textarea.value.substring(start, end);
+          let replacement = '';
+          
+          switch (format) {
+            case 'bold':
+              replacement = `**${selectedText}**`;
+              break;
+            case 'italic':
+              replacement = `*${selectedText}*`;
+              break;
+            case 'underline':
+              replacement = `__${selectedText}__`;
+              break;
+            case 'quote':
+              replacement = `> ${selectedText}`;
+              break;
+            case 'divider':
+              replacement = `\n---\n`;
+              break;
+          }
+          
+          // Insert the formatted text
+          textarea.value = 
+            textarea.value.substring(0, start) + 
+            replacement + 
+            textarea.value.substring(end);
+          
+          // Restore focus and selection
+          textarea.focus();
+          if (format !== 'divider') {
+            textarea.selectionStart = start + replacement.length;
+            textarea.selectionEnd = start + replacement.length;
+          } else {
+            textarea.selectionStart = start + 5;
+            textarea.selectionEnd = start + 5;
+          }
+        });
+      });
+    }
+    
+    // Invite form functionality
+    const inviteForm = document.getElementById('invite-form');
+    if (inviteForm) {
+      inviteForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const usernameInput = document.getElementById('invite-username');
+        const username = usernameInput.value.trim();
+        
+        if (!username) {
+          alert('Please enter a username');
+          return;
+        }
+        
+        // First need to get the user ID from the username
+        fetch(`/api/users/search?username=${encodeURIComponent(username)}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+            
+            if (!data.user) {
+              alert('User not found');
+              return;
+            }
+            
+            // Now send the invitation
+            return fetch(`/api/threads/<%= thread.id %>/invite`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                invitee_id: data.user.id
+              }),
+              credentials: 'same-origin'
+            });
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.message) {
+              alert('Invitation sent successfully');
+              usernameInput.value = '';
+            }
+          })
+          .catch(error => {
+            console.error('Error sending invitation:', error);
+            alert('Failed to send invitation. Please try again.');
+          });
+      });
+    }
+    
+    // Add reaction functionality
+    const reactButtons = document.querySelectorAll('.react-btn');
+    reactButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const messageElement = this.closest('.message');
+        const messageId = messageElement.getAttribute('data-message-id');
+        
+        // For simplicity, just adding a 'like' reaction
+        // In a full implementation, you'd show a reaction picker
+        fetch(`/api/threads/<%= thread.id %>/messages/${messageId}/reactions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            reaction_type: 'like',
+            character_id: null
+          }),
+          credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            // Update UI to show reaction
+            // For simplicity, just reload the page
+            location.reload();
+          }
+        })
+        .catch(error => {
+          console.error('Error adding reaction:', error);
+          alert('Failed to add reaction. Please try again.');
+        });
+      });
+    });
+  });
+</script>

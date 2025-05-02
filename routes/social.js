@@ -36,9 +36,15 @@ router.get('/feed', isAuthenticated, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
     const offset = (page - 1) * limit;
-
-    // Fixed: Properly handle the query result array
-    const [posts] = await req.db.query(`
+    
+    // Get the filter type from query string (all, following, team)
+    const filter = req.query.filter || 'all';
+    const activeCharacterId = req.query.characterId || req.session.activeCharacterId || null;
+    
+    console.log(`Feed filter: ${filter}, Active character: ${activeCharacterId}`);
+    
+    // Base query parts
+    let querySelect = `
       SELECT 
         p.*,
         u.username,
@@ -51,14 +57,56 @@ router.get('/feed', isAuthenticated, async (req, res) => {
       FROM posts p
       JOIN users u ON p.author_id = u.id
       LEFT JOIN characters c ON p.character_id = c.id
-      WHERE p.privacy = 'public' 
-        OR p.author_id = ?
-        OR (p.privacy = 'followers' AND EXISTS (
-          SELECT 1 FROM follows WHERE follower_id = ? AND following_id = p.author_id
+    `;
+    
+    let queryParams = [req.user.id];
+    
+    // Apply filter conditions
+    if (filter === 'following' && activeCharacterId) {
+      // Following filter: Show posts from users/characters followed by active character
+      querySelect += `
+        LEFT JOIN character_follows cf ON (cf.follower_character_id = ? AND (
+          cf.followed_character_id = p.character_id OR 
+          cf.followed_character_id IN (SELECT id FROM characters WHERE created_by = p.author_id)
         ))
+        LEFT JOIN follows f ON (f.follower_id = ? AND (
+          f.following_id = p.author_id OR 
+          f.character_id = p.character_id
+        ))
+        WHERE (cf.id IS NOT NULL OR f.id IS NOT NULL)
+      `;
+      queryParams.push(activeCharacterId, req.user.id);
+    } else if (filter === 'team') {
+      // Team filter: Show posts only from user's team/organization
+      querySelect += `
+        WHERE p.author_id IN (
+          SELECT user_id FROM team_members WHERE team_id IN (
+            SELECT team_id FROM team_members WHERE user_id = ?
+          )
+        )
+      `;
+      queryParams.push(req.user.id);
+    } else {
+      // Default (all) filter: Show public posts or followed posts
+      querySelect += `
+        WHERE p.privacy = 'public' 
+          OR p.author_id = ?
+          OR (p.privacy = 'followers' AND EXISTS (
+            SELECT 1 FROM follows WHERE follower_id = ? AND following_id = p.author_id
+          ))
+      `;
+      queryParams.push(req.user.id, req.user.id);
+    }
+    
+    // Add ordering and limit
+    querySelect += `
       ORDER BY p.created_at DESC
       LIMIT ? OFFSET ?
-    `, [req.user.id, req.user.id, req.user.id, limit, offset]);
+    `;
+    queryParams.push(limit, offset);
+
+    // Fixed: Properly handle the query result array
+    const [posts] = await req.db.query(querySelect, queryParams);
     
     // Get media for posts with images or videos - complete rewrite
     if (posts && posts.length > 0) {
@@ -346,6 +394,8 @@ router.get('/feed', isAuthenticated, async (req, res) => {
       upcomingEvents,
       page,
       hasMore: posts && posts.length === limit,
+      filter: filter, // Pass the current filter to the template
+      activeCharacterId: activeCharacterId, // Pass the active character ID
       stats: {
         posts: postCount && postCount[0] ? postCount[0].count || 0 : 0,
         followers: followerCount && followerCount[0] ? followerCount[0].count || 0 : 0,
@@ -356,6 +406,199 @@ router.get('/feed', isAuthenticated, async (req, res) => {
     console.error('Error fetching feed:', error);
     req.flash('error', 'Failed to load the social feed');
     res.redirect('/');
+  }
+});
+
+// New endpoint to fetch posts with filter
+router.get('/posts/filtered', isAuthenticated, async (req, res) => {
+  try {
+    const filter = req.query.filter || 'all';
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
+    const characterId = req.query.characterId || req.session.activeCharacterId || null;
+    
+    console.log(`Fetching filtered posts: ${filter}, Page: ${page}, Character ID: ${characterId}`);
+    
+    // Base query parts
+    let querySelect = `
+      SELECT 
+        p.*,
+        u.username,
+        c.name as character_name,
+        c.avatar_url as character_avatar,
+        c.url,
+        (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
+        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count,
+        (SELECT 1 FROM post_likes WHERE post_id = p.id AND user_id = ? LIMIT 1) as liked
+      FROM posts p
+      JOIN users u ON p.author_id = u.id
+      LEFT JOIN characters c ON p.character_id = c.id
+    `;
+    
+    let queryParams = [req.user.id];
+    
+    // Apply filter conditions
+    if (filter === 'following' && characterId) {
+      // Following filter: Show posts from users/characters followed by active character
+      querySelect += `
+        LEFT JOIN character_follows cf ON (cf.follower_character_id = ? AND (
+          cf.followed_character_id = p.character_id OR 
+          cf.followed_character_id IN (SELECT id FROM characters WHERE created_by = p.author_id)
+        ))
+        LEFT JOIN follows f ON (f.follower_id = ? AND (
+          f.following_id = p.author_id OR 
+          f.character_id = p.character_id
+        ))
+        WHERE (cf.id IS NOT NULL OR f.id IS NOT NULL)
+      `;
+      queryParams.push(characterId, req.user.id);
+    } else if (filter === 'team') {
+      // Team filter: Show posts only from user's team/organization
+      querySelect += `
+        WHERE p.author_id IN (
+          SELECT user_id FROM team_members WHERE team_id IN (
+            SELECT team_id FROM team_members WHERE user_id = ?
+          )
+        )
+      `;
+      queryParams.push(req.user.id);
+    } else {
+      // Default (all) filter: Show public posts or followed posts
+      querySelect += `
+        WHERE p.privacy = 'public' 
+          OR p.author_id = ?
+          OR (p.privacy = 'followers' AND EXISTS (
+            SELECT 1 FROM follows WHERE follower_id = ? AND following_id = p.author_id
+          ))
+      `;
+      queryParams.push(req.user.id, req.user.id);
+    }
+    
+    // Add ordering and limit
+    querySelect += `
+      ORDER BY p.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+    queryParams.push(limit, offset);
+    
+    // Execute query
+    const [posts] = await req.db.query(querySelect, queryParams);
+    
+    // Process posts (media, tags, comments, etc.)
+    if (posts && posts.length > 0) {
+      const postIds = posts.map(post => post.id);
+      
+      // Get media for posts
+      try {
+        const [media] = await req.db.query(`
+          SELECT 
+            pm.post_id, 
+            m.id as media_id, 
+            m.url, 
+            m.type, 
+            pm.display_order
+          FROM post_media pm 
+          JOIN media m ON pm.media_id = m.id 
+          WHERE pm.post_id IN (?)
+          ORDER BY pm.post_id, pm.display_order
+        `, [postIds]);
+        
+        // Attach media to corresponding posts
+        posts.forEach(post => {
+          post.media = media.filter(m => m.post_id === post.id);
+        });
+      } catch (mediaError) {
+        console.error('Error fetching media:', mediaError);
+        posts.forEach(post => post.media = []);
+      }
+      
+      // Get tags for posts
+      try {
+        const [tags] = await req.db.query(`
+          SELECT pt.post_id, t.* 
+          FROM post_tags pt 
+          JOIN tags t ON pt.tag_id = t.id 
+          WHERE pt.post_id IN (?)
+        `, [postIds]);
+        
+        // Attach tags to corresponding posts
+        posts.forEach(post => {
+          post.tags = tags.filter(t => t.post_id === post.id);
+        });
+      } catch (tagsError) {
+        console.error('Error fetching tags:', tagsError);
+        posts.forEach(post => post.tags = []);
+      }
+      
+      // Get comments for posts
+      try {
+        const [comments] = await req.db.query(`
+          SELECT 
+            c.*,
+            u.username,
+            ch.name as character_name,
+            ch.avatar_url as character_avatar,
+            ch.url
+          FROM comments c
+          JOIN users u ON c.user_id = u.id
+          LEFT JOIN characters ch ON c.character_id = ch.id
+          WHERE c.post_id IN (?) AND c.parent_id IS NULL
+          ORDER BY c.created_at DESC
+        `, [postIds]);
+        
+        // Attach comments to corresponding posts
+        posts.forEach(post => {
+          post.comments = comments.filter(c => c.post_id === post.id);
+        });
+      } catch (commentsError) {
+        console.error('Error fetching comments:', commentsError);
+        posts.forEach(post => post.comments = []);
+      }
+      
+      // Process poll options if any post is a poll
+      const pollPosts = posts.filter(post => post.post_type === 'poll');
+      if (pollPosts.length > 0) {
+        try {
+          const pollPostIds = pollPosts.map(post => post.id);
+          const [pollOptions] = await req.db.query(`
+            SELECT * FROM poll_options WHERE post_id IN (?)
+          `, [pollPostIds]);
+  
+          // Calculate percentages for each poll option
+          for (const post of pollPosts) {
+            const options = pollOptions.filter(option => option.post_id === post.id);
+            const totalVotes = options.reduce((sum, option) => sum + (option.votes || 0), 0);
+            post.total_votes = totalVotes;
+            
+            post.poll_options = options.map(option => ({
+              ...option,
+              percentage: totalVotes > 0 ? Math.round((option.votes || 0) / totalVotes * 100) : 0
+            }));
+          }
+        } catch (pollError) {
+          console.error('Error processing polls:', pollError);
+        }
+      }
+    }
+    
+    // Return JSON response with posts and pagination info
+    res.json({
+      success: true,
+      posts: posts || [],
+      pagination: {
+        page,
+        hasMore: posts && posts.length === limit
+      },
+      filter
+    });
+  } catch (error) {
+    console.error('Error fetching filtered posts:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to load posts',
+      message: error.message
+    });
   }
 });
 
@@ -1049,718 +1292,542 @@ router.get('/follow/status/character/:characterId', isAuthenticated, async (req,
   }
 });
 
-// Get events page
-router.get('/events', isAuthenticated, async (req, res) => {
+// NEW ENDPOINT: Check follow status for multiple characters at once
+router.get('/check-follow-status', isAuthenticated, async (req, res) => {
   try {
-    // Add error handling for potentially missing columns
-    let events = [];
-    try {
-      events = await req.db.query(`
-        SELECT 
-          p.id, p.title, p.content, 
-          p.event_date, p.event_time, p.event_location,
-          u.username,
-          c.name as character_name, c.avatar_url as character_avatar,
-          (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
-          (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
-        FROM posts p
-        JOIN users u ON p.author_id = u.id
-        LEFT JOIN characters c ON p.character_id = c.id
-        WHERE p.post_type = 'event'
-          AND p.event_date IS NOT NULL
-          AND p.event_date >= CURDATE()
-          AND (p.privacy = 'public' 
-            OR p.author_id = ?
-            OR (p.privacy = 'followers' AND EXISTS (
-              SELECT 1 FROM follows WHERE follower_id = ? AND following_id = p.author_id
-            ))
-          )
-        ORDER BY p.event_date
-      `, [req.user.id, req.user.id]);
-    } catch (eventError) {
-      console.error('Error fetching events, might need schema update:', eventError);
-      // Return empty array if the columns don't exist yet
-      events = [];
-    }
+    const { followerId, followingIds } = req.query;
     
-    res.render('social/events', {
-      title: 'Events',
-      events,
-      user: req.user
-    });
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    req.flash('error', 'Failed to load events');
-    res.redirect('/social/feed');
-  }
-});
-
-// Vote on a poll
-router.post('/post/:id/vote', isAuthenticated, async (req, res) => {
-  const postId = req.params.id;
-  const { characterId, optionId } = req.body;
-  
-  try {
-    // Validate input
-    if (!characterId || !optionId) {
+    if (!followerId || !followingIds) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Character selection and poll option required' 
+        error: 'Missing required parameters (followerId and followingIds)' 
       });
     }
     
-    // Verify the character belongs to the user
+    // Convert followingIds to array if it's a string
+    const followingIdArray = followingIds.includes(',') 
+      ? followingIds.split(',') 
+      : [followingIds];
+    
+    // Validate the follower ID belongs to the user making the request
+    // This is a security check to prevent checking follow status for characters not owned by the user
     const [characterCheck] = await req.db.query(
       'SELECT id FROM characters WHERE id = ? AND created_by = ?',
-      [characterId, req.user.id]
+      [followerId, req.user.id]
     );
     
     if (characterCheck.length === 0) {
-      return res.status(400).json({ 
+      return res.status(403).json({ 
         success: false, 
-        message: 'Invalid character selection' 
+        error: 'Not authorized to check follow status for this character' 
       });
     }
     
-    // Start a transaction for consistency
-    const conn = await req.db.getConnection();
-    await conn.beginTransaction();
-    
-    try {
-      // First ensure poll_votes table exists
-      await conn.query(`
-        CREATE TABLE IF NOT EXISTS poll_votes (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          option_id INT NOT NULL,
-          user_id INT NOT NULL,
-          character_id INT NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE KEY vote_once (option_id, user_id, character_id),
-          FOREIGN KEY (option_id) REFERENCES poll_options(id) ON DELETE CASCADE,
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-          FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
-        )
-      `);
-
-      // Check if user has already voted on this poll with this character
-      // Use a safer check that doesn't require joining with a table that might not exist
-      const [existingVotes] = await conn.query(`
-        SELECT COUNT(*) as vote_count
-        FROM poll_votes pv
-        INNER JOIN poll_options po ON pv.option_id = po.id
-        WHERE po.post_id = ? AND pv.user_id = ? AND pv.character_id = ?
-      `, [postId, req.user.id, characterId]);
-      
-      if (existingVotes[0].vote_count > 0) {
-        await conn.rollback();
-        return res.status(400).json({ 
-          success: false, 
-          message: 'You have already voted on this poll with this character' 
-        });
-      }
-      
-      // Verify the option belongs to this post
-      const [optionCheck] = await conn.query(`
-        SELECT id FROM poll_options WHERE id = ? AND post_id = ?
-      `, [optionId, postId]);
-      
-      if (optionCheck.length === 0) {
-        await conn.rollback();
-        return res.status(400).json({ 
-          success: false, 
-          message: 'Invalid poll option' 
-        });
-      }
-      
-      // Record the vote
-      await conn.query(`
-        INSERT INTO poll_votes (option_id, user_id, character_id)
-        VALUES (?, ?, ?)
-      `, [optionId, req.user.id, characterId]);
-      
-      // Increment the vote count for this option
-      await conn.query(`
-        UPDATE poll_options SET votes = votes + 1 WHERE id = ?
-      `, [optionId]);
-      
-      // Get updated results to return to client
-      const [options] = await conn.query(`
-        SELECT id, text, votes FROM poll_options WHERE post_id = ?
-      `, [postId]);
-      
-      const totalVotes = options.reduce((sum, option) => sum + option.votes, 0);
-      
-      // Calculate percentages for display
-      const pollResults = {
-        totalVotes,
-        options: options.map(option => ({
-          id: option.id,
-          text: option.text,
-          votes: option.votes,
-          percentage: totalVotes > 0 ? Math.round((option.votes / totalVotes) * 100) : 0,
-          userVoted: parseInt(option.id) === parseInt(optionId) // Mark which option the user voted for
-        }))
-      };
-      
-      await conn.commit();
-      
-      res.json({
-        success: true,
-        message: 'Vote recorded successfully',
-        pollResults
-      });
-    } catch (error) {
-      await conn.rollback();
-      console.error('Error processing poll vote:', error);
-      throw error;
-    } finally {
-      conn.release();
-    }
-  } catch (error) {
-    console.error('Error voting on poll:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to process vote: ' + error.message
-    });
-  }
-});
-
-// Respond to an event (interested or going)
-router.post('/post/:id/event-response', isAuthenticated, async (req, res) => {
-  const postId = req.params.id;
-  const { characterId, responseType } = req.body;
-  
-  try {
-    // Validate input
-    if (!characterId || !responseType || !['interested', 'going'].includes(responseType)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Character selection and valid response type required' 
-      });
-    }
-    
-    // Verify the character belongs to the user
-    const [characterCheck] = await req.db.query(
-      'SELECT id FROM characters WHERE id = ? AND created_by = ?',
-      [characterId, req.user.id]
-    );
-    
-    if (characterCheck.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid character selection' 
-      });
-    }
-    
-    // Verify the post is an event
-    const [postCheck] = await req.db.query(
-      'SELECT id FROM posts WHERE id = ? AND post_type = "event"',
-      [postId]
-    );
-    
-    if (postCheck.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid event post' 
-      });
-    }
-    
-    // Start a transaction for consistency
-    const conn = await req.db.getConnection();
-    await conn.beginTransaction();
-    
-    try {
-      // First ensure event_responses table exists
-      await conn.query(`
-        CREATE TABLE IF NOT EXISTS event_responses (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          post_id INT NOT NULL,
-          user_id INT NOT NULL,
-          character_id INT NOT NULL,
-          response_type ENUM('interested', 'going') NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-          UNIQUE KEY unique_response (post_id, user_id, character_id),
-          FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-          FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
-        )
-      `);
-
-      // Check if user has already responded to this event with this character
-      const [existingResponse] = await conn.query(`
-        SELECT id, response_type FROM event_responses 
-        WHERE post_id = ? AND user_id = ? AND character_id = ?
-      `, [postId, req.user.id, characterId]);
-      
-      if (existingResponse.length > 0) {
-        // Update the existing response if different, otherwise remove it (toggle)
-        if (existingResponse[0].response_type !== responseType) {
-          await conn.query(`
-            UPDATE event_responses 
-            SET response_type = ? 
-            WHERE id = ?
-          `, [responseType, existingResponse[0].id]);
-          
-          await conn.commit();
-          return res.json({
-            success: true,
-            message: `Response updated to ${responseType}`,
-            status: responseType,
-            changed: true
-          });
-        } else {
-          // Same response type means toggle off
-          await conn.query(`
-            DELETE FROM event_responses 
-            WHERE id = ?
-          `, [existingResponse[0].id]);
-          
-          await conn.commit();
-          return res.json({
-            success: true,
-            message: 'Response removed',
-            status: 'none',
-            changed: true
-          });
-        }
-      } else {
-        // Record new response
-        await conn.query(`
-          INSERT INTO event_responses (post_id, user_id, character_id, response_type)
-          VALUES (?, ?, ?, ?)
-        `, [postId, req.user.id, characterId, responseType]);
-        
-        await conn.commit();
-        return res.json({
-          success: true,
-          message: `Marked as ${responseType}`,
-          status: responseType,
-          changed: true
-        });
-      }
-    } catch (error) {
-      await conn.rollback();
-      console.error('Error processing event response:', error);
-      throw error;
-    } finally {
-      conn.release();
-    }
-  } catch (error) {
-    console.error('Error responding to event:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to process event response: ' + error.message
-    });
-  }
-});
-
-// Get event responses for a post
-router.get('/post/:id/event-responses', isAuthenticated, async (req, res) => {
-  const postId = req.params.id;
-  
-  try {
     // Create table if it doesn't exist (to avoid errors)
     await req.db.query(`
-      CREATE TABLE IF NOT EXISTS event_responses (
+      CREATE TABLE IF NOT EXISTS character_follows (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        post_id INT NOT NULL,
-        user_id INT NOT NULL,
-        character_id INT NOT NULL,
-        response_type ENUM('interested', 'going') NOT NULL,
+        follower_character_id INT NOT NULL,
+        followed_character_id INT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        UNIQUE KEY unique_response (post_id, user_id, character_id),
-        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE
+        UNIQUE KEY unique_character_follow (follower_character_id, followed_character_id),
+        FOREIGN KEY (follower_character_id) REFERENCES characters(id) ON DELETE CASCADE,
+        FOREIGN KEY (followed_character_id) REFERENCES characters(id) ON DELETE CASCADE
       )
     `);
     
-    // Get counts by response type
-    const [responses] = await req.db.query(`
-      SELECT response_type, COUNT(*) as count
-      FROM event_responses
-      WHERE post_id = ?
-      GROUP BY response_type
-    `, [postId]);
+    // Get follow status for all the requested characters
+    const [followStatuses] = await req.db.query(`
+      SELECT 
+        followed_character_id,
+        1 as is_following
+      FROM character_follows
+      WHERE follower_character_id = ? 
+      AND followed_character_id IN (?)
+    `, [followerId, followingIdArray]);
     
-    // Get user's current response if any
-    const [userResponse] = await req.db.query(`
-      SELECT character_id, response_type
-      FROM event_responses
-      WHERE post_id = ? AND user_id = ?
-    `, [postId, req.user.id]);
+    // Also check the traditional follows table
+    const [userFollowStatuses] = await req.db.query(`
+      SELECT 
+        character_id,
+        1 as is_following
+      FROM follows
+      WHERE follower_id = ? 
+      AND character_id IN (?)
+    `, [req.user.id, followingIdArray]);
     
-    // Format the response data
-    const interestedCount = responses.find(r => r.response_type === 'interested')?.count || 0;
-    const goingCount = responses.find(r => r.response_type === 'going')?.count || 0;
+    // Combine results from both tables
+    const combinedStatuses = {};
+    
+    // Create a lookup object with default "not following" for all IDs
+    followingIdArray.forEach(id => {
+      combinedStatuses[id] = false;
+    });
+    
+    // Update with character follows
+    followStatuses.forEach(status => {
+      combinedStatuses[status.followed_character_id] = true;
+    });
+    
+    // Also update with user follows
+    userFollowStatuses.forEach(status => {
+      combinedStatuses[status.character_id] = true;
+    });
     
     res.json({
       success: true,
-      responses: {
-        interested: interestedCount,
-        going: goingCount,
-        total: interestedCount + goingCount
-      },
-      userResponse: userResponse.length > 0 ? {
-        characterId: userResponse[0].character_id,
-        responseType: userResponse[0].response_type
-      } : null
+      statuses: combinedStatuses
     });
   } catch (error) {
-    console.error('Error fetching event responses:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to fetch event responses: ' + error.message
+    console.error('Error checking follow status:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Failed to check follow status',
+      message: error.message
     });
   }
 });
 
-// Get single event page
-router.get('/event/:id', isAuthenticated, async (req, res) => {
-  const eventId = req.params.id;
-  
+// NEW ENDPOINT: Follow another character
+router.post('/follow', isAuthenticated, async (req, res) => {
   try {
-    // Get the event post details
-    const [eventPost] = await req.db.query(`
-      SELECT 
-        p.*,
-        u.username,
-        c.name as character_name, 
-        c.avatar_url as character_avatar,
-        c.url,
-        (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
-        (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count,
-        (SELECT 1 FROM post_likes WHERE post_id = p.id AND user_id = ? LIMIT 1) as liked
-      FROM posts p
-      JOIN users u ON p.author_id = u.id
-      LEFT JOIN characters c ON p.character_id = c.id
-      WHERE p.id = ? AND p.post_type = 'event'
-    `, [req.user.id, eventId]);
+    const { followerId, followingId } = req.body;
     
-    if (!eventPost || eventPost.length === 0) {
-      req.flash('error', 'Event not found');
-      return res.redirect('/social/events');
-    }
-    
-    const event = eventPost[0];
-    
-    // Get event response counts
-    const [responses] = await req.db.query(`
-      SELECT response_type, COUNT(*) as count
-      FROM event_responses
-      WHERE post_id = ?
-      GROUP BY response_type
-    `, [eventId]);
-    
-    // Format response data
-    const interestedCount = responses.find(r => r.response_type === 'interested')?.count || 0;
-    const goingCount = responses.find(r => r.response_type === 'going')?.count || 0;
-    
-    // Get user's current response if any
-    const [userResponse] = await req.db.query(`
-      SELECT character_id, response_type
-      FROM event_responses
-      WHERE post_id = ? AND user_id = ?
-    `, [eventId, req.user.id]);
-    
-    // Get user's characters for responding
-    const [characters] = await req.db.query(`
-      SELECT id, name, avatar_url, url 
-      FROM characters 
-      WHERE created_by = ?
-    `, [req.user.id]);
-    
-    // Get people who are going/interested
-    const [attendees] = await req.db.query(`
-      SELECT 
-        er.response_type,
-        u.id as user_id,
-        u.username,
-        c.id as character_id,
-        c.name as character_name,
-        c.avatar_url as character_avatar,
-        c.url
-      FROM event_responses er
-      JOIN users u ON er.user_id = u.id
-      JOIN characters c ON er.character_id = c.id
-      WHERE er.post_id = ?
-      ORDER BY er.created_at DESC
-    `, [eventId]);
-    
-    const interestedAttendees = attendees.filter(a => a.response_type === 'interested');
-    const goingAttendees = attendees.filter(a => a.response_type === 'going');
-    
-    // Get comments for the event
-    const [comments] = await req.db.query(`
-      SELECT 
-        c.*,
-        u.username,
-        ch.name as character_name,
-        ch.avatar_url as character_avatar,
-        ch.url
-      FROM comments c
-      JOIN users u ON c.user_id = u.id
-      LEFT JOIN characters ch ON c.character_id = ch.id
-      WHERE c.post_id = ? AND c.parent_id IS NULL
-      ORDER BY c.created_at DESC
-    `, [eventId]);
-    
-    res.render('social/event', {
-      title: `Event: ${event.title}`,
-      event,
-      characters,
-      user: req.user,
-      stats: {
-        interested: interestedCount,
-        going: goingCount,
-        total: interestedCount + goingCount
-      },
-      userResponse: userResponse.length > 0 ? {
-        characterId: userResponse[0].character_id,
-        responseType: userResponse[0].response_type
-      } : null,
-      interestedAttendees,
-      goingAttendees,
-      comments
-    });
-  } catch (error) {
-    console.error('Error fetching event details:', error);
-    req.flash('error', 'Failed to load event');
-    res.redirect('/social/events');
-  }
-});
-
-// Media URL validation and refresh endpoint
-router.post('/media/refresh', isAuthenticated, async (req, res) => {
-  try {
-    const { mediaId, postId, mediaType } = req.body;
-    
-    if (!mediaId) {
+    if (!followerId || !followingId) {
       return res.status(400).json({
         success: false,
-        error: 'Missing media ID'
+        error: 'Missing required parameters'
       });
     }
     
-    // Get the current media record
-    const [media] = await req.db.query(
-      'SELECT * FROM media WHERE id = ?',
-      [mediaId]
+    // Verify the source character belongs to the user
+    const [sourceCharCheck] = await req.db.query(
+      'SELECT id FROM characters WHERE id = ? AND created_by = ?',
+      [followerId, req.user.id]
     );
     
-    if (media.length === 0) {
+    if (sourceCharCheck.length === 0) {
+      return res.status(403).json({
+        success: false,
+        error: 'You do not own this character'
+      });
+    }
+    
+    // Verify target character exists and is not the same as source
+    const [targetCharCheck] = await req.db.query(
+      'SELECT id FROM characters WHERE id = ?',
+      [followingId]
+    );
+    
+    if (targetCharCheck.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'Media not found'
+        error: 'Target character not found'
       });
     }
     
-    const currentMedia = media[0];
+    if (parseInt(followerId) === parseInt(followingId)) {
+      return res.status(400).json({
+        success: false,
+        error: 'A character cannot follow itself'
+      });
+    }
     
-    // For now, we'll implement a basic check to see if the URL is accessible
-    // In a production environment, you might want to implement more sophisticated checks
-    // or integrate with the specific video provider's API
+    // Check if character_follows table exists, create if it doesn't
+    await req.db.query(`
+      CREATE TABLE IF NOT EXISTS character_follows (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        follower_character_id INT NOT NULL,
+        followed_character_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_character_follow (follower_character_id, followed_character_id),
+        FOREIGN KEY (follower_character_id) REFERENCES characters(id) ON DELETE CASCADE,
+        FOREIGN KEY (followed_character_id) REFERENCES characters(id) ON DELETE CASCADE
+      )
+    `);
     
-    // For video URLs, we might need to generate a new signed URL if the service supports it
-    if (currentMedia.type === 'video') {
-      // Check if it's a YouTube URL that needs to be reformatted
-      if (currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be')) {
-        // Extract the YouTube video ID
-        let videoId = '';
-        if (currentMedia.url.includes('youtube.com/watch?v=')) {
-          videoId = currentMedia.url.split('v=')[1];
-          if (videoId.includes('&')) {
-            videoId = videoId.split('&')[0];
-          }
-        } else if (currentMedia.url.includes('youtu.be/')) {
-          videoId = currentMedia.url.split('youtu.be/')[1];
-          if (videoId.includes('?')) {
-            videoId = videoId.split('?')[0];
-          }
-        }
-        
-        if (videoId) {
-          // Create an embed URL which is more reliable than direct links
-          const embedUrl = `https://www.youtube.com/embed/${videoId}`;
-          
-          // Update the media record
-          await req.db.query(
-            'UPDATE media SET url = ?, updated_at = NOW() WHERE id = ?',
-            [embedUrl, mediaId]
-          );
-          
-          return res.json({
-            success: true,
-            media: {
-              id: currentMedia.id,
-              url: embedUrl,
-              type: currentMedia.type
-            }
-          });
-        }
+    // Check if already following - IMPORTANT: Do this before trying to insert
+    const [existingFollow] = await req.db.query(`
+      SELECT id FROM character_follows 
+      WHERE follower_character_id = ? AND followed_character_id = ?
+    `, [followerId, followingId]);
+    
+    if (existingFollow && existingFollow.length > 0) {
+      // Instead of an error, return a success response indicating already following
+      return res.json({
+        success: true,
+        alreadyFollowing: true,
+        message: 'Already following this character'
+      });
+    }
+    
+    // Follow the character with transaction
+    const connection = await req.db.getConnection();
+    await connection.beginTransaction();
+    
+    try {
+      // Add to character_follows table - Use INSERT IGNORE to prevent duplicate key errors
+      await connection.query(`
+        INSERT IGNORE INTO character_follows (follower_character_id, followed_character_id) 
+        VALUES (?, ?)
+      `, [followerId, followingId]);
+      
+      // Also update the follows table for compatibility - Use INSERT IGNORE here too
+      await connection.query(`
+        INSERT IGNORE INTO follows (follower_id, character_id) VALUES (?, ?)
+      `, [req.user.id, followingId]);
+      
+      await connection.commit();
+      
+      res.json({
+        success: true,
+        message: 'Successfully followed character'
+      });
+    } catch (error) {
+      await connection.rollback();
+      
+      // If the error is a duplicate entry, return a more meaningful response
+      if (error.code === 'ER_DUP_ENTRY') {
+        return res.json({
+          success: true,
+          alreadyFollowing: true,
+          message: 'Already following this character'
+        });
       }
       
-      // For other video services, you would implement similar service-specific logic
-      // For example, for Vimeo, you might need to regenerate access tokens
-      
-      // For now, just return the current URL with a timestamp to force reload
-      return res.json({
-        success: true,
-        media: {
-          id: currentMedia.id,
-          url: `${currentMedia.url}${currentMedia.url.includes('?') ? '&' : '?'}_t=${Date.now()}`,
-          type: currentMedia.type
-        }
-      });
-    } 
-    // For images, we can check if they're still valid and possibly update them
-    else if (currentMedia.type === 'image') {
-      return res.json({
-        success: true,
-        media: {
-          id: currentMedia.id,
-          url: currentMedia.url,
-          type: currentMedia.type
-        }
-      });
+      console.error('Transaction error:', error);
+      throw error;
+    } finally {
+      connection.release();
     }
-    
-    // Default response
-    return res.json({
-      success: true,
-      media: currentMedia
-    });
   } catch (error) {
-    console.error('Error refreshing media URL:', error);
+    console.error('Error following character:', error);
     res.status(500).json({
       success: false,
-      error: 'Failed to refresh media URL'
+      error: 'Failed to follow character',
+      message: error.message
     });
   }
 });
 
-// New API endpoint to get suggested characters
+// NEW ENDPOINT: Unfollow a character
+router.post('/unfollow', isAuthenticated, async (req, res) => {
+  try {
+    const { followerId, followingId } = req.body;
+    
+    if (!followerId || !followingId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required parameters'
+      });
+    }
+    
+    // Verify the source character belongs to the user
+    const [sourceCharCheck] = await req.db.query(
+      'SELECT id FROM characters WHERE id = ? AND created_by = ?',
+      [followerId, req.user.id]
+    );
+    
+    if (sourceCharCheck.length === 0) {
+      return res.status(403).json({
+        success: false,
+        error: 'You do not own this character'
+      });
+    }
+    
+    // Create connection for transaction
+    const connection = await req.db.getConnection();
+    await connection.beginTransaction();
+    
+    try {
+      // Remove from character_follows table if it exists
+      await connection.query(`
+        DELETE FROM character_follows 
+        WHERE follower_character_id = ? AND followed_character_id = ?
+      `, [followerId, followingId]);
+      
+      // Also update the follows table for compatibility
+      await connection.query(`
+        DELETE FROM follows 
+        WHERE follower_id = ? AND character_id = ?
+      `, [req.user.id, followingId]);
+      
+      await connection.commit();
+      
+      res.json({
+        success: true,
+        message: 'Successfully unfollowed character'
+      });
+    } catch (error) {
+      await connection.rollback();
+      console.error('Transaction error:', error);
+      throw error;
+    } finally {
+      connection.release();
+    }
+  } catch (error) {
+    console.error('Error unfollowing character:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to unfollow character',
+      message: error.message
+    });
+  }
+});
+
+// NEW ENDPOINT: Get all characters with follow exclusion for wider search
+router.get('/all-characters', isAuthenticated, async (req, res) => {
+  try {
+    const excludeCharacterId = req.query.exclude || null;
+    const limit = parseInt(req.query.limit) || 8;
+    
+    // Get all characters except the excluded one, prioritize those not created by the user
+    const [characters] = await req.db.query(`
+      SELECT 
+        c.id, c.name, c.avatar_url, c.url, c.created_by, 
+        u.username as creator_username,
+        CASE WHEN c.created_by = ? THEN 1 ELSE 0 END as is_own,
+        0 as is_following
+      FROM characters c
+      JOIN users u ON c.created_by = u.id
+      WHERE c.id != IFNULL(?, -1)
+      ORDER BY is_own ASC, RAND()
+      LIMIT ?
+    `, [req.user.id, excludeCharacterId, limit]);
+    
+    // Get followed character IDs for exclusion (if needed in the future)
+    const [followed] = await req.db.query(`
+      SELECT character_id FROM follows 
+      WHERE follower_id = ? AND character_id IS NOT NULL
+    `, [req.user.id]);
+    
+    const followedIds = followed.map(f => f.character_id);
+    
+    res.json({
+      success: true,
+      characters: characters,
+      followedIds: followedIds
+    });
+  } catch (error) {
+    console.error('Error fetching all characters:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch characters'
+    });
+  }
+});
+
+// NEW ENDPOINT: Get suggested characters with exclusions
 router.get('/suggested-characters', isAuthenticated, async (req, res) => {
   try {
     const excludeCharacterId = req.query.exclude || null;
-    console.log('Getting suggested characters, excluding:', excludeCharacterId);
+    const retry = req.query.retry === 'true'; // Support broadening search criteria
+    const limit = parseInt(req.query.limit) || 5;
     
-    // First check if follows table exists
+    console.log(`Getting suggested characters. Excluding: ${excludeCharacterId}, Retry mode: ${retry}`);
+    
+    // Get currently active character (if any)
+    const activeCharacterId = req.session.activeCharacterId || excludeCharacterId || null;
+    
+    // Start building the query with basic exclusions - REMOVED c.location field
+    let query = `
+      SELECT 
+        c.id, 
+        c.name, 
+        c.avatar_url, 
+        c.url,
+        c.created_by,
+        u.username as creator_username,
+        0 as is_following
+      FROM characters c
+      JOIN users u ON c.created_by = u.id
+      WHERE c.created_by != ? 
+    `;
+    
+    const queryParams = [req.user.id];
+    
+    // Add exclusion for the active character
+    if (excludeCharacterId) {
+      query += ' AND c.id != ? ';
+      queryParams.push(excludeCharacterId);
+    }
+    
+    // Check if follows table exists and get followed characters
     const [followsTableCheck] = await req.db.query(`
       SELECT 1 FROM information_schema.tables 
       WHERE table_schema = DATABASE() 
       AND table_name = 'follows'
     `);
     
-    // Get suggested characters with best available query
-    let suggestedCharacters = [];
+    let followedCharacterIds = [];
     
+    // Get characters already followed by the user's character
     if (followsTableCheck && followsTableCheck.length > 0) {
-      // If follows table exists, use a query that properly excludes followed characters
-      [suggestedCharacters] = await req.db.query(`
-        SELECT 
-          c.id, 
-          c.name, 
-          c.avatar_url, 
-          c.url, 
-          c.created_by,
-          u.username as creator_username, 
-          0 as is_following
-        FROM characters c
-        JOIN users u ON c.created_by = u.id
-        WHERE c.created_by != ? 
-          AND c.id != IFNULL(?, -1)
-          AND NOT EXISTS (
-            SELECT 1 FROM follows 
-            WHERE follower_id = ? 
-            AND character_id = c.id
-          )
-        ORDER BY RAND()
-        LIMIT 5
-      `, [req.user.id, excludeCharacterId, req.user.id]);
-    } else {
-      // Fallback query for when follows table doesn't exist yet
-      [suggestedCharacters] = await req.db.query(`
-        SELECT 
-          c.id, 
-          c.name, 
-          c.avatar_url, 
-          c.url, 
-          c.created_by,
-          u.username as creator_username,
-          0 as is_following
-        FROM characters c
-        JOIN users u ON c.created_by = u.id
-        WHERE c.created_by != ?
-          AND c.id != IFNULL(?, -1)
-        ORDER BY RAND()
-        LIMIT 5
-      `, [req.user.id, excludeCharacterId]);
-    }
-    
-    // If suggestions are empty, try one more simple query
-    if (!suggestedCharacters || suggestedCharacters.length === 0) {
-      [suggestedCharacters] = await req.db.query(`
-        SELECT 
-          c.id, c.name, c.avatar_url, c.url, c.created_by, 
-          u.username as creator_username,
-          0 as is_following
-        FROM characters c
-        JOIN users u ON c.created_by = u.id
-        WHERE c.id != IFNULL(?, -1)
-        ORDER BY RAND()
-        LIMIT 8
-      `, [excludeCharacterId]);
-    }
-    
-    // Handle the case where still no characters are found
-    if (!suggestedCharacters || suggestedCharacters.length === 0) {
-      // Absolute fallback - just get ANY characters, even if it's the user's own
-      [suggestedCharacters] = await req.db.query(`
-        SELECT 
-          c.id, c.name, c.avatar_url, c.url, c.created_by, 
-          u.username as creator_username,
-          0 as is_following
-        FROM characters c
-        JOIN users u ON c.created_by = u.id
-        WHERE c.id != IFNULL(?, -1)
-        LIMIT 5
-      `, [excludeCharacterId]);
-    }
-    
-    // Manual filtering to ensure we exclude any followed characters
-    try {
-      // Get the list of followed character IDs
-      const [followed] = await req.db.query(`
+      // First from regular follows
+      const [userFollows] = await req.db.query(`
         SELECT character_id FROM follows 
         WHERE follower_id = ? AND character_id IS NOT NULL
       `, [req.user.id]);
       
-      const followedIds = followed.map(f => f.character_id);
+      if (userFollows && userFollows.length > 0) {
+        followedCharacterIds = userFollows.map(follow => follow.character_id);
+      }
       
-      // Filter out followed characters
-      suggestedCharacters = suggestedCharacters.filter(char => {
-        // Skip if user is already following this character
-        return !followedIds.includes(char.id);
-      });
-    } catch (error) {
-      console.error('Error during manual filtering:', error);
+      // Then also check character_follows table if it exists and if we have an active character
+      if (activeCharacterId) {
+        const [characterFollowsCheck] = await req.db.query(`
+          SELECT 1 FROM information_schema.tables 
+          WHERE table_schema = DATABASE() 
+          AND table_name = 'character_follows'
+        `);
+        
+        if (characterFollowsCheck && characterFollowsCheck.length > 0) {
+          const [characterFollows] = await req.db.query(`
+            SELECT followed_character_id 
+            FROM character_follows 
+            WHERE follower_character_id = ?
+          `, [activeCharacterId]);
+          
+          if (characterFollows && characterFollows.length > 0) {
+            // Add these IDs to our exclusion list
+            characterFollows.forEach(follow => {
+              if (!followedCharacterIds.includes(follow.followed_character_id)) {
+                followedCharacterIds.push(follow.followed_character_id);
+              }
+            });
+          }
+        }
+      }
+      
+      // Exclude already followed characters unless in retry mode
+      if (followedCharacterIds.length > 0 && !retry) {
+        query += ' AND c.id NOT IN (?) ';
+        queryParams.push(followedCharacterIds);
+      }
     }
     
-    res.json({
-      success: true,
-      characters: suggestedCharacters
-    });
+    // Add ordering - in retry mode we use pure random
+    if (retry) {
+      query += ' ORDER BY RAND() ';
+    } else {
+      // In normal mode, we prioritize characters with similar tags/interests if possible
+      // This is a placeholder for more sophisticated recommendation logic
+      query += ' ORDER BY RAND() ';
+    }
     
+    // Add limit
+    query += ' LIMIT ? ';
+    queryParams.push(limit);
+    
+    console.log('Executing query:', query);
+    console.log('With parameters:', queryParams);
+    
+    // Execute the query
+    const [characters] = await req.db.query(query, queryParams);
+    
+    console.log(`Found ${characters.length} suggested characters`);
+    
+    // Add fallback approach if no results found
+    if (!characters || characters.length === 0) {
+      console.log('No characters found with main query, trying fallback approach...');
+      
+      // Try a simpler query without exclusions (except the current character)
+      let fallbackQuery = `
+        SELECT 
+          c.id, 
+          c.name, 
+          c.avatar_url, 
+          c.url,
+          c.created_by,
+          u.username as creator_username,
+          0 as is_following
+        FROM characters c
+        JOIN users u ON c.created_by = u.id
+        WHERE c.id != IFNULL(?, -1)
+        ORDER BY RAND()
+        LIMIT ?
+      `;
+      
+      const [fallbackCharacters] = await req.db.query(fallbackQuery, [excludeCharacterId, limit]);
+      
+      console.log(`Fallback query found ${fallbackCharacters.length} characters`);
+      
+      // Return the fallback results
+      return res.json({
+        success: true,
+        characters: fallbackCharacters || [],
+        excludedId: excludeCharacterId,
+        retry: retry,
+        fallback: true
+      });
+    }
+    
+    // Return the found characters
+    return res.json({
+      success: true,
+      characters: characters || [],
+      excludedId: excludeCharacterId,
+      retry: retry
+    });
   } catch (error) {
-    console.error('Error fetching suggested characters:', error);
-    res.status(500).json({
+    console.error('Error getting suggested characters:', error);
+    
+    // If the error is related to the field list, try a simplified query
+    if (error.code === 'ER_BAD_FIELD_ERROR') {
+      try {
+        console.log('Error in field list, trying simplified query...');
+        
+        // Super simple query that should work with any schema
+        const [safeCharacters] = await req.db.query(`
+          SELECT 
+            c.id, 
+            c.name, 
+            c.avatar_url, 
+            c.url,
+            c.created_by,
+            u.username as creator_username
+          FROM characters c
+          JOIN users u ON c.created_by = u.id
+          WHERE c.id != IFNULL(?, -1)
+          ORDER BY RAND()
+          LIMIT ?
+        `, [req.query.exclude || null, parseInt(req.query.limit) || 5]);
+        
+        return res.json({
+          success: true,
+          characters: safeCharacters || [],
+          excludedId: req.query.exclude || null,
+          fallback: true
+        });
+      } catch (fallbackError) {
+        console.error('Even simplified query failed:', fallbackError);
+        // Return empty results rather than error
+        return res.json({
+          success: true,
+          characters: [],
+          error: 'Could not retrieve characters',
+          message: fallbackError.message
+        });
+      }
+    }
+    
+    return res.status(500).json({
       success: false,
-      error: 'Failed to fetch suggested characters'
+      error: 'Failed to get suggested characters',
+      message: error.message
     });
   }
 });
+
+// Function to get unformatted SQL for debugging
+function getSQL(query, params) {
+  let sql = query;
+  if (params) {
+    params.forEach(param => {
+      sql = sql.replace('?', typeof param === 'string' ? `'${param}'` : param);
+    });
+  }
+  return sql;
+}
 
 module.exports = router;

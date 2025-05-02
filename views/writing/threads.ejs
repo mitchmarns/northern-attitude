@@ -1,0 +1,275 @@
+<div class="threads-container">
+  <div class="threads-header">
+    <h1>Writing Threads</h1>
+    <p class="threads-description">
+      Collaborate with other writers in organized conversation threads. Start a new thread or join existing ones.
+    </p>
+    
+    <div class="threads-actions">
+      <button class="btn btn-primary" id="create-thread-btn">
+        <i class="ph-duotone ph-plus"></i> Create New Thread
+      </button>
+      
+      <div class="threads-filter">
+        <div class="filter-group">
+          <label for="thread-filter">Filter:</label>
+          <select id="thread-filter" class="form-control">
+            <option value="all">All Threads</option>
+            <option value="my-threads">My Threads</option>
+            <option value="active">Active</option>
+            <option value="archived">Archived</option>
+          </select>
+        </div>
+        
+        <div class="search-group">
+          <input type="text" class="form-control" placeholder="Search threads..." id="thread-search">
+          <button class="btn search-btn">
+            <i class="ph-duotone ph-magnifying-glass"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="threads-list">
+    <% if (threads && threads.length > 0) { %>
+      <% threads.forEach(thread => { %>
+        <div class="thread-card">
+          <div class="thread-card-header">
+            <h3 class="thread-title">
+              <a href="/writing/threads/<%= thread.id %>"><%= thread.title %></a>
+            </h3>
+            <span class="thread-status <%= thread.status %>"><%= thread.status %></span>
+          </div>
+          
+          <div class="thread-card-body">
+            <p class="thread-description"><%= thread.description %></p>
+            
+            <div class="thread-meta">
+              <div class="thread-participants">
+                <span class="meta-label">Participants:</span>
+                <span class="meta-value"><%= thread.participant_count || 0 %></span>
+              </div>
+              
+              <div class="thread-messages">
+                <span class="meta-label">Messages:</span>
+                <span class="meta-value"><%= thread.message_count || 0 %></span>
+              </div>
+              
+              <div class="thread-activity">
+                <span class="meta-label">Last activity:</span>
+                <span class="meta-value"><%= formatDate(thread.updated_at) %></span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="thread-card-footer">
+            <div class="thread-creator">
+              <span>Created by: </span>
+              <a href="/profile/<%= thread.creator_id %>">
+                <%= thread.creator_name %>
+              </a>
+              <% if (thread.character_id) { %>
+                as
+                <a href="/characters/<%= thread.character_id %>">
+                  <%= thread.character_name %>
+                </a>
+              <% } %>
+            </div>
+            
+            <div class="thread-actions">
+              <% if (isParticipant(user.id, thread.id)) { %>
+                <a href="/writing/threads/<%= thread.id %>" class="btn btn-outline btn-sm">Continue</a>
+              <% } else if (thread.privacy !== 'private') { %>
+                <button class="btn btn-primary btn-sm join-thread-btn" data-thread-id="<%= thread.id %>">Join</button>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }); %>
+    <% } else { %>
+      <div class="empty-state">
+        <div class="empty-state-icon">
+          <i class="ph-duotone ph-chat-teardrop-text"></i>
+        </div>
+        <h3>No threads found</h3>
+        <p>Start a new thread to begin collaborative writing</p>
+        <button class="btn btn-primary" id="empty-create-thread-btn">Create Thread</button>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<!-- Create Thread Modal -->
+<div class="modal" id="create-thread-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Create New Thread</h2>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form id="create-thread-form" action="/api/threads" method="POST">
+        <div class="form-group">
+          <label for="thread-title">Title</label>
+          <input type="text" id="thread-title" name="title" class="form-control" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="thread-description">Description</label>
+          <textarea id="thread-description" name="description" class="form-control" rows="4"></textarea>
+        </div>
+        
+        <div class="form-group">
+          <label for="thread-privacy">Privacy</label>
+          <select id="thread-privacy" name="privacy" class="form-control">
+            <option value="public">Public - Anyone can view and join</option>
+            <option value="invite-only">Invite Only - Only invited users can join</option>
+            <option value="private">Private - Only visible to participants</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>Post as Character (Optional)</label>
+          <div class="character-selector">
+            <% if (characters && characters.length > 0) { %>
+              <% characters.forEach(character => { %>
+                <div class="character-option">
+                  <input type="radio" name="character_id" id="char-<%= character.id %>" value="<%= character.id %>">
+                  <label for="char-<%= character.id %>" class="character-label">
+                    <div class="character-avatar">
+                      <% if (character.avatar_url) { %>
+                        <img src="<%= character.avatar_url %>" alt="<%= character.name %>">
+                      <% } else { %>
+                        <div class="avatar-placeholder"><%= character.name.charAt(0) %></div>
+                      <% } %>
+                    </div>
+                    <div class="character-info">
+                      <span class="character-name"><%= character.name %></span>
+                      <span class="character-role"><%= character.role %></span>
+                    </div>
+                  </label>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <p class="no-characters">You don't have any characters yet. <a href="/characters/create">Create one?</a></p>
+            <% } %>
+            
+            <div class="character-option">
+              <input type="radio" name="character_id" id="char-none" value="" checked>
+              <label for="char-none" class="character-label">
+                <div class="character-avatar">
+                  <div class="avatar-placeholder">
+                    <i class="ph-duotone ph-user"></i>
+                  </div>
+                </div>
+                <div class="character-info">
+                  <span class="character-name">Post as Yourself</span>
+                  <span class="character-role">User</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Create Thread</button>
+          <button type="button" class="btn btn-outline cancel-modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Format date helper function
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now - date;
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    
+    if (diffInDays === 0) {
+      return 'Today at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } else if (diffInDays === 1) {
+      return 'Yesterday at ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } else if (diffInDays < 7) {
+      return diffInDays + ' days ago';
+    } else {
+      return date.toLocaleDateString([], {month: 'short', day: 'numeric', year: 'numeric'});
+    }
+  }
+  
+  // Check if user is a participant helper function
+  function isParticipant(userId, threadId) {
+    // This would normally be determined by server data
+    // For now just return a placeholder
+    return false; // Would be filled in with actual data from the server
+  }
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    const createThreadBtn = document.getElementById('create-thread-btn');
+    const emptyCreateThreadBtn = document.getElementById('empty-create-thread-btn');
+    const createThreadModal = document.getElementById('create-thread-modal');
+    const closeModal = document.querySelector('.close-modal');
+    const cancelModal = document.querySelector('.cancel-modal');
+    
+    function showModal() {
+      createThreadModal.style.display = 'flex';
+    }
+    
+    function hideModal() {
+      createThreadModal.style.display = 'none';
+    }
+    
+    if (createThreadBtn) {
+      createThreadBtn.addEventListener('click', showModal);
+    }
+    
+    if (emptyCreateThreadBtn) {
+      emptyCreateThreadBtn.addEventListener('click', showModal);
+    }
+    
+    if (closeModal) {
+      closeModal.addEventListener('click', hideModal);
+    }
+    
+    if (cancelModal) {
+      cancelModal.addEventListener('click', hideModal);
+    }
+    
+    // Close modal when clicking outside of it
+    window.addEventListener('click', function(event) {
+      if (event.target === createThreadModal) {
+        hideModal();
+      }
+    });
+    
+    // Thread filter functionality
+    const threadFilter = document.getElementById('thread-filter');
+    if (threadFilter) {
+      threadFilter.addEventListener('change', function() {
+        // Implementation would use AJAX to filter threads
+        console.log('Filter changed to:', this.value);
+      });
+    }
+    
+    // Thread search functionality
+    const threadSearch = document.getElementById('thread-search');
+    if (threadSearch) {
+      threadSearch.addEventListener('input', function() {
+        // Implementation would use AJAX to search threads
+        console.log('Searching for:', this.value);
+      });
+    }
+    
+    // Join thread functionality
+    const joinButtons = document.querySelectorAll('.join-thread-btn');
+    joinButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const threadId = this.getAttribute('data-thread-id');
+        // Implementation would use AJAX to join thread
+        console.log('Joining thread:', threadId);
+      });
+    });
+  });
+</script>

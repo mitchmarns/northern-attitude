@@ -111,7 +111,11 @@ const authRoutes = require('./routes/auth');
 const dashboardRoutes = require('./routes/dashboard');
 const profileRoutes = require('./routes/profile');
 const socialRoutes = require('./routes/social');
+const threadsRouter = require('./routes/threads');
+const writingRouter = require('./routes/writing');
+const apiRouter = require('./routes/api'); // Add this line
 
+// API routes
 app.use('/', indexRoutes);
 app.use('/auth', authRoutes);
 app.use('/characters', characterRoutes);
@@ -119,6 +123,9 @@ app.use('/teams', teamRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/profile', profileRoutes);
 app.use('/social', socialRoutes);
+app.use('/writing/threads', threadsRouter);
+app.use('/writing', writingRouter);
+app.use('/api', apiRouter); // Add this line
 
 // Error handling
 app.use((req, res, next) => {
