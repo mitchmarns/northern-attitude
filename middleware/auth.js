@@ -1,6 +1,5 @@
 /**
- * Authentication middleware for Northern Attitude
- * Handles user authentication checks and redirects
+ * Authentication middleware
  */
 
 /**

@@ -177,10 +177,9 @@ const ThreadsController = {
         return res.status(400).render('error', { message: 'Thread title is required', error: {} });
       }
       
-      // Try using direct queries that match the schema exactly
       console.log('Inserting thread with simplified approach');
       
-      // First insert the thread - match schema exactly
+      // Insert the thread
       const [threadResult] = await db.query(`
         INSERT INTO threads (title, description, creator_id, character_id, privacy, status)
         VALUES (?, ?, ?, ?, ?, 'active')
@@ -195,7 +194,7 @@ const ThreadsController = {
       const threadId = threadResult.insertId;
       console.log(`Thread inserted with ID: ${threadId}`);
       
-      // Now insert the participant - match schema exactly
+      // Insert the participant
       await db.query(`
         INSERT INTO thread_participants (thread_id, user_id, character_id, is_admin)
         VALUES (?, ?, ?, true)
@@ -246,31 +245,62 @@ const ThreadsController = {
   updateThread: async (req, res) => {
     try {
       const threadId = req.params.id;
+      // Accept both JSON and form fields
       const { title, description, privacy, status } = req.body;
-      
+
       // Check if user is admin of the thread
       const [threadAdmin] = await db.query(`
         SELECT * FROM thread_participants
         WHERE thread_id = ? AND user_id = ? AND is_admin = true
       `, [threadId, req.user.id]);
-      
+
       if (threadAdmin.length === 0) {
-        return res.status(403).json({ 
-          message: 'You do not have permission to update this thread' 
-        });
+        // Support both API and web responses
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+          return res.status(403).json({ 
+            message: 'You do not have permission to update this thread' 
+          });
+        }
+        req.flash('error_msg', 'You do not have permission to update this thread');
+        return res.redirect('/writing/threads');
       }
-      
-      // Update thread details
+
+      // Only update provided fields
+      const updates = [];
+      const params = [];
+      if (title !== undefined) { updates.push('title = ?'); params.push(title); }
+      if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+      if (privacy !== undefined) { updates.push('privacy = ?'); params.push(privacy); }
+      if (status !== undefined) { updates.push('status = ?'); params.push(status); }
+
+      if (updates.length === 0) {
+        if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+          return res.status(400).json({ message: 'No fields to update' });
+        }
+        req.flash('error_msg', 'No fields to update');
+        return res.redirect('/writing/threads');
+      }
+
+      params.push(threadId);
+
       await db.query(`
         UPDATE threads
-        SET title = ?, description = ?, privacy = ?, status = ?
+        SET ${updates.join(', ')}
         WHERE id = ?
-      `, [title, description, privacy, status, threadId]);
-      
-      res.json({ message: 'Thread updated successfully' });
+      `, params);
+
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.json({ message: 'Thread updated successfully' });
+      }
+      req.flash('success_msg', 'Thread updated successfully');
+      res.redirect(`/writing/threads/${threadId}`);
     } catch (error) {
       console.error('Error updating thread:', error);
-      res.status(500).json({ message: 'Failed to update thread' });
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.status(500).json({ message: 'Failed to update thread' });
+      }
+      req.flash('error_msg', 'Failed to update thread');
+      res.redirect('/writing/threads');
     }
   },
 

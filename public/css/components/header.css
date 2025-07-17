@@ -1,7 +1,8 @@
 /* Header & Navigation */
 .site-header {
-  background-color: var(--navbar-bg);
-  box-shadow: var(--shadow-sm);
+  background-color: rgba(235, 235, 235, 0.9);
+  backdrop-filter: var(--backdrop-blur);
+  border-bottom: 1px solid var(--glass-border);
   position: sticky;
   top: 0;
   z-index: var(--z-dropdown);
@@ -40,7 +41,7 @@
   position: relative;
   color: var(--darktext);
   font-weight: var(--medium);
-  transition: all 0.3s ease;
+  transition: all 0.3s var(--ease-smooth);
   text-decoration: none; /* Ensure links aren't underlined */
   padding: 0.5rem 0; /* Add vertical padding for larger touch target */
 }
@@ -52,13 +53,14 @@
   left: 50%;
   width: 0;
   height: 2px;
-  background-color: var(--header);
-  transition: all 0.3s ease;
+  background: linear-gradient(90deg, var(--header), var(--gradient2));
+  transition: all 0.3s var(--ease-bounce);
   transform: translateX(-50%);
 }
 
 .nav-link:hover {
   color: var(--header);
+  transform: translateY(-1px);
 }
 
 .nav-link:hover:before {
@@ -81,7 +83,9 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background-color: var(--card-bg);
+  background-color: var(--glass-bg);
+  backdrop-filter: var(--backdrop-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-md);
   padding: var(--spacing-sm);
@@ -90,7 +94,7 @@
   z-index: var(--z-dropdown);
   opacity: 0;
   transform: translateY(-10px);
-  transition: opacity 0.3s, transform 0.3s;
+  transition: opacity 0.3s var(--ease-smooth), transform 0.3s var(--ease-smooth);
 }
 
 .dropdown-menu.show {
@@ -105,11 +109,12 @@
   color: var(--lighttext);
   border-radius: var(--radius-sm);
   text-decoration: none;
-  transition: background-color 0.2s, color 0.2s;
+  transition: all 0.2s var(--ease-smooth);
 }
 
 .dropdown-item:hover, .dropdown-item:focus {
   background-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(2px);
   outline: none;
 }
 

@@ -1,192 +1,407 @@
-<div class="container p-4">
-  <div class="d-flex profile-header mb-5" style="gap: var(--spacing-lg);">
-    <div class="profile-header-content">
-      <h1 class="mb-2"><%= character.name %></h1>
-      <% if (character.nickname) { %>
-        <p class="nickname mb-3">"<%= character.nickname %>"</p>
-      <% } %>
-      <div class="character-meta d-flex flex-wrap gap-2">
-        <span><i class="ph-duotone ph-user"></i> <%= character.role || 'Civilian' %></span>
-        <% if (character.teamId && character.team) { %>
-          <span><i class="ph-duotone ph-users"></i> <%= character.team %></span>
-        <% } %>
-        <% if (character.position) { %>
-          <span><i class="ph-duotone ph-hockey"></i> <%= character.position %></span>
-        <% } %>
-        <% if (character.jerseyNumber) { %>
-          <i class="ph-duotone ph-t-shirt"></i> #<%= character.jerseyNumber %></span>
-        <% } %>
-      </div>
-    </div>
-    <div class="profile-avatar">
-      <% if (character.url) { %>
-        <img src="<%= character.url %>" alt="<%= character.name %>" onerror="this.onerror=null; this.src='/img/default-avatar.png';">
-      <% } else { %>
-        <div class="avatar-placeholder d-flex align-items-center justify-content-center">
-          <i class="ph-duotone ph-user"></i>
-        </div>
-      <% } %>
-    </div>
-  </div>
-  
-  <div class="character-tabs mb-4">
-    <div class="character-tab-links">
-      <a href="#tab-basic" class="character-tab-link active">Basic Info</a>
-      <a href="#tab-personality" class="character-tab-link">Personality</a>
-      <a href="#tab-appearance" class="character-tab-link">Appearance</a>
-      <a href="#tab-background" class="character-tab-link">Background</a>
-      <a href="#tab-details" class="character-tab-link">Details</a>
-    </div>
-    
-    <div class="character-tab-content p-3">
-      <!-- Basic Info Tab -->
-      <div id="tab-basic" class="character-tab-pane">
-        <div class="info-grid mb-4">
-          <div class="info-item">
-            <h3>Age</h3>
-            <p><%= character.age || 'Not specified' %></p>
-          </div>
-          <div class="info-item">
-            <h3>Gender</h3>
-            <p><%= character.gender || 'Not specified' %></p>
-          </div>
-          <% if (character.faceclaim) { %>
-          <div class="info-item">
-            <h3>Faceclaim</h3>
-            <p><%= character.faceclaim %></p>
-          </div>
-          <% } %>
-          <% if (character.role === 'Player') { %>
-          <div class="info-item">
-            <h3>Position</h3>
-            <p><%= character.position || 'Not specified' %></p>
-          </div>
-          <div class="info-item">
-            <h3>Team</h3>
-            <p><%= character.team || 'Not specified' %></p>
-          </div>
-          <div class="info-item">
-            <h3>Jersey Number</h3>
-            <p><%= character.jerseyNumber || 'Not specified' %></p>
-          </div>
-          <% } else if (character.role === 'Staff') { %>
-          <div class="info-item">
-            <h3>Position</h3>
-            <p><%= character.position || 'Not specified' %></p>
-          </div>
-          <div class="info-item">
-            <h3>Team</h3>
-            <p><%= character.team || 'Not specified' %></p>
-          </div>
-          <% } %>
-        </div>
-        
-        <% if (character.bio) { %>
-        <div class="bio-section mt-4">
-          <h3 class="mb-2">Bio</h3>
-          <p><%= character.bio %></p>
-        </div>
-        <% } %>
-      </div>
-      
-      <!-- Personality Tab -->
-      <div id="tab-personality" class="character-tab-pane">
-        <% if (character.personality) { %>
-        <div class="info-section mb-4">
-          <h3 class="mb-2">Personality</h3>
-          <p><%= character.personality %></p>
-        </div>
-        <% } %>
-        
-        <div class="info-grid">
-          <% if (character.likes) { %>
-          <div class="info-item">
-            <h3>Likes</h3>
-            <p><%= character.likes %></p>
-          </div>
-          <% } %>
-          
-          <% if (character.dislikes) { %>
-          <div class="info-item">
-            <h3>Dislikes</h3>
-            <p><%= character.dislikes %></p>
-          </div>
-          <% } %>
-          
-          <% if (character.fears) { %>
-          <div class="info-item">
-            <h3>Fears</h3>
-            <p><%= character.fears %></p>
-          </div>
-          <% } %>
-          
-          <% if (character.goals) { %>
-          <div class="info-item">
-            <h3>Goals</h3>
-            <p><%= character.goals %></p>
-          </div>
-          <% } %>
-        </div>
-      </div>
-      
-      <!-- Appearance Tab -->
-      <div id="tab-appearance" class="character-tab-pane">
-        <% if (character.appearance) { %>
-        <div class="info-section">
-          <h3 class="mb-2">Physical Appearance</h3>
-          <p><%= character.appearance %></p>
-        </div>
-        <% } else { %>
-        <div class="empty-state p-5 text-center">
-          <p class="m-0">No appearance information available.</p>
-        </div>
-        <% } %>
-      </div>
-      
-      <!-- Background Tab -->
-      <div id="tab-background" class="character-tab-pane">
-        <% if (character.background) { %>
-        <div class="info-section">
-          <h3 class="mb-2">Character Background</h3>
-          <p><%= character.background %></p>
-        </div>
-        <% } else { %>
-        <div class="empty-state p-5 text-center">
-          <p class="m-0">No background information available.</p>
-        </div>
-        <% } %>
-      </div>
-      
-      <!-- Additional Details Tab -->
-      <div id="tab-details" class="character-tab-pane">
-        <% if (character.skills || character.fullBio) { %>
-          <% if (character.skills) { %>
-          <div class="info-section mb-4">
-            <h3 class="mb-2">Skills & Abilities</h3>
-            <p><%= character.skills %></p>
-          </div>
-          <% } %>
-          
-          <% if (character.fullBio) { %>
-          <div class="info-section">
-            <h3 class="mb-2">Full Biography</h3>
-            <p><%= character.fullBio %></p>
-          </div>
-          <% } %>
-        <% } else { %>
-        <div class="empty-state p-5 text-center">
-          <p class="m-0">No additional details available.</p>
-        </div>
-        <% } %>
-      </div>
-    </div>
-  </div>
-  
-  <div class="d-flex gap-3 mt-4">
-    <a href="/characters/<%= character.id %>/edit" class="btn btn-secondary">Edit Character</a>
-    <a href="/characters" class="btn btn-outline">Back to Characters</a>
-  </div>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= character.name %></title>
+  <script src="https://kit.fontawesome.com/08698b12f5.js" crossorigin="anonymous"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/pages/characterProfile.css">
+</head>
+<body>
 
-<link rel="stylesheet" href="/css/pages/characterProfile.css">
-<script src="/js/characterProfile.js"></script>
+  <main>
+    <!-- Name Banner -->
+    <div class="name-banner">
+      <div class="background">
+        <img src="<%= character.bannerUrl %>" alt="banner background" />
+      </div>
+      <div class="name"><%= character.name %></div>
+    </div>
+
+    <!-- Tabs -->
+    <section id="tab-container">
+      <div class="tabs">
+        <button class="tab active" data-tab="stats">stats</button>
+        <button class="tab" data-tab="bio">biography</button>
+        <button class="tab" data-tab="connections">connections</button>
+        <button class="tab" data-tab="instagram">pictures</button>
+      </div>
+    </section>
+
+    <div class="content-wrapper">
+      <!-- Sidebar -->
+      <div class="sidebarborder">
+        <div class="sidebar">
+          <div class="over">
+            <div class="p"><%= character.quote || '—' %></div>
+          </div>
+          <div class="under">
+            <img src="<%= character.sidebarUrl || character.avatarUrl %>" alt="<%= character.name %>" onerror="this.onerror=null; this.src='/img/default-character.png';" />
+          </div>
+        </div>
+        <div class="spotify-embed">
+          <h3>Listen on Spotify</h3>
+          <% if(character.spotifyEmbed) { %>
+            <%- character.spotifyEmbed %>
+          <% } else { %>
+            <iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/5mm62IZlGuynlpW83VELAE?utm_source=generator&theme=0" width="100%" height="152" frameborder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="tab-content active" id="stats">
+        <div class="character-info">
+          <div id="info-container">
+            <div class="info-section basics">
+              <h2>Basics</h2>
+              <div class="info-item"><span class="label">Nickname:</span> <span class="value"><%= character.nickname || '—' %></span></div>
+              <div class="info-item"><span class="label">Age:</span> <span class="value"><%= character.age || '—' %></span></div>
+              <div class="info-item"><span class="label">Gender:</span> <span class="value"><%= character.gender || '—' %></span></div>
+              <div class="info-item"><span class="label">Birthday:</span> <span class="value"><%= character.birthday || '—' %></span></div>
+              <div class="info-item"><span class="label">Zodiac:</span> <span class="value"><%= character.zodiac || '—' %></span></div>
+              <div class="info-item"><span class="label">Hometown:</span> <span class="value"><%= character.hometown || '—' %></span></div>
+              <div class="info-item"><span class="label">Education:</span> <span class="value"><%= character.education || '—' %></span></div>
+              <div class="info-item"><span class="label">Occupation:</span> <span class="value"><%= character.occupation || character.role || '—' %></span></div>
+              <div class="info-item"><span class="label">Sexuality:</span> <span class="value"><%= character.sexuality || '—' %></span></div>
+              <div class="info-item"><span class="label">Pronouns:</span> <span class="value"><%= character.pronouns || '—' %></span></div>
+              <div class="info-item"><span class="label">Languages:</span> <span class="value"><%= character.languages || '—' %></span></div>
+              <div class="info-item"><span class="label">Religion:</span> <span class="value"><%= character.religion || '—' %></span></div>
+              <% if (character.faceclaim) { %>
+                <div class="info-item"><span class="label">Faceclaim:</span> <span class="value"><%= character.faceclaim %></span></div>
+              <% } %>
+              <% if (character.role === 'Player' || character.role === 'Staff') { %>
+                <div class="info-item"><span class="label">Team:</span> <span class="value"><%= character.team || '—' %></span></div>
+                <div class="info-item"><span class="label">Position:</span> <span class="value"><%= character.position || '—' %></span></div>
+                <% if (character.role === 'Player') { %>
+                  <div class="info-item"><span class="label">Jersey #:</span> <span class="value"><%= character.jerseyNumber || '—' %></span></div>
+                <% } %>
+              <% } %>
+            </div>
+            <div class="info-section personality">
+              <h2>Personality</h2>
+              <div class="info-item"><span class="label">Traits:</span> <span class="value"><%= character.personality || '—' %></span></div>
+              <div class="info-item"><span class="label">Likes:</span> <span class="value"><%= character.likes || '—' %></span></div>
+              <div class="info-item"><span class="label">Dislikes:</span> <span class="value"><%= character.dislikes || '—' %></span></div>
+              <div class="info-item"><span class="label">Fears:</span> <span class="value"><%= character.fears || '—' %></span></div>
+              <div class="info-item"><span class="label">Goals:</span> <span class="value"><%= character.goals || '—' %></span></div>
+              <div class="info-item"><span class="label">Strengths:</span> <span class="value"><%= character.strengths || '—' %></span></div>
+              <div class="info-item"><span class="label">Weaknesses:</span> <span class="value"><%= character.weaknesses || '—' %></span></div>
+            </div>
+            <div class="info-section favorites">
+              <h2>Favorites</h2>
+              <div class="info-item"><span class="label">Food:</span> <span class="value"><%= character.favFood || '—' %></span></div>
+              <div class="info-item"><span class="label">Music:</span> <span class="value"><%= character.favMusic || '—' %></span></div>
+              <div class="info-item"><span class="label">Movies:</span> <span class="value"><%= character.favMovies || '—' %></span></div>
+              <div class="info-item"><span class="label">Color:</span> <span class="value"><%= character.favColor || '—' %></span></div>
+              <div class="info-item"><span class="label">Sports:</span> <span class="value"><%= character.favSports || '—' %></span></div>
+            </div>
+            <div class="info-section inspiration">
+              <h2>Inspiration</h2>
+              <div class="info-item"><span class="label">Characters:</span> <span class="value"><%= character.inspiration || '—' %></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="bio">
+        <div class="biocon">
+          <h3>TIMELINE</h3>
+          <div class="scrolling-banner">
+            <% if (character.timeline && character.timeline.length) { %>
+              <% character.timeline.forEach(function(event) { %>
+                <span><%= event %></span>
+              <% }) %>
+            <% } else { %>
+              <span>No timeline events available.</span>
+            <% } %>
+          </div>
+          <div class="bio-section mt-4">
+            <h3 class="mb-2">BIO</h3>
+            <p><%= character.bio || 'No biography available.' %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-content" id="connections">
+        <div class="connections-list">
+          <% if (character.connections && character.connections.length) { %>
+            <% character.connections.forEach(function(conn) { %>
+              <div class="connection">
+                <img src="<%= conn.img || '/img/default-character.png' %>" alt="<%= conn.name %>" onerror="this.onerror=null; this.src='/img/default-character.png';">
+                <div class="connection-info">
+                  <h4><%= conn.name %></h4>
+                  <p>Relationship: <%= conn.relationship %></p>
+                  <p>Details: <%= conn.details %></p>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <span>No connections listed.</span>
+          <% } %>
+        </div>
+      </div>
+
+      <div class="tab-content" id="instagram">
+        <div id="igheader">PICTURES</div> 
+        <div class="instagram-buttons">
+          <% if (isOwner) { %>
+            <button class="edit-media-btn" data-target="gallery" title="Add image to gallery">
+              <i class="fa-solid fa-image"></i>
+            </button>
+          <% } %>
+        </div>
+        <p class="help-text">Click on an image to view it in full size.</p>
+        <div id="instagram-gallery">
+          <% if (character.gallery && character.gallery.length) { %>
+            <div class="gallery-grid">
+              <% character.gallery.forEach(function(img) { %>
+                <img src="<%= img.url %>" alt="<%= img.caption || character.name %>">
+              <% }) %>
+            </div>
+          <% } else { %>
+            <img src="/img/default-character.png" alt="No images available" onerror="this.onerror=null; this.src='/img/default-character.png';">
+          <% } %>
+        </div>
+        <div id="image-modal" class="modal">
+          <span class="close">&times;</span>
+          <img class="modal-content" id="modal-image">
+          <div id="caption"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-3 mt-4" style="margin-left: 320px;">
+      <a href="/characters/<%= character.id %>/edit" class="btn btn-secondary">Edit Character</a>
+      <a href="/characters" class="btn btn-outline">Back to Characters</a>
+    </div>
+  </main>
+
+  <% if (isOwner) { %>
+  <!-- Media URL Update Modal -->
+  <div id="media-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3 id="media-modal-title">Update Media</h3>
+      <form id="media-update-form" action="/characters/<%= character.id %>/update-media" method="POST">
+        <input type="hidden" id="media-type" name="mediaType" value="">
+        <div class="form-group">
+          <label for="media-url">URL:</label>
+          <input type="text" id="media-url" name="url" class="form-control" placeholder="Enter URL">
+          <small class="help-text" id="media-help-text"></small>
+        </div>
+        <div class="form-group">
+          <button type="submit" class="btn">Save</button>
+          <button type="button" class="btn btn-outline modal-cancel">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
+  <script>
+    // Tab Switching Logic
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = document.querySelectorAll('.tab');
+      const tabContents = document.querySelectorAll('.tab-content');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tabContents.forEach(content => content.classList.remove('active'));
+          tab.classList.add('active');
+          const targetTab = tab.getAttribute('data-tab');
+          document.getElementById(targetTab).classList.add('active');
+        });
+      });
+
+      // Popup Modal functionality
+      const images = document.querySelectorAll('#instagram-gallery img');
+      const modal = document.getElementById('image-modal');
+      const modalImg = document.getElementById('modal-image');
+      const captionText = document.getElementById('caption');
+      const closeBtn = document.querySelector('.close');
+      images.forEach(image => {
+        image.addEventListener('click', () => {
+          modal.style.display = 'block';
+          modalImg.src = image.src;
+          captionText.textContent = image.alt;
+        });
+      });
+      closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
+
+      // Media update buttons - only execute if user is owner
+      if (document.querySelectorAll('.edit-media-btn').length > 0) {
+        const mediaModal = document.getElementById('media-modal');
+        const mediaModalTitle = document.getElementById('media-modal-title');
+        const mediaType = document.getElementById('media-type');
+        const mediaUrl = document.getElementById('media-url');
+        const mediaHelpText = document.getElementById('media-help-text');
+        const mediaUpdateButtons = document.querySelectorAll('.edit-media-btn');
+        const mediaModalClose = mediaModal.querySelector('.close');
+        const mediaModalCancel = mediaModal.querySelector('.modal-cancel');
+
+        // Help text for different media types
+        const helpTexts = {
+          bannerUrl: "Enter a direct URL to an image for the banner (1200x300px recommended)",
+          sidebarUrl: "Enter a direct URL to an image for the sidebar (250x400px recommended)",
+          spotifyEmbed: "Paste the full Spotify iframe embed code (from Share > Embed > Copy Code)",
+          gallery: "Enter a direct image URL to add to your gallery. This will add a new image (not replace all)."
+        };
+
+        // Current values
+        const currentValues = {
+          bannerUrl: "<%= character.bannerUrl || '' %>".replace(/&quot;/g, '"'),
+          sidebarUrl: "<%= character.sidebarUrl || '' %>".replace(/&quot;/g, '"'),
+          spotifyEmbed: "<%= character.spotifyEmbed || '' %>".replace(/&quot;/g, '"')
+        };
+
+        // Modal titles
+        const modalTitles = {
+          bannerUrl: "Update Banner Image",
+          sidebarUrl: "Update Sidebar Image",
+          spotifyEmbed: "Update Spotify Playlist",
+          gallery: "Add Image to Gallery"
+        };
+
+        mediaUpdateButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const target = btn.getAttribute('data-target');
+            mediaModalTitle.textContent = modalTitles[target] || "Update Media";
+            mediaType.value = target;
+            mediaUrl.value = currentValues[target] || '';
+            mediaHelpText.textContent = helpTexts[target] || '';
+            mediaModal.style.display = 'block';
+          });
+        });
+
+        // Close modal
+        mediaModalClose.addEventListener('click', () => {
+          mediaModal.style.display = 'none';
+        });
+
+        mediaModalCancel.addEventListener('click', () => {
+          mediaModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', (event) => {
+          if (event.target === mediaModal) {
+            mediaModal.style.display = 'none';
+          }
+        });
+      }
+    });
+  </script>
+
+  <style>
+    .edit-media-btn {
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    
+    .edit-media-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+    
+    .sidebar .under {
+      position: relative;
+    }
+    
+    .spotify-embed {
+      position: relative;
+    }
+    
+    .spotify-embed .edit-media-btn {
+      top: 10px;
+      right: 10px;
+      bottom: auto;
+    }
+    
+    .background {
+      position: relative;
+    }
+    
+    /* Modal styling */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .modal-content {
+      background-color: #232323;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #555;
+      border-radius: 8px;
+      width: 50%;
+      max-width: 500px;
+    }
+    
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close:hover,
+    .close:focus {
+      color: white;
+      text-decoration: none;
+    }
+    
+    .help-text {
+      display: block;
+      margin-top: 5px;
+      color: #aaa;
+      font-size: 0.85em;
+    }
+
+    /* Instagram gallery grid */
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .gallery-grid img {
+      width: 100%;
+      height: auto;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .gallery-grid img:hover {
+      transform: scale(1.05);
+    }
+  </style>
+</body>
+</html>

@@ -1,20 +1,106 @@
-<div class="dashboard-container p-4">
-  <h1 class="text-center mb-4">Welcome, <%= user.username %>!</h1>
-  
-  <div class="dashboard-actions d-flex justify-between gap-2 mb-4">
-    <a href="/characters/create" class="btn">Create New Character</a>
-    <a href="/teams" class="btn">View Teams</a>
+<!-- Add this in your <head> section if not already present -->
+<link rel="stylesheet" href="/css/pages/dashboard.css">
+
+<div class="container dashboard-container py-4">
+  <h1 class="dashboard-title mb-4 text-center">Welcome, <%= user.username %>!</h1>
+
+  <!-- Stats Section -->
+  <div class="dashboard-stats row mb-4 gap-3 justify-content-center">
+    <div class="col-3 col-md-3 col-6">
+      <div class="dashboard-stat-card d-flex flex-column align-items-center p-3">
+        <div class="stat-label text-center">Characters</div>
+        <div class="stat-value stat-value-accent1"><%= stats.characterCount %></div>
+      </div>
+    </div>
+    <div class="col-3 col-md-3 col-6">
+      <div class="dashboard-stat-card d-flex flex-column align-items-center p-3">
+        <div class="stat-label text-center">Teams</div>
+        <div class="stat-value stat-value-accent2"><%= stats.teamCount %></div>
+      </div>
+    </div>
+    <div class="col-3 col-md-3 col-6">
+      <div class="dashboard-stat-card d-flex flex-column align-items-center p-3">
+        <div class="stat-label text-center">Threads</div>
+        <div class="stat-value stat-value-accent3"><%= stats.threadCount %></div>
+      </div>
+    </div>
+    <div class="col-3 col-md-3 col-6">
+      <div class="dashboard-stat-card d-flex flex-column align-items-center p-3">
+        <div class="stat-label text-center">Posts</div>
+        <div class="stat-value stat-value-accent4"><%= stats.postCount %></div>
+      </div>
+    </div>
   </div>
-  
-  <div class="dashboard-section mb-4 p-4">
-    <h2 class="mb-3">Your Characters</h2>
-    <!-- Character list will go here -->
-    <p class="text-center">You haven't created any characters yet.</p>
-  </div>
-  
-  <div class="dashboard-section p-4">
-    <h2 class="mb-3">Recent Activity</h2>
-    <!-- Activity feed will go here -->
-    <p class="text-center">No recent activity.</p>
+
+  <!-- Recent Items Section -->
+  <div class="row gap-4">
+    <div class="col-md-6 mb-4">
+      <div class="dashboard-section-card p-4">
+        <h3 class="dashboard-section-title accent1">Recent Characters</h3>
+        <% if (recent.characters.length > 0) { %>
+          <ul class="mb-2">
+            <% recent.characters.forEach(c => { %>
+              <li>
+                <a href="/characters/<%= c.id %>" class="dashboard-link accent1"><%= c.name %></a>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="text-muted">No characters yet.</p>
+        <% } %>
+        <a href="/characters" class="btn btn-sm btn-outline mt-2 accent1-border">View All Characters</a>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="dashboard-section-card p-4">
+        <h3 class="dashboard-section-title accent2">Recent Teams</h3>
+        <% if (recent.teams.length > 0) { %>
+          <ul class="mb-2">
+            <% recent.teams.forEach(t => { %>
+              <li>
+                <a href="/teams/<%= t.id %>" class="dashboard-link accent2"><%= t.name %></a>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="text-muted">No teams yet.</p>
+        <% } %>
+        <a href="/teams" class="btn btn-sm btn-outline mt-2 accent2-border">View All Teams</a>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="dashboard-section-card p-4">
+        <h3 class="dashboard-section-title accent3">Recent Threads</h3>
+        <% if (recent.threads.length > 0) { %>
+          <ul class="mb-2">
+            <% recent.threads.forEach(t => { %>
+              <li>
+                <a href="/writing/threads/<%= t.id %>" class="dashboard-link accent3"><%= t.title %></a>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="text-muted">No threads yet.</p>
+        <% } %>
+        <a href="/writing/threads" class="btn btn-sm btn-outline mt-2 accent3-border">View All Threads</a>
+      </div>
+    </div>
+    <div class="col-md-6 mb-4">
+      <div class="dashboard-section-card p-4">
+        <h3 class="dashboard-section-title accent4">Recent Posts</h3>
+        <% if (recent.posts.length > 0) { %>
+          <ul class="mb-2">
+            <% recent.posts.forEach(p => { %>
+              <li>
+                <a href="/social/feed" class="dashboard-link accent4"><%= p.title || 'Untitled Post' %></a>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <p class="text-muted">No posts yet.</p>
+        <% } %>
+        <a href="/social/feed" class="btn btn-sm btn-outline mt-2 accent4-border">View All Posts</a>
+      </div>
+    </div>
   </div>
 </div>

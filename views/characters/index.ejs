@@ -14,19 +14,13 @@
       <div class="character-list">
         <% characters.forEach(character => { %>
           <div class="character-card">
-            <% if (character.url) { %>
-              <div class="character-image">
-                <img src="<%= character.url %>" alt="<%= character.name %>" class="character-avatar">
-              </div>
-            <% } else { %>
-              <div class="character-image">
-                <img src="/images/default-avatar.png" alt="Default Avatar" class="character-avatar">
-              </div>
-            <% } %>
+            <div class="character-image">
+              <img src="<%= character.url || '/img/default-character.png' %>" alt="<%= character.name %>" class="character-avatar" onerror="this.onerror=null; this.src='/img/default-character.png';">
+            </div>
             <h2><%= character.name %></h2>
-            <p><strong>Age:</strong> <%= character.age %></p>
-            <p><strong>Position:</strong> <%= character.position %></p>
-            <p><strong>Team:</strong> <%= character.team %></p>
+            <p><strong>Age:</strong> <%= character.age || '—' %></p>
+            <p><strong>Position:</strong> <%= character.position || '—' %></p>
+            <p><strong>Team:</strong> <%= character.team ? character.team : 'Not specified' %></p>
             <a href="/characters/<%= character.id %>" class="btn btn-primary">View Profile</a>
           </div>
         <% }); %>
@@ -34,6 +28,10 @@
     <% } else { %>
       <p class="text-center">No characters found.</p>
     <% } %>
+    
+    <div class="text-center mt-4">
+      <a href="/characters/create" class="btn btn-success">Create New Character</a>
+    </div>
   </div>
 </body>
 </html>

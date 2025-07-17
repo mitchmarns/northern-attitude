@@ -4,17 +4,18 @@
   padding: 10px 18px;
   background-color: var(--accent3); 
   color: var(--lighttext);
-  border: none;
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   font-family: var(--mainfont);
   font-size: var(--text-base);
   font-weight: var(--medium);
   text-align: center;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s var(--ease-smooth);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  backdrop-filter: var(--backdrop-blur);
+  box-shadow: var(--shadow-colored);
   z-index: 1;
 }
 
@@ -29,14 +30,39 @@
   z-index: -1;
 }
 
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transform: translate(-50%, -50%);
+  transition: all 0.4s var(--ease-smooth);
+  border-radius: 50%;
+  z-index: -1;
+}
+
 .btn:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-hover);
   color: var(--lighttext);
-  transform: translateY(-2px);
+  transform: translateY(-2px) scale(1.02);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .btn:hover:before {
   width: 100%;
+}
+
+.btn:hover::after {
+  width: 200px;
+  height: 200px;
+}
+
+.btn:active {
+  transform: translateY(-1px) scale(0.98);
+  transition: all 0.1s var(--ease-sharp);
 }
 
 .btn:focus {

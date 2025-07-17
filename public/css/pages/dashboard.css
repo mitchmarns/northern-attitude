@@ -1,0 +1,56 @@
+/* Card backgrounds, border radius, and shadow */
+.dashboard-stat-card,
+.dashboard-section-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Stat label */
+.stat-label {
+  color: var(--muted-text);
+  font-size: var(--text-sm);
+  font-weight: var(--medium);
+  letter-spacing: 0.05em;
+}
+
+/* Stat values with accent colors */
+.stat-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--bold);
+}
+.stat-value-accent1 { color: var(--accent1); }
+.stat-value-accent2 { color: var(--accent2); }
+.stat-value-accent3 { color: var(--accent3); }
+.stat-value-accent4 { color: var(--accent4); }
+
+/* Section titles */
+.dashboard-section-title {
+  font-size: var(--text-xl);
+  font-weight: var(--bold);
+  margin-bottom: var(--spacing-sm);
+}
+.dashboard-section-title.accent1 { color: var(--accent1); }
+.dashboard-section-title.accent2 { color: var(--accent2); }
+.dashboard-section-title.accent3 { color: var(--accent3); }
+.dashboard-section-title.accent4 { color: var(--accent4); }
+
+/* Dashboard links */
+.dashboard-link {
+  font-weight: var(--medium);
+}
+.dashboard-link.accent1 { color: var(--accent1); }
+.dashboard-link.accent2 { color: var(--accent2); }
+.dashboard-link.accent3 { color: var(--accent3); }
+.dashboard-link.accent4 { color: var(--accent4); }
+
+/* Button border accents */
+.accent1-border { border-color: var(--accent1) !important; color: var(--accent1) !important; }
+.accent2-border { border-color: var(--accent2) !important; color: var(--accent2) !important; }
+.accent3-border { border-color: var(--accent3) !important; color: var(--accent3) !important; }
+.accent4-border { border-color: var(--accent4) !important; color: var(--accent4) !important; }
+
+/* Muted text */
+.text-muted {
+  color: var(--muted-text) !important;
+}

@@ -18,25 +18,48 @@
   </div>
 </div>
 
+<!-- Add toolbar CSS and JS if not already present -->
+<link rel="stylesheet" href="/css/textToolbar.css">
 <script src="/js/characterForm.js"></script>
+<script src="/js/textToolbar.js"></script>
 <script>
   // Render the form fields with pre-filled data
-  const character = JSON.parse('<%- JSON.stringify(character || {}) %>');
+  let character;
+  try {
+    // Use a safer approach to parse JSON with proper escaping
+    character = <%- JSON.stringify(character || {}) %>;
+  } catch (e) {
+    console.error("Error parsing character data:", e);
+    character = {};
+  }
   
   // Map the url field from database to avatarUrl for the form
   if (character.url && !character.avatarUrl) {
     character.avatarUrl = character.url;
   }
+  
+  // Map database fields to form fields for media URLs
+  if (character.banner_url) {
+    character.bannerUrl = character.banner_url;
+  }
+  
+  if (character.sidebar_url) {
+    character.sidebarUrl = character.sidebar_url;
+  }
+  
+  if (character.spotify_embed) {
+    character.spotifyEmbed = character.spotify_embed;
+  }
 
   // Add teams data to character object
   try {
     // Parse teams data safely
-    character.teams = JSON.parse('<%- JSON.stringify(teams || []) %>');
+    character.teams = <%- JSON.stringify(teams || []) %>;
     console.log("Teams loaded:", character.teams); // Debug output
     
-    // Map team name to teamId for the form
-    if (character.team && character.teams && character.teams.length > 0) {
-      const teamMatch = character.teams.find(t => t.name === character.team);
+    // Map team_id to teamId for the form
+    if (character.teamId && character.teams && character.teams.length > 0) {
+      const teamMatch = character.teams.find(t => t.id == character.teamId);
       if (teamMatch) {
         character.teamId = teamMatch.id;
         console.log("Selected team:", teamMatch.name, "with ID:", teamMatch.id); // Debug output
@@ -59,6 +82,11 @@
   if (character.full_bio) {
     character.fullBio = character.full_bio;
   }
+
+  // Map quote if needed
+  if (character.QUOTE && !character.quote) {
+    character.quote = character.QUOTE;
+  }
   
   // Debugging output
   console.log("Character data for form:", {
@@ -69,11 +97,35 @@
   });
   
   document.getElementById('form-fields').innerHTML = renderCharacterFormFields(character);
-  
-  // Initialize the form after rendering with short delay to ensure DOM is ready
+
+  // Initialize the form and text toolbar after rendering
   setTimeout(() => {
     initializeCharacterForm();
     // Make sure team fields are shown correctly based on role
     toggleTeamFields();
+    // Initialize text styling toolbar for any contenteditable fields (not markdown)
+    if (typeof initializeTextToolbar === 'function') {
+      initializeTextToolbar({ useMarkdown: false }); // Pass option to disable markdown if supported
+    }
   }, 100);
+
+  // Map additional fields from database to form fields
+  if (character.birthday) character.birthday = character.birthday;
+  if (!character.birthday) character.birthday = null;
+  if (character.zodiac) character.zodiac = character.zodiac;
+  if (character.hometown) character.hometown = character.hometown;
+  if (character.education) character.education = character.education;
+  if (character.occupation) character.occupation = character.occupation;
+  if (character.sexuality) character.sexuality = character.sexuality;
+  if (character.pronouns) character.pronouns = character.pronouns;
+  if (character.languages) character.languages = character.languages;
+  if (character.religion) character.religion = character.religion;
+  if (character.strengths) character.strengths = character.strengths;
+  if (character.weaknesses) character.weaknesses = character.weaknesses;
+  if (character.favFood) character.favFood = character.favFood;
+  if (character.favMusic) character.favMusic = character.favMusic;
+  if (character.favMovies) character.favMovies = character.favMovies;
+  if (character.favColor) character.favColor = character.favColor;
+  if (character.favSports) character.favSports = character.favSports;
+  if (character.inspiration) character.inspiration = character.inspiration;
 </script>

@@ -229,6 +229,31 @@
                 </div>
               </div>
             </div>
+
+            <div class="row">
+              <div class="col">
+                <div class="form-group">
+                  <label for="strengths">Strengths</label>
+                  <textarea 
+                    id="strengths" 
+                    name="strengths" 
+                    class="form-control" 
+                    rows="4"
+                  ><%= typeof character !== 'undefined' ? character.strengths : '' %></textarea>
+                </div>
+              </div>
+              <div class="col">
+                <div class="form-group">
+                  <label for="weaknesses">Weaknesses</label>
+                  <textarea 
+                    id="weaknesses" 
+                    name="weaknesses" 
+                    class="form-control" 
+                    rows="4"
+                  ><%= typeof character !== 'undefined' ? character.weaknesses : '' %></textarea>
+                </div>
+              </div>
+            </div>
           </div>
           
           <!-- Appearance Tab -->
@@ -280,6 +305,66 @@
                 rows="12"
               ><%= typeof character !== 'undefined' ? character.fullBio : '' %></textarea>
               <small style="color: rgba(255, 255, 255, 0.5);">Use this for any additional information about your character</small>
+            </div>
+
+            <div class="form-group">
+              <label for="favFood">Favorite Food</label>
+              <input 
+                type="text" 
+                id="favFood" 
+                name="favFood" 
+                class="form-control" 
+                value="<%= typeof character !== 'undefined' ? character.favFood : '' %>"
+              />
+            </div>
+            <div class="form-group">
+              <label for="favMusic">Favorite Music</label>
+              <input 
+                type="text" 
+                id="favMusic" 
+                name="favMusic" 
+                class="form-control" 
+                value="<%= typeof character !== 'undefined' ? character.favMusic : '' %>"
+              />
+            </div>
+            <div class="form-group">
+              <label for="favMovies">Favorite Movies</label>
+              <input 
+                type="text" 
+                id="favMovies" 
+                name="favMovies" 
+                class="form-control" 
+                value="<%= typeof character !== 'undefined' ? character.favMovies : '' %>"
+              />
+            </div>
+            <div class="form-group">
+              <label for="favColor">Favorite Color</label>
+              <input 
+                type="text" 
+                id="favColor" 
+                name="favColor" 
+                class="form-control" 
+                value="<%= typeof character !== 'undefined' ? character.favColor : '' %>"
+              />
+            </div>
+            <div class="form-group">
+              <label for="favSports">Favorite Sports</label>
+              <input 
+                type="text" 
+                id="favSports" 
+                name="favSports" 
+                class="form-control" 
+                value="<%= typeof character !== 'undefined' ? character.favSports : '' %>"
+              />
+            </div>
+            <div class="form-group">
+              <label for="inspiration">Inspiration</label>
+              <textarea 
+                id="inspiration" 
+                name="inspiration" 
+                class="form-control" 
+                rows="4"
+              ><%= typeof character !== 'undefined' ? character.inspiration : '' %></textarea>
             </div>
           </div>
         </div>

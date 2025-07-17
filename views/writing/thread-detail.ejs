@@ -40,7 +40,7 @@
                 <img src="<%= message.avatar_url %>" alt="<%= message.character_name || message.username %>">
               <% } else { %>
                 <div class="avatar-placeholder">
-                  <%= (message.character_name || message.username).charAt(0) %>
+                  <%= ((message.character_name || message.username || message.sender_name || 'U') + '').charAt(0) %>
                 </div>
               <% } %>
             </div>
@@ -148,43 +148,6 @@
       <% } %>
     </div>
   </div>
-  
-  <div class="thread-sidebar">
-    <div class="sidebar-section">
-      <h3>Participants (<%= participants.length %>)</h3>
-      <div class="participants-list">
-        <% participants.forEach(participant => { %>
-          <div class="participant-item">
-            <div class="participant-avatar">
-              <% if (participant.avatar_url) { %>
-                <img src="<%= participant.avatar_url %>" alt="<%= participant.character_name || participant.username %>">
-              <% } else { %>
-                <div class="avatar-placeholder">
-                  <%= (participant.character_name || participant.username).charAt(0) %>
-                </div>
-              <% } %>
-            </div>
-            <div class="participant-info">
-              <% if (participant.character_id) { %>
-                <span class="participant-name">
-                  <a href="/characters/<%= participant.character_id %>"><%= participant.character_name %></a>
-                </span>
-                <span class="participant-username">
-                  <a href="/profile/<%= participant.user_id %>"><%= participant.username %></a>
-                </span>
-              <% } else { %>
-                <span class="participant-name">
-                  <a href="/profile/<%= participant.user_id %>"><%= participant.username %></a>
-                </span>
-              <% } %>
-              <% if (participant.is_admin) { %>
-                <span class="admin-badge">Admin</span>
-              <% } %>
-            </div>
-          </div>
-        <% }); %>
-      </div>
-    </div>
     
     <% if (thread.privacy === 'invite-only' && (thread.creator_id === user.id || participants.some(p => p.user_id === user.id && p.is_admin))) { %>
       <div class="sidebar-section">
@@ -304,6 +267,44 @@
 </div>
 
 <script>
+  // --- Add this function for formatting ---
+  function formatSimpleMarkdown(text) {
+    if (!text) return '';
+    // Escape HTML
+    text = text.replace(/[&<>"']/g, function(m) {
+      return ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[m];
+    });
+    // Divider
+    text = text.replace(/(^|\n)---+\n?/g, '$1<hr class="divider">\n');
+    // Bold (**text**)
+    text = text.replace(/\*\*(.+?)\*\*/g, '<span class="bold">$1</span>');
+    // Underline (__text__)
+    text = text.replace(/__(.+?)__/g, '<span class="underline">$1</span>');
+    // Italic (*text*)
+    text = text.replace(/\*(.+?)\*/g, '<span class="italic">$1</span>');
+    // Quote (> ...)
+    text = text.replace(/(^|\n)&gt; (.+)/g, '$1<span class="quote">$2</span>');
+    // Line breaks
+    text = text.replace(/\n/g, '<br>');
+    return text;
+  }
+
+  function applyFormattingToMessages() {
+    document.querySelectorAll('.formatted-text').forEach(function(el) {
+      // Only format if not already formatted (avoid double-formatting)
+      if (!el.dataset.formatted) {
+        el.innerHTML = formatSimpleMarkdown(el.textContent);
+        el.dataset.formatted = "true";
+      }
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function() {
     // Thread info modal functionality
     const threadInfoBtn = document.getElementById('thread-info-btn');
@@ -489,9 +490,9 @@
           .then(response => response.json())
           .then(data => {
             if (data.message) {
-              // Update message content
-              messageBody.innerHTML = newContent;
-              
+              // Update message content and re-apply formatting
+              messageBody.innerHTML = formatSimpleMarkdown(newContent);
+              messageBody.dataset.formatted = "true";
               // Update timestamp to show edited
               const timeElement = messageElement.querySelector('.message-time');
               if (!timeElement.textContent.includes('(edited)')) {
@@ -546,46 +547,70 @@
       const formatButtons = toolbar.querySelectorAll('.toolbar-btn');
       
       formatButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('mousedown', function(e) {
+          e.preventDefault(); // Prevent focus loss and form submission
+        });
+        button.addEventListener('click', function(e) {
+          e.preventDefault(); // Prevent form submission
           const format = this.getAttribute('data-format');
           const textarea = messageContent;
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
-          const selectedText = textarea.value.substring(start, end);
+          const value = textarea.value;
+          const selectedText = value.substring(start, end);
           let replacement = '';
-          
+          let newCursorPos = start;
+
           switch (format) {
             case 'bold':
-              replacement = `**${selectedText}**`;
+              replacement = `**${selectedText || 'bold text'}**`;
+              newCursorPos = selectedText ? start + replacement.length : start + 2;
               break;
             case 'italic':
-              replacement = `*${selectedText}*`;
+              replacement = `*${selectedText || 'italic text'}*`;
+              newCursorPos = selectedText ? start + replacement.length : start + 1;
               break;
             case 'underline':
-              replacement = `__${selectedText}__`;
+              replacement = `__${selectedText || 'underlined text'}__`;
+              newCursorPos = selectedText ? start + replacement.length : start + 2;
               break;
             case 'quote':
-              replacement = `> ${selectedText}`;
+              // Add '> ' at the start of each selected line
+              if (selectedText) {
+                replacement = selectedText.split('\n').map(line => '> ' + line).join('\n');
+                newCursorPos = start + replacement.length;
+              } else {
+                replacement = '> ';
+                newCursorPos = start + 2;
+              }
               break;
             case 'divider':
               replacement = `\n---\n`;
+              newCursorPos = start + replacement.length;
               break;
           }
-          
+
           // Insert the formatted text
-          textarea.value = 
-            textarea.value.substring(0, start) + 
-            replacement + 
-            textarea.value.substring(end);
-          
+          textarea.value = value.substring(0, start) + replacement + value.substring(end);
+
           // Restore focus and selection
           textarea.focus();
-          if (format !== 'divider') {
-            textarea.selectionStart = start + replacement.length;
-            textarea.selectionEnd = start + replacement.length;
+          if (format === 'divider') {
+            textarea.selectionStart = textarea.selectionEnd = newCursorPos;
+          } else if (!selectedText) {
+            // Place cursor inside the formatting if no text was selected
+            if (format === 'bold') {
+              textarea.selectionStart = textarea.selectionEnd = start + 2;
+            } else if (format === 'italic') {
+              textarea.selectionStart = textarea.selectionEnd = start + 1;
+            } else if (format === 'underline') {
+              textarea.selectionStart = textarea.selectionEnd = start + 2;
+            } else if (format === 'quote') {
+              textarea.selectionStart = textarea.selectionEnd = start + 2;
+            }
           } else {
-            textarea.selectionStart = start + 5;
-            textarea.selectionEnd = start + 5;
+            // Place cursor after the inserted text
+            textarea.selectionStart = textarea.selectionEnd = start + replacement.length;
           }
         });
       });

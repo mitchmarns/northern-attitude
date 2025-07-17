@@ -3,17 +3,24 @@ const router = express.Router();
 const db = require('../config/database');
 const Character = require('../models/Character');
 
-// Remove the ThreadsController import that's causing issues
-// const ThreadsController = require('../controllers/threadsController');
-
 // For testing, we'll use a temporary auth middleware
 const tempAuth = (req, res, next) => {
   console.log('Auth middleware called in writing routes');
-  // Add user to both req.user and req.session.user for compatibility
-  const dummyUser = { id: 1, username: 'testuser' };
-  req.user = dummyUser;
-  req.session = req.session || {};
-  req.session.user = dummyUser;
+  
+  // Use existing user in session if available
+  if (req.session && req.session.user) {
+    req.user = req.session.user;
+    console.log('Using existing session user:', req.user.username);
+  } else {
+    // Otherwise use a dummy user for testing that doesn't override any real users
+    const dummyUser = { id: 1, username: 'visitor' };
+    req.user = dummyUser;
+    
+    // Set up session if it doesn't exist
+    req.session = req.session || {};
+    req.session.user = dummyUser;
+    console.log('No session user, using dummy visitor user');
+  }
   next();
 };
 
@@ -138,25 +145,27 @@ router.post('/threads', tempAuth, async (req, res) => {
       return res.status(400).render('error', { message: 'Thread title is required', error: {} });
     }
     
-    console.log('Thread creation - using direct query without transaction');
+    console.log('Thread creation - creating in database northern_attitude');
     
-    // Simplified query that matches your schema - let MySQL handle timestamps
+    // Explicitly use the correct database schema
+    await db.query('USE northern_attitude');
+    
+    // Super simplified query that exactly matches your schema
     const insertThreadQuery = `
       INSERT INTO threads 
-      (title, description, creator_id, character_id, privacy, status) 
-      VALUES (?, ?, ?, ?, ?, ?)
+      (title, description, creator_id, privacy, status) 
+      VALUES (?, ?, ?, ?, ?)
     `;
     
     const threadValues = [
       req.body.title,
       req.body.description || '',
       req.user.id,
-      req.body.character_id || null,
       req.body.privacy || 'public',
       'active'
     ];
     
-    console.log('Executing direct thread insert with values:', threadValues);
+    console.log('Executing thread insert with values:', threadValues);
     
     // Insert thread directly
     const [threadResult] = await db.query(insertThreadQuery, threadValues);
@@ -171,16 +180,11 @@ router.post('/threads', tempAuth, async (req, res) => {
     // Insert participant directly
     const insertParticipantQuery = `
       INSERT INTO thread_participants 
-      (thread_id, user_id, character_id, is_admin) 
-      VALUES (?, ?, ?, ?)
+      (thread_id, user_id, is_admin) 
+      VALUES (?, ?, ?)
     `;
     
-    await db.query(insertParticipantQuery, [
-      threadId, 
-      req.user.id, 
-      req.body.character_id || null, 
-      true
-    ]);
+    await db.query(insertParticipantQuery, [threadId, req.user.id, true]);
     
     console.log('Participant added successfully');
     
@@ -197,7 +201,7 @@ router.post('/threads', tempAuth, async (req, res) => {
     if (req.xhr || req.headers.accept.indexOf('json') > -1) {
       return res.json({ 
         success: true, 
-        message: 'Thread created successfully',
+        message: 'Thread created',
         thread: threads[0],
         threadId,
         redirect: `/writing/threads/${threadId}`
@@ -348,43 +352,51 @@ router.get('/diagnostic/schema', tempAuth, async (req, res) => {
   }
 });
 
-// Add a diagnostic route to directly query and modify tables
-router.get('/diagnostic/test-insert', tempAuth, async (req, res) => {
+// Add direct database testing endpoint
+router.get('/database-test', tempAuth, async (req, res) => {
   try {
-    // Try a direct simple insert into threads
-    const result = await db.query(`
+    // Test database connection
+    const [result1] = await db.query('SELECT 1 as test');
+    
+    // Explicitly select database
+    await db.query('USE northern_attitude');
+    
+    // Show all tables
+    const [tables] = await db.query('SHOW TABLES');
+    
+    // Check if threads table exists
+    const [threadExists] = await db.query(`
+      SELECT COUNT(*) as count 
+      FROM information_schema.tables 
+      WHERE table_schema = 'northern_attitude' 
+      AND table_name = 'threads'
+    `);
+    
+    // Try to insert directly
+    const insertResult = await db.query(`
       INSERT INTO threads (title, description, creator_id, privacy, status)
-      VALUES ('Test Thread', 'This is a test thread', ?, 'public', 'active')
-    `, [req.user.id]);
+      VALUES ('Test Thread', 'Direct test', 1, 'public', 'active')
+    `);
     
-    const threadId = result[0].insertId;
+    const threadId = insertResult[0].insertId;
     
-    // Add a participant
-    await db.query(`
-      INSERT INTO thread_participants (thread_id, user_id, is_admin)
-      VALUES (?, ?, true)
-    `, [threadId, req.user.id]);
-    
-    // Get the created thread
-    const [threads] = await db.query('SELECT * FROM threads WHERE id = ?', [threadId]);
-    
-    // Get all threads
-    const [allThreads] = await db.query('SELECT * FROM threads');
+    // Get the inserted thread
+    const [thread] = await db.query('SELECT * FROM threads WHERE id = ?', [threadId]);
     
     res.json({
-      success: true,
-      message: 'Test insert successful',
-      insertedId: threadId,
-      thread: threads[0],
-      allThreads: allThreads
+      connectionTest: result1[0].test === 1 ? 'success' : 'failed',
+      tables,
+      threadTableExists: threadExists[0].count > 0,
+      insertedThreadId: threadId,
+      insertedThread: thread[0]
     });
   } catch (error) {
-    console.error('Diagnostic test insert failed:', error);
+    console.error('Database test error:', error);
     res.status(500).json({
-      success: false,
-      message: 'Test insert failed',
-      error: error.message,
-      sqlMessage: error.sqlMessage || 'No SQL message'
+      error: 'Database test failed',
+      message: error.message,
+      sqlMessage: error.sqlMessage || 'No SQL message',
+      stack: error.stack
     });
   }
 });

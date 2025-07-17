@@ -538,14 +538,35 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         html += `</div></div>`;
       } else if (post.post_type === 'video') {
-        html += `
-          <div class="post-media">
-            <video controls class="post-video">
-              <source src="${post.media[0].url}" type="video/mp4">
-              Your browser does not support the video tag.
-            </video>
-          </div>
-        `;
+        // Video embed logic
+        const url = post.media[0].url;
+        let videoEmbed = '';
+        if (url) {
+          // YouTube
+          const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
+          if (ytMatch) {
+            videoEmbed = `<div class="youtube-embed-container"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+          } else {
+            // Vimeo
+            const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+            if (vimeoMatch) {
+              videoEmbed = `<div class="youtube-embed-container"><iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+            } else {
+              // TikTok
+              const tiktokMatch = url.match(/tiktok\.com\/(@[\\w\\d\\.\\-_]+)\/video\/(\\d+)/);
+              if (tiktokMatch) {
+                videoEmbed = `<div class="tiktok-embed-container"><iframe src="https://www.tiktok.com/embed/v2/${tiktokMatch[2]}" frameborder="0" allowfullscreen></iframe></div>`;
+              } else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                // Direct video file
+                videoEmbed = `<div class="direct-video-container"><video class="direct-video-player" controls><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video></div>`;
+              } else {
+                // Fallback: just a link
+                videoEmbed = `<a href="${url}" target="_blank" rel="noopener">View Video</a>`;
+              }
+            }
+          }
+        }
+        html += `<div class="post-media">${videoEmbed}</div>`;
       }
     } else if (post.post_type === 'image') {
       html += `

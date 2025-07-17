@@ -27,6 +27,41 @@
   
   // Make function globally available
   window.handleImageError = handleImageError;
+
+  // Add markdown formatter
+  function formatSimpleMarkdown(text) {
+    if (!text) return '';
+    text = text.replace(/[&<>"']/g, function(m) {
+      return ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      })[m];
+    });
+    text = text.replace(/(^|\n)---+\n?/g, '$1<hr class="divider">\n');
+    text = text.replace(/\*\*(.+?)\*\*/g, '<span class="bold">$1</span>');
+    text = text.replace(/__(.+?)__/g, '<span class="underline">$1</span>');
+    text = text.replace(/\*(.+?)\*/g, '<span class="italic">$1</span>');
+    text = text.replace(/(^|\n)&gt; (.+)/g, '$1<span class="quote">$2</span>');
+    text = text.replace(/\n/g, '<br>');
+    return text;
+  }
+
+  function applyFormattingToFeed() {
+    document.querySelectorAll('.formatted-text').forEach(function(el) {
+      if (!el.dataset.formatted) {
+        el.innerHTML = formatSimpleMarkdown(el.textContent);
+        el.dataset.formatted = "true";
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Apply markdown formatting to all .formatted-text elements on load
+    applyFormattingToFeed();
+  });
 </script>
 
 <div class="container">
@@ -272,14 +307,40 @@
                              class="post-image" 
                              data-fallback="/img/broken-image.png"
                              onerror="this.src='/img/broken-image.png'; console.error('Failed to load image:', this.src);">
-                        <% console.log("Rendering image URL:", media.url); %>
+                        <% /* console.log("Rendering image URL:", media.url); */ %>
                       <% }); %>
                     </div>
                   <% } else if (post.post_type === 'video') { %>
-                    <video controls class="post-video">
-                      <source src="<%= post.media[0].url %>" type="video/mp4">
-                      Your browser does not support the video tag.
-                    </video>
+                    <% 
+                      // Helper: Detect YouTube/Vimeo/direct video
+                      function getVideoEmbed(url) {
+                        if (!url) return '';
+                        // YouTube
+                        const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([A-Za-z0-9_\-]+)/);
+                        if (ytMatch) {
+                          return `<div class="youtube-embed-container"><iframe src="https://www.youtube.com/embed/${ytMatch[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+                        }
+                        // Vimeo
+                        const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+                        if (vimeoMatch) {
+                          return `<div class="youtube-embed-container"><iframe src="https://player.vimeo.com/video/${vimeoMatch[1]}" frameborder="0" allowfullscreen></iframe></div>`;
+                        }
+                        // TikTok
+                        const tiktokMatch = url.match(/tiktok\.com\/(@[\w\d\.\-_]+)\/video\/(\d+)/);
+                        if (tiktokMatch) {
+                          return `<div class="tiktok-embed-container"><iframe src="https://www.tiktok.com/embed/v2/${tiktokMatch[2]}" frameborder="0" allowfullscreen></iframe></div>`;
+                        }
+                        // Direct video file
+                        if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                          return `<div class="direct-video-container"><video class="direct-video-player" controls><source src="${url}" type="video/mp4">Your browser does not support the video tag.</video></div>`;
+                        }
+                        // Fallback: just a link
+                        return `<a href="${url}" target="_blank" rel="noopener">View Video</a>`;
+                      }
+                    %>
+                    <% if (post.media[0] && post.media[0].url) { %>
+                      <%- getVideoEmbed(post.media[0].url) %>
+                    <% } %>
                   <% } %>
                 </div>
               <% } else if (post.post_type === 'image') { %>
@@ -863,55 +924,21 @@
                     <i class="ph-duotone ph-plus"></i> Follow
                   </button>
                 </li>
-              <% }); %>
+              <% }) %>
             <% } else { %>
               <li class="no-suggestions">
                 <p>No more character suggestions available.</p>
                 <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
-                <button class="btn btn-sm btn-outline refresh-suggestions-btn mt-2">Refresh Suggestions</button>
+                <button class="btn btn-sm btn-outline refresh-btn mt-2">Refresh Suggestions</button>
               </li>
             <% } %>
           <% } else { %>
             <li class="no-suggestions">
-              <p>No suggested characters available yet.</p>
+              <p>No character suggestions available.</p>
               <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
-              <button class="btn btn-sm btn-outline refresh-suggestions-btn mt-2">Refresh Suggestions</button>
             </li>
           <% } %>
         </ul>
-      </div>
-      
-      <div class="upcoming-events card mt-3">
-        <h4>Upcoming Events</h4>
-        <% if (upcomingEvents && upcomingEvents.length) { %>
-          <ul class="events-list">
-            <% upcomingEvents.forEach(event => { %>
-              <li class="event-item">
-                <div class="event-date-badge">
-                  <% if (event.date) { %>
-                    <span class="event-month"><%= new Date(event.date).toLocaleString('default', { month: 'short' }) %></span>
-                    <span class="event-day"><%= new Date(event.date).getDate() %></span>
-                  <% } else { %>
-                    <span class="event-month">TBD</span>
-                    <span class="event-day">--</span>
-                  <% } %>
-                </div>
-                <div class="event-details">
-                  <h5><%= event.title %></h5>
-                  <% if (event.time) { %>
-                    <p><i class="icon-time"></i> <%= event.time %></p>
-                  <% } %>
-                  <% if (event.location) { %>
-                    <p><i class="icon-location"></i> <%= event.location %></p>
-                  <% } %>
-                </div>
-              </li>
-            <% }) %>
-          </ul>
-        <% } else { %>
-          <p class="no-events">No upcoming events</p>
-        <% } %>
-        <a href="/social/events" class="btn btn-outline btn-sm mt-2">See All Events</a>
       </div>
     </div>
   </div>

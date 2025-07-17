@@ -7,15 +7,12 @@
   --shadow: #1e1f1e;
   --border: #3a3b3a; /* Matched with card-bg for consistency */
   
-  /* Gradient Colors - Modern & Soft */
-  --gradient1: rgba(125, 145, 190, 0.7); /* Soft lavender blue */
-  --gradient2: rgba(144, 173, 198, 0.7); /* Soft sky blue */
-  --gradient3: rgba(173, 186, 217, 0.7); /* Soft periwinkle */
-  --gradient-bg: radial-gradient(
-      circle closest-side,
-      rgba(247, 249, 252, 1) 50%,
-      rgba(236, 242, 248, 0.8) 300% /* Subtle clean gradient */
-  );
+  /* Enhanced Gradient Colors - More sophisticated */
+  --gradient1: rgba(125, 145, 190, 0.8); /* Slightly more saturated */
+  --gradient2: rgba(144, 173, 198, 0.8);
+  --gradient3: rgba(173, 186, 217, 0.8);
+  --gradient4: rgba(190, 165, 195, 0.6); /* New purple accent */
+  --gradient-hover: linear-gradient(135deg, var(--gradient1), var(--gradient2), var(--gradient4));
   
   --graypicture: grayscale(40%) contrast(105%) sepia(3%); /* Modern vintage feel */
   
@@ -43,13 +40,14 @@
   --info-bg: rgba(91, 173, 234, 0.1);
 
   /* Spacing */
-  --spacing-xxs: 3px; /* Extra small spacing option */
-  --spacing-xs: 5px;
-  --spacing-sm: 10px;
-  --spacing-md: 20px;
-  --spacing-lg: 40px;
-  --spacing-xl: 60px; /* Extra large spacing */
-  --spacing-2xl: 100px; /* Double extra large spacing */
+  --spacing-xxs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 32px;
+  --spacing-xl: 48px; /* Extra large spacing */
+  --spacing-2xl: 64px;
+  --spacing-3xl: 96px; /* New larger spacing */
 
   /* Typography */
   --mainfont: 'proxima-nova', system-ui, sans-serif; /* Added system-ui as fallback */
@@ -97,6 +95,8 @@
   --shadow-sm: 0 2px 5px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
   --shadow-lg: 0 8px 20px rgba(0, 0, 0, 0.3);
+  --shadow-colored: 0 4px 20px rgba(125, 145, 190, 0.15);
+  --shadow-hover: 0 8px 25px rgba(125, 145, 190, 0.2);
 
   /* Z-indices */
   --z-backdrop: 10;
@@ -116,4 +116,31 @@
   --opacity-50: 0.5;
   --opacity-75: 0.75;
   --opacity-100: 1;
+
+  /* Glassmorphism effects */
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --backdrop-blur: blur(10px);
+
+  /* Animation curves */
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-sharp: cubic-bezier(0.4, 0, 0.6, 1);
+
+  /* Additional utility variables */
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  --focus-ring: 0 0 0 3px rgba(90, 128, 149, 0.3);
+  
+  /* Content max-widths */
+  --content-width-sm: 640px;
+  --content-width-md: 768px;
+  --content-width-lg: 1024px;
+  --content-width-xl: 1280px;
+  
+  /* Aspect ratios */
+  --aspect-square: 1 / 1;
+  --aspect-video: 16 / 9;
+  --aspect-photo: 4 / 3;
 }

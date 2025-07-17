@@ -41,8 +41,12 @@
 }
 
 .thread-creator a {
-  color: var(--header);
+  color: var(--accent3);
   font-weight: var(--medium);
+}
+
+.thread-creator a:hover {
+  color: var(--header-hover);
 }
 
 .thread-status, .thread-privacy {
@@ -87,6 +91,7 @@
 .thread-description {
   color: var(--lighttext);
   margin-bottom: 0;
+  line-height: var(--leading-normal);
 }
 
 .thread-header-actions {
@@ -166,11 +171,11 @@
 
 .message-sender a {
   font-weight: var(--medium);
-  color: var(--header);
+  color: var(--accent3);
 }
 
 .message-sender.character a {
-  color: var(--accent2);
+  color: var(--accent1);
 }
 
 .message-sender .by-user {
@@ -240,7 +245,7 @@
 }
 
 .react-btn:hover {
-  color: var(--accent2);
+  color: var(--accent1);
 }
 
 .empty-messages {
@@ -255,7 +260,7 @@
 }
 
 .own-message .message-content {
-  background-color: rgba(90, 128, 149, 0.15);
+  background-color: rgba(90, 128, 149, 0.2);
 }
 
 /* Message Composer */
@@ -314,7 +319,7 @@
 }
 
 .participant-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.08);
 }
 
 .participant-avatar {
@@ -336,6 +341,7 @@
 
 .participant-name {
   font-weight: var(--medium);
+  color: var(--lighttext);
 }
 
 .participant-username {
@@ -345,8 +351,8 @@
 
 .admin-badge {
   display: inline-block;
-  background-color: rgba(90, 128, 149, 0.2);
-  color: var(--header);
+  background-color: rgba(90, 128, 149, 0.25);
+  color: var(--lighttext);
   font-size: var(--text-xs);
   padding: 1px 4px;
   border-radius: var(--radius-sm);
@@ -385,16 +391,18 @@
   font-weight: var(--medium);
   width: 100px;
   flex-shrink: 0;
-  color: var(--muted-text);
+  color: var(--accent3);
 }
 
 .info-value {
   flex: 1;
+  color: var(--lighttext);
 }
 
 .thread-rules {
   list-style-type: disc;
   padding-left: var(--spacing-md);
+  color: var(--lighttext);
 }
 
 .thread-rules li {

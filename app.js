@@ -5,10 +5,10 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const mysql = require('mysql2/promise'); // Using promise-based version
 const dotenv = require('dotenv');
+dotenv.config();
 const expressLayouts = require('express-ejs-layouts');
 const { addDbToRequest } = require('./middleware/auth');
 // Remove the MySQLStore import until the package is installed
-dotenv.config();
 const port = 3000;
 
 // Create express app
@@ -124,7 +124,6 @@ const socialRoutes = require('./routes/social');
 const threadsRouter = require('./routes/threads');
 const apiRouter = require('./routes/api'); // This might be undefined - check this
 const writingRouter = require('./routes/writing');
-const usersRoutes = require('./routes/users');
 
 // Route registration - fix the order and conflicts
 app.use('/', indexRoutes);
@@ -135,15 +134,10 @@ app.use('/dashboard', ensureAuthenticated, dashboardRoutes);
 app.use('/profile', profileRoutes);
 app.use('/social', socialRoutes);
 app.use('/writing', require('./routes/writing'));
-app.use('/users', usersRoutes);
 // Mount the API routes
 if (apiRouter) {
   app.use('/api', apiRouter); // Only use if it exists
 }
-// Since we're using threadsRouter for both pages and API, make sure API has priority
-app.use('/api/threads', require('./routes/threads'));
-
-
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

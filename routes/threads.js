@@ -14,9 +14,17 @@ console.log('Loading threads routes with controller methods:', Object.keys(Threa
 
 // Add middleware for testing purposes
 const tempAuth = (req, res, next) => {
-  console.log('Auth middleware called');
-  // Add a dummy user for testing
-  req.user = { id: 1, username: 'testuser' };
+  console.log('Auth middleware called in threads routes');
+  
+  // Use existing user in session if available
+  if (req.session && req.session.user) {
+    req.user = req.session.user;
+    console.log('Using existing session user:', req.user.username);
+  } else {
+    // Otherwise use a dummy user for testing
+    req.user = { id: 1, username: 'visitor' };
+    console.log('No session user, using dummy visitor user');
+  }
   next();
 };
 
@@ -60,12 +68,12 @@ router.post('/', tempAuth, (req, res) => {
     return res.status(400).json({ success: false, message: 'Thread title is required' });
   }
   
-  // Start a transaction
-  db.getConnection()
-    .then(connection => {
-      console.log('Database connection established');
+  // Start by ensuring we're using the correct database
+  db.query('USE northern_attitude')
+    .then(() => {
+      console.log('Database connection established and using northern_attitude');
       
-      // Simplify the query to exactly match schema - let MySQL handle the timestamps
+      // Use the exact same query pattern that worked in the test script
       const insertThreadQuery = `
         INSERT INTO threads 
         (title, description, creator_id, privacy, status) 
@@ -82,63 +90,53 @@ router.post('/', tempAuth, (req, res) => {
       
       console.log('Executing thread insert with values:', threadValues);
       
-      // First try direct query with error handling
-      db.query(insertThreadQuery, threadValues)
-        .then(([threadResult]) => {
-          const threadId = threadResult.insertId;
-          console.log(`Thread inserted with ID: ${threadId}`);
+      return db.query(insertThreadQuery, threadValues);
+    })
+    .then(([threadResult]) => {
+      const threadId = threadResult.insertId;
+      console.log(`Thread inserted with ID: ${threadId}`);
+      
+      if (!threadId) {
+        throw new Error('Failed to get thread ID after insert');
+      }
+      
+      // Now insert the participant - same pattern as test script
+      const insertParticipantQuery = `
+        INSERT INTO thread_participants 
+        (thread_id, user_id, is_admin) 
+        VALUES (?, ?, ?)
+      `;
+      
+      return db.query(insertParticipantQuery, [threadId, req.user.id, true])
+        .then(() => {
+          console.log('Participant added successfully');
           
-          if (!threadId) {
-            throw new Error('Failed to get thread ID after insert');
-          }
-          
-          // Now insert the participant - simplify to match schema
-          const insertParticipantQuery = `
-            INSERT INTO thread_participants 
-            (thread_id, user_id, is_admin) 
-            VALUES (?, ?, ?)
-          `;
-          
-          return db.query(insertParticipantQuery, [threadId, req.user.id, true])
-            .then(() => {
-              console.log('Participant added successfully');
-              
-              // Verify the thread exists
-              return db.query('SELECT * FROM threads WHERE id = ?', [threadId])
-                .then(([threads]) => {
-                  if (threads.length === 0) {
-                    throw new Error('Thread not found after creation');
-                  }
-                  
-                  console.log('Thread verified in database:', threads[0]);
-                  
-                  // Return success
-                  res.json({ 
-                    success: true, 
-                    message: 'Thread created successfully',
-                    thread: threads[0],
-                    threadId: threadId,
-                    redirect: `/writing/threads/${threadId}`
-                  });
-                });
+          // Return thread data with ID for response
+          return db.query('SELECT * FROM threads WHERE id = ?', [threadId])
+            .then(([threads]) => {
+              return { threadId, thread: threads[0] };
             });
-        })
-        .catch(error => {
-          console.error('SQL error creating thread:', error);
-          res.status(500).json({ 
-            success: false, 
-            message: 'Database error creating thread',
-            error: error.message,
-            sqlMessage: error.sqlMessage || 'No SQL message'
-          });
         });
     })
-    .catch(err => {
-      console.error('Error getting database connection:', err);
+    .then(({ threadId, thread }) => {
+      console.log('Thread creation completed successfully:', thread);
+      
+      // Return success
+      res.json({ 
+        success: true, 
+        message: 'Thread created successfully',
+        thread,
+        threadId,
+        redirect: `/writing/threads/${threadId}`
+      });
+    })
+    .catch(error => {
+      console.error('Error creating thread:', error);
       res.status(500).json({ 
         success: false, 
-        message: 'Database connection error',
-        error: err.message
+        message: 'Database error creating thread',
+        error: error.message,
+        sqlMessage: error.sqlMessage || 'No SQL message'
       });
     });
 });
@@ -282,5 +280,96 @@ router.get('/:id', tempAuth, (req, res) => {
     res.status(500).json({ success: false, message: 'Server error while fetching thread' });
   });
 });
+
+// Post message to thread
+router.post('/:id/messages', tempAuth, (req, res) => {
+  const threadId = req.params.id;
+  const { content, character_id } = req.body;
+  
+  console.log(`Posting message to thread ${threadId}:`, content);
+  
+  // Validate content
+  if (!content || content.trim() === '') {
+    return res.status(400).json({
+      success: false,
+      message: 'Message content is required'
+    });
+  }
+  
+  // Check if thread exists and user is a participant
+  db.query(
+    `SELECT * FROM thread_participants 
+     WHERE thread_id = ? AND user_id = ?`,
+    [threadId, req.user.id]
+  )
+  .then(([participants]) => {
+    // If user is not a participant, check if thread is public and add them
+    if (participants.length === 0) {
+      return db.query(
+        `SELECT * FROM threads WHERE id = ? AND privacy = 'public'`,
+        [threadId]
+      )
+      .then(([threads]) => {
+        if (threads.length === 0) {
+          return Promise.reject({ status: 403, message: 'You must be a participant to post in this thread' });
+        }
+        
+        // Auto-join public thread
+        return db.query(
+          `INSERT INTO thread_participants (thread_id, user_id, is_admin)
+           VALUES (?, ?, false)`,
+          [threadId, req.user.id]
+        ).then(() => true);
+      });
+    }
+    return true;
+  })
+  .then(() => {
+    // Insert the message
+    return db.query(
+      `INSERT INTO thread_messages 
+       (thread_id, sender_id, character_id, content, created_at, updated_at)
+       VALUES (?, ?, ?, ?, NOW(), NOW())`,
+      [threadId, req.user.id, character_id || null, content]
+    );
+  })
+  .then(([result]) => {
+    const messageId = result.insertId;
+    
+    // Update thread's updated_at timestamp
+    return db.query(
+      `UPDATE threads SET updated_at = NOW() WHERE id = ?`,
+      [threadId]
+    )
+    .then(() => messageId);
+  })
+  .then((messageId) => {
+    // Get the created message with sender info
+    return db.query(
+      `SELECT tm.*, u.username, c.name as character_name, c.avatar_url
+       FROM thread_messages tm
+       JOIN users u ON tm.sender_id = u.id
+       LEFT JOIN characters c ON tm.character_id = c.id
+       WHERE tm.id = ?`,
+      [messageId]
+    );
+  })
+  .then(([messages]) => {
+    res.json({
+      success: true,
+      message: 'Message posted successfully',
+      data: messages[0]
+    });
+  })
+  .catch(error => {
+    console.error('Error posting message:', error);
+    const status = error.status || 500;
+    const message = error.message || 'Failed to post message';
+    res.status(status).json({ success: false, message });
+  });
+});
+
+// Add PUT route for updating a thread
+router.put('/:id', tempAuth, ThreadsController.updateThread);
 
 module.exports = router;

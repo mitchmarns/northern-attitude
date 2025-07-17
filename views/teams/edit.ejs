@@ -5,9 +5,10 @@
     <button type="submit" class="btn btn-primary">Save Changes</button>
   </form>
   <script src="/js/teamForm.js"></script>
+  <script type="application/json" id="team-data"><%- JSON.stringify(team) %></script>
   <script>
     // Render the form fields with pre-filled data
-    const team = JSON.parse('<%- JSON.stringify(team) %>');
+    const team = JSON.parse(document.getElementById('team-data').textContent);
     document.getElementById('form-fields').innerHTML = renderTeamFormFields(team);
   </script>
 </div>
