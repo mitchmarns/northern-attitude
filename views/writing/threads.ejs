@@ -154,8 +154,6 @@
                   </label>
                 </div>
               <% }); %>
-            <% } else { %>
-              <p class="no-characters">You don't have any characters yet. <a href="/characters/create">Create one?</a></p>
             <% } %>
             
             <div class="character-option">
@@ -437,7 +435,7 @@
           const threadId = thread.id || 0;
           const threadTitle = (thread.title || 'Untitled Thread').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           const threadStatus = (thread.status || 'unknown').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          const threadDescription = (thread.description || 'No description').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+          const threadDescription = (thread.description || 'No description');
           const threadParticipantCount = thread.participant_count || 0;
           const threadMessageCount = thread.message_count || 0;
           const threadUpdatedAt = thread.updated_at || new Date();
@@ -457,7 +455,7 @@
               </div>
               
               <div class="thread-card-body">
-                <p class="thread-description">${threadDescription}</p>
+                <p class="thread-description formatted-text">${formatSimpleMarkdown(threadDescription)}</p>
                 
                 <div class="thread-meta">
                   <div class="thread-participants">
@@ -700,5 +698,7 @@
       }
     `;
     document.head.appendChild(style);
+  });
+</script>
   });
 </script>

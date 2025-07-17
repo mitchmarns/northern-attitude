@@ -27,10 +27,39 @@ const pool = mysql.createPool({
   rowsAsArray: false // Ensure rows are returned as objects
 });
 
+// Slow query threshold in milliseconds
+const SLOW_QUERY_THRESHOLD_MS = 200; // Log queries slower than 200ms
+
+// Helper to run EXPLAIN on SELECT queries for profiling
+async function explainIfSelect(sql, params) {
+  if (typeof sql === 'string' && sql.trim().toUpperCase().startsWith('SELECT')) {
+    try {
+      const [explainRows] = await pool.query('EXPLAIN ' + sql, params);
+      console.log('EXPLAIN for query:', sql, params, '\n', explainRows);
+    } catch (err) {
+      console.warn('EXPLAIN failed:', err.message);
+    }
+  }
+}
+
 // Modify the database wrapper to ensure it returns results correctly
 const originalQuery = pool.query.bind(pool);
 pool.query = async function(...args) {
-  const result = await originalQuery(...args);
+  const sql = args[0];
+  const params = args[1];
+  const start = Date.now();
+  let result;
+  try {
+    result = await originalQuery(...args);
+  } finally {
+    const duration = Date.now() - start;
+    if (typeof sql === 'string' && sql.trim().toUpperCase().startsWith('SELECT')) {
+      explainIfSelect(sql, params);
+    }
+    if (duration > SLOW_QUERY_THRESHOLD_MS) {
+      console.warn(`[SLOW QUERY] (${duration}ms):`, sql, params);
+    }
+  }
   return Array.isArray(result) ? result : [result, null];
 };
 

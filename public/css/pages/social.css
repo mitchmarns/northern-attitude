@@ -26,10 +26,6 @@
   margin-bottom: var(--spacing-sm);
 }
 
-.card:hover {
-  box-shadow: var(--shadow-md);
-}
-
 /* Profile Summary */
 .profile-summary {
   text-align: center;
@@ -1138,6 +1134,7 @@
 .suggested-list {
   list-style: none;
   padding: 0;
+  margin-bottom: 10px;
 }
 
 .suggested-item {
@@ -1279,7 +1276,6 @@
 /* Load More Button */
 .load-more {
   text-align: center;
-  margin: var(--spacing-lg) 0;
   margin: var(--spacing-md) 0;
 }
 
@@ -1439,7 +1435,6 @@
   }
   
   .col-6 {
-    flex: 0 0 56%;
     max-width: 56%;
   }
 }
@@ -1807,3 +1802,4 @@ video::-webkit-media-controls-panel {
   background-color: rgba(255, 255, 255, 0.1);
   color: var(--lighttext);
 }
+

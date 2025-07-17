@@ -50,9 +50,12 @@ const ThreadsController = {
         'SELECT * FROM characters WHERE created_by = ?',
         [req.user.id]
       );
+      // Profile query with EXPLAIN
+      await db.query('EXPLAIN SELECT * FROM characters WHERE created_by = ?', [req.user.id]);
+      // Consider: CREATE INDEX idx_characters_created_by ON characters(created_by);
 
       // Query to get threads with count of participants and messages
-      const [threads] = await db.query(`
+      await db.query(`EXPLAIN
         SELECT t.*,
                u.username as creator_name,
                c.name as character_name,
@@ -68,6 +71,10 @@ const ThreadsController = {
         GROUP BY t.id
         ORDER BY t.updated_at DESC
       `, [req.user.id, req.user.id]);
+      // Consider indexes:
+      // CREATE INDEX idx_threads_creator_id ON threads(creator_id);
+      // CREATE INDEX idx_thread_participants_thread_id_user_id ON thread_participants(thread_id, user_id);
+      // CREATE INDEX idx_thread_messages_thread_id ON thread_messages(thread_id);
 
       // Render the threads view with data
       res.render('writing/threads', {

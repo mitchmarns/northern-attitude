@@ -29,6 +29,9 @@ router.post('/register', async (req, res) => {
     }
     
     // Check if user already exists - use db.query directly
+    // Profile query with EXPLAIN
+    await db.query('EXPLAIN SELECT * FROM users WHERE username = ? OR email = ?', [username, email]);
+    // Consider: CREATE INDEX idx_users_username_email ON users(username, email);
     const [existingUsers] = await db.query(
       'SELECT * FROM users WHERE username = ? OR email = ?',
       [username, email]

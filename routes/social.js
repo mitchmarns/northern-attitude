@@ -9,6 +9,9 @@ router.get('/feed', isAuthenticated, async (req, res) => {
     console.log('User ID:', req.user.id); // Debug log
     
     // Get user's characters - fix the query to return all columns
+    // Profile query with EXPLAIN
+    await req.db.query('EXPLAIN SELECT * FROM characters WHERE created_by = ?', [req.user.id]);
+    // Consider: CREATE INDEX idx_characters_created_by ON characters(created_by);
     const [characters] = await req.db.query(
       'SELECT * FROM characters WHERE created_by = ?',
       [req.user.id]
@@ -676,24 +679,21 @@ router.post('/post/create', isAuthenticated, async (req, res) => {
   } = req.body;
   
   try {
-    // Require character ID
-    if (!characterId) {
-      req.flash('error', 'You must select a character to post');
-      return res.redirect('/social/feed');
-    }
-    
+    // Allow posting as yourself if characterId is empty/null
+    // Remove the strict requirement for characterId
     const conn = await req.db.getConnection();
     await conn.beginTransaction();
     
     try {
-      // Verify character belongs to user
-      const [characterCheck] = await conn.query(
-        'SELECT id FROM characters WHERE id = ? AND created_by = ?',
-        [characterId, req.user.id]
-      );
-      
-      if (characterCheck.length === 0) {
-        throw new Error('Invalid character selection');
+      // If characterId is provided, verify it belongs to the user
+      if (characterId) {
+        const [characterCheck] = await conn.query(
+          'SELECT id FROM characters WHERE id = ? AND created_by = ?',
+          [characterId, req.user.id]
+        );
+        if (characterCheck.length === 0) {
+          throw new Error('Invalid character selection');
+        }
       }
       
       // Create the post
@@ -707,7 +707,7 @@ router.post('/post/create', isAuthenticated, async (req, res) => {
         content, 
         postType, 
         req.user.id, 
-        characterId, 
+        characterId || null, // Allow NULL for posting as yourself
         eventDate || null, 
         eventTime || null, 
         eventLocation || null, 
@@ -1487,6 +1487,7 @@ router.post('/follow', isAuthenticated, async (req, res) => {
       await connection.rollback();
       
       // If the error is a duplicate entry, return a more meaningful response
+      // If the error is a duplicate entry, return a more meaningful response
       if (error.code === 'ER_DUP_ENTRY') {
         return res.json({
           success: true,
@@ -1678,7 +1679,6 @@ router.get('/suggested-characters', isAuthenticated, async (req, res) => {
         const [characterFollowsCheck] = await req.db.query(`
           SELECT 1 FROM information_schema.tables 
           WHERE table_schema = DATABASE() 
-          AND table_name = 'character_follows'
         `);
         
         if (characterFollowsCheck && characterFollowsCheck.length > 0) {

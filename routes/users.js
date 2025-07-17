@@ -17,6 +17,9 @@ router.post('/login', async (req, res) => {
   
   try {
     // Check if user exists
+    // Profile query with EXPLAIN
+    await db.query('EXPLAIN SELECT * FROM users WHERE username = ?', [username]);
+    // Consider: CREATE INDEX idx_users_username ON users(username);
     const [users] = await db.query(
       'SELECT * FROM users WHERE username = ?',
       [username]

@@ -290,6 +290,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Load posts with selected filter
         loadFilteredPosts(filter, 1, characterId);
+        
+        // Reset page to 1 on filter change
+        postsContainer.setAttribute('data-page', '1');
       });
     });
     
@@ -298,9 +301,10 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loadMoreBtn) {
       loadMoreBtn.addEventListener('click', function() {
         // Get current page and increment
-        let currentPage = parseInt(this.getAttribute('data-page') || '1');
+        let currentPage = parseInt(postsContainer.getAttribute('data-page') || '1');
         currentPage++;
-        
+        postsContainer.setAttribute('data-page', currentPage.toString());
+
         // Get active filter
         const activeFilter = document.querySelector('.feed-filter-bar .filter-btn.active');
         const filter = activeFilter ? activeFilter.getAttribute('data-filter') : 'all';
@@ -313,11 +317,8 @@ document.addEventListener('DOMContentLoaded', function() {
         this.innerHTML = '<span class="loading-spinner-small"></span> Loading...';
         this.disabled = true;
         
-        // Load more posts
+        // Load more posts (append = true)
         loadFilteredPosts(filter, currentPage, characterId, true);
-        
-        // Update data-page attribute
-        this.setAttribute('data-page', currentPage.toString());
       });
     }
   }
@@ -350,7 +351,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Only replace content if not appending
             postsContainer.innerHTML = renderEmptyFeedMessage(filter);
           }
-          
           // Hide load more button
           if (loadMoreBtn) {
             loadMoreBtn.style.display = 'none';
@@ -368,6 +368,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
           // Replace all posts for tab switch
           postsContainer.innerHTML = postsHTML;
+          // Reset page to 1
+          postsContainer.setAttribute('data-page', '1');
         }
         
         // Show/hide load more button based on pagination
@@ -477,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Start building the post HTML
     let html = `
       <div class="post-card card">
-        <div class="post-header">
+        <div class="post-header>
           <div class="post-author">
     `;
     
@@ -521,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Content
-    html += `<div class="post-content formatted-text">${post.content}</div>`;
+    html += `<div class="post-content formatted-text">${formatSimpleMarkdown(post.content)}</div>`;
     
     // Media (if any)
     if (post.media && post.media.length) {

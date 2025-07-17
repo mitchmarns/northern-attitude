@@ -16,7 +16,9 @@ const isAuthenticated = (req, res, next) => {
 // Display profile page
 router.get('/profile', isAuthenticated, async (req, res) => {
   try {
-    // Fetch complete user data from the database
+    // Profile query with EXPLAIN
+    await db.promise().query('EXPLAIN SELECT id, username, email, created_at, first_name, last_name FROM users WHERE id = ?', [req.session.user.id]);
+    // Consider: CREATE INDEX idx_users_id ON users(id);
     const [users] = await db.promise().query(
       'SELECT id, username, email, created_at, first_name, last_name FROM users WHERE id = ?',
       [req.session.user.id]

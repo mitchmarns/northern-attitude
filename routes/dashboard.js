@@ -15,7 +15,16 @@ router.get('/', isAuthenticated, async (req, res) => {
   const userId = req.session.user.id;
 
   try {
-    // Fetch counts
+    // Profile queries with EXPLAIN
+    await db.query('EXPLAIN SELECT COUNT(*) AS characterCount FROM characters WHERE created_by = ?', [userId]);
+    await db.query('EXPLAIN SELECT COUNT(*) AS teamCount FROM teams WHERE created_by = ?', [userId]);
+    await db.query('EXPLAIN SELECT COUNT(*) AS threadCount FROM threads WHERE creator_id = ?', [userId]);
+    await db.query('EXPLAIN SELECT COUNT(*) AS postCount FROM posts WHERE author_id = ?', [userId]);
+    // Consider indexes:
+    // CREATE INDEX idx_characters_created_by ON characters(created_by);
+    // CREATE INDEX idx_teams_created_by ON teams(created_by);
+    // CREATE INDEX idx_threads_creator_id ON threads(creator_id);
+    // CREATE INDEX idx_posts_author_id ON posts(author_id);
     const [[{ characterCount }]] = await db.query('SELECT COUNT(*) AS characterCount FROM characters WHERE created_by = ?', [userId]);
     const [[{ teamCount }]] = await db.query('SELECT COUNT(*) AS teamCount FROM teams WHERE created_by = ?', [userId]);
     const [[{ threadCount }]] = await db.query('SELECT COUNT(*) AS threadCount FROM threads WHERE creator_id = ?', [userId]);

@@ -89,18 +89,16 @@
           <h4>Post as:</h4>
           <% if (characters && characters.length > 0) { %>
             <select id="character-select" class="form-control" required>
-              <option value="">Select a character</option>
+              <option value="">Post as Yourself</option>
               <% characters.forEach(character => { %>
                 <option value="<%= character.id %>" data-avatar="<%= character.url || '/img/default-character.svg' %>"><%= character.name %></option>
               <% }) %>
             </select>
-            
             <!-- Active posting identity display -->
             <div class="active-posting-identity mt-3">
               <div class="no-character-selected">
-                <p class="text-center text-muted">Select a character to post</p>
+                <p class="text-center text-muted">Posting as <strong>yourself</strong></p>
               </div>
-              
               <div class="post-as-character-display" style="display: none;">
                 <img src="/img/default-character.svg" 
                      alt="Character" 
@@ -114,7 +112,7 @@
             </div>
           <% } else { %>
             <div class="alert alert-info mt-2">
-              <p class="mb-0">You need to <a href="/characters/create">create a character</a> before posting.</p>
+              <p class="mb-0">You need to <a href="/characters/create">create a character</a> before posting as a character.</p>
             </div>
           <% } %>
         </div>
@@ -161,14 +159,14 @@
           
           <div class="text-styling-toolbar" id="post-toolbar">
             <div class="toolbar-group">
-              <button type="button" class="toolbar-btn" data-command="bold"><i class="ph-duotone ph-text-b"></i></button>
-              <button type="button" class="toolbar-btn" data-command="italic"><i class="ph-duotone ph-text-italic"></i></button>
-              <button type="button" class="toolbar-btn" data-command="underline"><i class="ph-duotone ph-text-a-underline"></i></i></button>
+              <button type="button" class="toolbar-btn" id="toolbar-bold" data-command="bold"><i class="ph-duotone ph-text-b"></i></button>
+              <button type="button" class="toolbar-btn" id="toolbar-italic" data-command="italic"><i class="ph-duotone ph-text-italic"></i></button>
+              <button type="button" class="toolbar-btn" id="toolbar-underline" data-command="underline"><i class="ph-duotone ph-text-a-underline"></i></button>
             </div>
             <div class="toolbar-group">
-              <button type="button" class="toolbar-btn" data-command="h2"><i class="ph-duotone ph-text-h-two"></i></button>
-              <button type="button" class="toolbar-btn" data-command="h3"><i class="ph-duotone ph-text-h-three"></i></button>
-              <button type="button" class="toolbar-btn" data-command="quote"><i class="ph-duotone ph-quotes"></i></button>
+              <button type="button" class="toolbar-btn" id="toolbar-h2" data-command="h2"><i class="ph-duotone ph-text-h-two"></i></button>
+              <button type="button" class="toolbar-btn" id="toolbar-h3" data-command="h3"><i class="ph-duotone ph-text-h-three"></i></button>
+              <button type="button" class="toolbar-btn" id="toolbar-quote" data-command="quote"><i class="ph-duotone ph-quotes"></i></button>
             </div>
           </div>
           
@@ -258,7 +256,7 @@
         <button class="filter-btn" data-filter="team">Team</button>
       </div>
       
-      <div class="posts-container">
+      <div class="posts-container" data-page="1">
         <% if (posts && posts.length) { %>
           <% posts.forEach(post => { %>
             <div class="post-card card">
@@ -294,7 +292,7 @@
               <% } %>
               
               <div class="post-content formatted-text">
-                <%- post.content %>
+                <%- formatSimpleMarkdown(post.content) %>
               </div>
               
               <% if (post.media && post.media.length) { %>
@@ -948,57 +946,400 @@
 
 <!-- Add additional script for suggested characters functionality -->
 <script>
-  // Run when document is ready
+  // This will run in the browser after the page loads
   document.addEventListener('DOMContentLoaded', function() {
-    // Initialize character state first to ensure it's available
-    if (window.globalCharacterState) {
-      window.globalCharacterState.init();
+    // Get the currently selected character ID from session storage
+    const clientSelectedCharacterId = parseInt(sessionStorage.getItem('selectedCharacterId') || '0');
+    
+    // Set the hidden input value - add safety check first
+    const clientSelectedCharElement = document.getElementById('client-selected-character');
+    if (clientSelectedCharElement) {
+      clientSelectedCharElement.value = clientSelectedCharacterId;
+      console.log('Client-side selected character ID:', clientSelectedCharacterId);
+    } else {
+      console.warn('client-selected-character element not found');
     }
     
-    // Fix the button handlers for any existing refresh-suggestions buttons
-    document.querySelectorAll('.refresh-suggestions-btn').forEach(button => {
-      button.addEventListener('click', function() {
-        // Use the global character state for consistent character ID
-        const selectedCharId = window.globalCharacterState ? 
-          window.globalCharacterState.getCurrentCharacterId() : 
-          parseInt(
-            document.getElementById('client-selected-character')?.value || 
-            sessionStorage.getItem('selectedCharacterId') || 
-            '0'
-          );
-        
-        // Show loading state on the button
-        this.disabled = true;
-        const originalText = this.textContent;
-        this.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Refreshing...`;
-        
-        // Call the refresh function
+    // Instead of just filtering, refresh suggestions from server to get properly filtered list
+    if (clientSelectedCharacterId) {
+      // Add a short delay to ensure the selection is properly initialized
+      setTimeout(() => {
         if (typeof refreshSuggestedCharacters === 'function') {
-          refreshSuggestedCharacters(selectedCharId);
+          refreshSuggestedCharacters(clientSelectedCharacterId);
+        } else {
+          console.warn('refreshSuggestedCharacters function not available');
+          // Fallback to simple client-side filtering
+          if (typeof filterSuggestedCharacters === 'function') {
+            filterSuggestedCharacters(clientSelectedCharacterId);
+          } else {
+            console.warn('filterSuggestedCharacters function not available');
+          }
+        }
+      }, 500);
+    } else {
+      // Just use client-side filtering if no character selected
+      if (typeof filterSuggestedCharacters === 'function') {
+        filterSuggestedCharacters(clientSelectedCharacterId);
+      }
+    }
+    
+    // Also listen for character selection changes
+    const characterSelect = document.getElementById('character-select');
+    if (characterSelect) {
+      characterSelect.addEventListener('change', function() {
+        // When character changes, update the hidden field
+        const newCharId = parseInt(this.value) || 0;
+        const clientSelectedCharElement = document.getElementById('client-selected-character');
+        if (clientSelectedCharElement) {
+          clientSelectedCharElement.value = newCharId;
         }
         
-        // Reset button after a delay
-        setTimeout(() => {
+        // Use server-side refresh instead of client filtering
+        if (typeof refreshSuggestedCharacters === 'function' && newCharId) {
+          refreshSuggestedCharacters(newCharId);
+        } else {
+          // Fallback to client-side filtering
+          if (typeof filterSuggestedCharacters === 'function') {
+            filterSuggestedCharacters(newCharId);
+          }
+        }
+      });
+    }
+  });
+  
+  // Function to filter suggested characters in the client side
+  function filterSuggestedCharacters(selectedCharId) {
+    if (!selectedCharId) return;
+    
+    console.log('Filtering suggested characters, hiding character ID:', selectedCharId);
+    
+    // Hide any suggestion items that match the selected character ID
+    let hiddenCount = 0;
+    let totalCount = 0;
+    const allItems = document.querySelectorAll('.suggested-item');
+    totalCount = allItems.length;
+    
+    allItems.forEach(item => {
+      const charId = parseInt(item.getAttribute('data-character-id'));
+      if (charId === selectedCharId) {
+        console.log('Hiding suggestion for selected character:', charId);
+        item.style.display = 'none';
+        hiddenCount++;
+      } else {
+        // Make sure other items are visible
+        item.style.display = 'flex';
+      }
+    });
+    
+    // Check if we need to show the "no suggestions" message
+    if (hiddenCount === totalCount || totalCount === 0) {
+      console.log('All suggestions are hidden or none available, showing no suggestions message');
+      
+      // Check if we already have a no-suggestions element
+      if (!document.querySelector('.suggested-list .no-suggestions')) {
+        const noSuggestionsItem = document.createElement('li');
+        noSuggestionsItem.className = 'no-suggestions';
+        noSuggestionsItem.innerHTML = `
+          <p>No more character suggestions available.</p>
+          <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
+          <button class="btn btn-sm btn-outline refresh-btn mt-2">Refresh Suggestions</button>
+        `;
+        
+        // Add refresh handler
+        noSuggestionsItem.querySelector('.refresh-btn').addEventListener('click', function() {
+          if (typeof refreshSuggestedCharacters === 'function') {
+            refreshSuggestedCharacters(selectedCharId);
+          }
+        });
+        
+        // Add it to the list
+        document.querySelector('.suggested-list').appendChild(noSuggestionsItem);
+      } else {
+        // Make sure it's visible
+        document.querySelector('.suggested-list .no-suggestions').style.display = 'block';
+      }
+    } else {
+      // Hide the no-suggestions message if it exists
+      const noSuggestions = document.querySelector('.suggested-list .no-suggestions');
+      if (noSuggestions) {
+        noSuggestions.style.display = 'none';
+      }
+    }
+  }
+  
+  // Function to refresh suggested characters from the server
+  function refreshSuggestedCharacters(selectedCharId) {
+    console.log('Refreshing suggested characters, excluding:', selectedCharId);
+    
+    // Show a loading state on the suggestions list
+    const suggestedList = document.querySelector('.suggested-list');
+    if (!suggestedList) return;
+    
+    // Add loading indicator
+    const loadingItem = document.createElement('li');
+    loadingItem.className = 'loading-suggestions';
+    loadingItem.innerHTML = `
+      <div class="loading-spinner">
+        <div class="spinner-border spinner-border-sm text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+      </div>
+      <p>Loading fresh suggestions...</p>
+    `;
+    
+    // Clear existing list and show loading
+    suggestedList.innerHTML = '';
+    suggestedList.appendChild(loadingItem);
+    
+    // Make AJAX request to get new suggestions
+    fetch(`/social/suggested-characters?exclude=${selectedCharId}`)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Remove loading indicator
+        suggestedList.innerHTML = '';
+        
+        if (data.success && data.characters && data.characters.length > 0) {
+          // Populate with new characters
+          data.characters.forEach(character => {
+            const item = document.createElement('li');
+            item.className = 'suggested-item';
+            item.setAttribute('data-character-id', character.id);
+            
+            item.innerHTML = `
+              <div class="suggested-avatar">
+                <img src="${character.avatar_url || character.url || '/img/default-character.svg'}" 
+                     alt="${character.name}"
+                     data-fallback="/img/default-character.svg"
+                     onerror="handleImageError(this)" />
+              </div>
+              <div class="suggested-info">
+                <a href="/social/profile/${character.url || character.id}" class="suggested-name">${character.name}</a>
+                <span class="suggested-meta">by @${character.creator_username}</span>
+              </div>
+              <button class="btn btn-sm btn-outline follow-btn" data-character-id="${character.id}">
+                <i class="ph-duotone ph-plus"></i> Follow
+              </button>
+            `;
+            
+            suggestedList.appendChild(item);
+          });
+          
+          // Re-attach follow button handlers
+          attachFollowButtonHandlers();
+        } else {
+          // Show no suggestions message
+          const noSuggestionsItem = document.createElement('li');
+          noSuggestionsItem.className = 'no-suggestions';
+          noSuggestionsItem.innerHTML = `
+            <p>No more character suggestions available.</p>
+            <a href="/characters/explore" class="btn btn-sm btn-primary mt-2">Find Characters</a>
+            <button class="btn btn-sm btn-outline refresh-suggestions-btn mt-2">Refresh Suggestions</button>
+          `;
+          
+          suggestedList.appendChild(noSuggestionsItem);
+          
+          // Add refresh handler to the new button
+          const refreshBtn = noSuggestionsItem.querySelector('.refresh-suggestions-btn');
+          if (refreshBtn) {
+            refreshBtn.addEventListener('click', function() {
+              // Try again with retry=true to get broader results
+              refreshSuggestedCharacters(selectedCharId, true);
+            });
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Error refreshing suggestions:', error);
+        
+        // Show error message
+        suggestedList.innerHTML = `
+          <li class="error-suggestions">
+            <p>Error loading suggestions. Please try again.</p>
+            <button class="btn btn-sm btn-outline refresh-suggestions-btn mt-2">Retry</button>
+          </li>
+        `;
+        
+        // Add retry handler
+        const retryBtn = suggestedList.querySelector('.refresh-suggestions-btn');
+        if (retryBtn) {
+          retryBtn.addEventListener('click', function() {
+            refreshSuggestedCharacters(selectedCharId);
+          });
+        }
+      });
+  }
+  
+  // Function to refresh with broader search parameters
+  function retryWithBroaderSearch(selectedCharId) {
+    console.log('Trying broader search for suggestions');
+    
+    fetch(`/social/suggested-characters?exclude=${selectedCharId}&retry=true`)
+      .then(response => response.json())
+      .then(data => {
+        // Process the response exactly as in refreshSuggestedCharacters
+        const suggestedList = document.querySelector('.suggested-list');
+        if (!suggestedList) return;
+        
+        suggestedList.innerHTML = '';
+        
+        if (data.success && data.characters && data.characters.length > 0) {
+          // Populate with new characters
+          data.characters.forEach(character => {
+            const item = document.createElement('li');
+            item.className = 'suggested-item';
+            item.setAttribute('data-character-id', character.id);
+            
+            item.innerHTML = `
+              <div class="suggested-avatar">
+                <img src="${character.avatar_url || character.url || '/img/default-character.svg'}" 
+                     alt="${character.name}"
+                     data-fallback="/img/default-character.svg"
+                     onerror="handleImageError(this)" />
+              </div>
+              <div class="suggested-info">
+                <a href="/social/profile/${character.url || character.id}" class="suggested-name">${character.name}</a>
+                <span class="suggested-meta">by @${character.creator_username}</span>
+              </div>
+              <button class="btn btn-sm btn-outline follow-btn" data-character-id="${character.id}">
+                <i class="ph-duotone ph-plus"></i> Follow
+              </button>
+            `;
+            
+            suggestedList.appendChild(item);
+          });
+          
+          // Re-attach follow button handlers
+          attachFollowButtonHandlers();
+        } else {
+          // Still no suggestions, suggest creating more characters
+          const noSuggestionsItem = document.createElement('li');
+          noSuggestionsItem.className = 'no-suggestions';
+          noSuggestionsItem.innerHTML = `
+            <p>We couldn't find any suggestions right now.</p>
+            <a href="/characters/create" class="btn btn-sm btn-primary mt-2">Create a Character</a>
+            <a href="/characters/explore" class="btn btn-sm btn-outline mt-2">Browse All</a>
+          `;
+          
+          suggestedList.appendChild(noSuggestionsItem);
+        }
+      })
+      .catch(error => {
+        console.error('Error during broader search:', error);
+        // Handle error (same as in refreshSuggestedCharacters)
+      });
+  }
+  
+  // Function to attach follow button handlers to all follow buttons
+  function attachFollowButtonHandlers() {
+    // First check if we have a selected character
+    const selectedCharacterId = parseInt(
+      document.getElementById('client-selected-character')?.value || 
+      sessionStorage.getItem('selectedCharacterId') || 
+      '0'
+    );
+    
+    if (!selectedCharacterId) {
+      console.warn('No character selected. Follow buttons will prompt for character selection.');
+    }
+    
+    // Attach handlers to all follow buttons in suggested characters
+    document.querySelectorAll('.suggested-list .follow-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        const targetCharacterId = this.getAttribute('data-character-id');
+        if (!targetCharacterId) return;
+        
+        if (!selectedCharacterId) {
+          // Show warning that they need to select a character first
+          alert('Please select a character to post as before following others.');
+          return;
+        }
+        
+        // Disable button and show loading state
+        this.disabled = true;
+        const originalText = this.innerHTML;
+        this.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Following...`;
+        
+        // Call follow endpoint
+        fetch('/social/follow', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            followerId: selectedCharacterId,
+            followingId: targetCharacterId
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            // Change button to show Following state
+            this.classList.remove('btn-outline');
+            this.classList.add('btn-primary');
+            this.innerHTML = `<i class="ph-duotone ph-check"></i> Following`;
+            
+            // Optionally remove this suggestion after a delay
+            setTimeout(() => {
+              const listItem = this.closest('.suggested-item');
+              if (listItem) {
+                listItem.style.opacity = '0';
+                setTimeout(() => {
+                  listItem.remove();
+                  
+                  // If no more suggestions, show the no suggestions message
+                  if (document.querySelectorAll('.suggested-item').length === 0) {
+                    if (!document.querySelector('.suggested-list .no-suggestions')) {
+                      refreshSuggestedCharacters(selectedCharacterId);
+                    }
+                  }
+                }, 300);
+              }
+            }, 1000);
+          } else {
+            // Show error and reset button
+            console.error('Follow error:', data.error);
+            this.disabled = false;
+            this.innerHTML = originalText;
+            
+            // If already following, update button state
+            if (data.error === 'Already following this character') {
+              this.classList.remove('btn-outline');
+              this.classList.add('btn-primary');
+              this.innerHTML = `<i class="ph-duotone ph-check"></i> Following`;
+            }
+          }
+        })
+        .catch(error => {
+          console.error('Error following character:', error);
+          // Reset button
           this.disabled = false;
-          this.textContent = originalText;
-        }, 2000);
+          this.innerHTML = originalText;
+        });
       });
     });
     
-    // Listen for character selection changes to update all components
-    document.addEventListener('characterSelectionChanged', function(e) {
-      console.log('Character selection changed event received:', e.detail);
-      
-      // Update any data attributes or UI elements that need to know about the selection
-      document.querySelectorAll('[data-needs-character]').forEach(element => {
-        if (e.detail.isSelected) {
-          element.removeAttribute('disabled');
-          element.classList.remove('needs-character');
-        } else {
-          element.setAttribute('disabled', 'disabled');
-          element.classList.add('needs-character');
-        }
+    // Also attach handlers to the refresh-suggestions buttons
+    document.querySelectorAll('.refresh-suggestions-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const selectedCharId = parseInt(
+          document.getElementById('client-selected-character')?.value || 
+          sessionStorage.getItem('selectedCharacterId') || 
+          '0'
+        );
+        refreshSuggestedCharacters(selectedCharId);
       });
     });
+  }
+  
+  // Make sure to attach handlers when the page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    attachFollowButtonHandlers();
   });
 </script>

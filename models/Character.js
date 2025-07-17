@@ -11,6 +11,9 @@ class Character {
         return [];
       }
       
+      // Profile query with EXPLAIN
+      await db.query('EXPLAIN SELECT * FROM characters WHERE created_by = ?', [userId]);
+      // Consider: CREATE INDEX idx_characters_created_by ON characters(created_by);
       const [rows] = await db.query(
         'SELECT * FROM characters WHERE created_by = ?',
         [userId]

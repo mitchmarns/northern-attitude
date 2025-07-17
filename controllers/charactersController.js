@@ -3,6 +3,9 @@ const Character = require('../models/Character'); // Import Character model
 
 // Helper to get all teams for a user
 async function getUserTeams(userId) {
+  // Profile query with EXPLAIN
+  await db.query('EXPLAIN SELECT id, name FROM teams WHERE created_by = ?', [userId]);
+  // Consider: CREATE INDEX idx_teams_created_by ON teams(created_by);
   const [teams] = await db.query('SELECT id, name FROM teams WHERE created_by = ?', [userId]);
   return teams;
 }

@@ -92,6 +92,20 @@ router.post('/threads/:id/messages', tempAuth, (req, res) => {
      WHERE thread_id = ? AND user_id = ?`,
     [threadId, req.user.id]
   )
+  // Profile query with EXPLAIN
+  db.query(
+    `EXPLAIN SELECT * FROM thread_participants 
+     WHERE thread_id = ? AND user_id = ?`,
+    [threadId, req.user.id]
+  )
+  // Consider: CREATE INDEX idx_thread_participants_thread_id_user_id ON thread_participants(thread_id, user_id);
+  .then(() =>
+    db.query(
+      `SELECT * FROM thread_participants 
+       WHERE thread_id = ? AND user_id = ?`,
+      [threadId, req.user.id]
+    )
+  )
   .then(([participants]) => {
     // If user is not a participant, check if thread is public and add them
     if (participants.length === 0) {

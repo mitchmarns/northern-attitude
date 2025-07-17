@@ -46,6 +46,41 @@ router.get('/', tempAuth, (req, res) => {
       GROUP BY t.id
       ORDER BY last_message_at DESC, t.updated_at DESC
     `)
+    // Profile query with EXPLAIN
+    db.query(`
+      EXPLAIN
+      SELECT t.*, 
+             u.username as creator_name,
+             COUNT(DISTINCT tp.id) as participant_count,
+             COUNT(DISTINCT tm.id) as message_count,
+             MAX(tm.created_at) as last_message_at
+      FROM threads t
+      LEFT JOIN users u ON t.creator_id = u.id
+      LEFT JOIN thread_participants tp ON t.id = tp.thread_id
+      LEFT JOIN thread_messages tm ON t.id = tm.thread_id
+      GROUP BY t.id
+      ORDER BY last_message_at DESC, t.updated_at DESC
+    `)
+    // Consider indexes:
+    // CREATE INDEX idx_threads_creator_id ON threads(creator_id);
+    // CREATE INDEX idx_thread_participants_thread_id ON thread_participants(thread_id);
+    // CREATE INDEX idx_thread_messages_thread_id ON thread_messages(thread_id);
+    .then(([explain]) => {
+      // ...existing code...
+      return db.query(`
+        SELECT t.*, 
+               u.username as creator_name,
+               COUNT(DISTINCT tp.id) as participant_count,
+               COUNT(DISTINCT tm.id) as message_count,
+               MAX(tm.created_at) as last_message_at
+        FROM threads t
+        LEFT JOIN users u ON t.creator_id = u.id
+        LEFT JOIN thread_participants tp ON t.id = tp.thread_id
+        LEFT JOIN thread_messages tm ON t.id = tm.thread_id
+        GROUP BY t.id
+        ORDER BY last_message_at DESC, t.updated_at DESC
+      `);
+    })
     .then(([threads]) => {
       res.json({ success: true, threads });
     })

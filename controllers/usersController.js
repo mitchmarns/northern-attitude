@@ -11,6 +11,9 @@ const UsersController = {
   login: async (req, res) => {
     const { username, password } = req.body;
     try {
+      // Profile query with EXPLAIN
+      await db.query('EXPLAIN SELECT * FROM users WHERE username = ?', [username]);
+      // Consider: CREATE INDEX idx_users_username ON users(username);
       const [users] = await db.query('SELECT * FROM users WHERE username = ?', [username]);
       if (!users.length) {
         return res.render('users/login', { title: 'Login', errors: ['Invalid username or password'], username });

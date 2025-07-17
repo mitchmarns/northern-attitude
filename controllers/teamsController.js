@@ -4,6 +4,9 @@ const TeamsController = {
   // List all teams
   listAll: async (req, res) => {
     try {
+      // Profile query with EXPLAIN
+      await db.query('EXPLAIN SELECT * FROM teams ORDER BY name ASC');
+      // Consider: CREATE INDEX idx_teams_name ON teams(name);
       const [teams] = await db.query('SELECT * FROM teams ORDER BY name ASC');
       res.render('teams/teams', { title: 'All Teams', teams });
     } catch (err) {

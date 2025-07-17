@@ -96,3 +96,35 @@ const mapCharacterForForm = (characterFromDb) => ({
 - Keep EJS and client-side JS as simple as possible.  
 - Use consistent naming conventions.  
 - Document any non-obvious logic.
+
+---
+
+## Performance & Scalability Best Practices
+
+- **Paginate all large lists:**  
+  Never render more than 10–20 items at a time. Always use pagination or infinite scroll for feeds, comments, suggestions, etc.  
+  Use backend pagination for all endpoints returning lists. The frontend should request additional pages as needed (e.g., via "Load More" buttons or infinite scroll).  
+  Always return pagination metadata (e.g., `page`, `hasMore`, `totalCount` if available) in API responses for lists.
+
+- **Optimize images:**  
+  Use thumbnails and compress images for all avatars, galleries, and media previews. Avoid loading full-size images in lists.
+
+- **Remove duplicate font imports:**  
+  Only load each font once in your HTML head. Eliminate redundant `<link rel="stylesheet">` for the same font.
+
+- **Bundle/minify CSS/JS:**  
+  Use a build tool (e.g., Webpack, esbuild, Parcel) to bundle and minify CSS/JS. Reduce asset size and HTTP requests.
+
+- **Reduce logging in production:**  
+  Remove or minimize `console.log` statements in production. Use a logging library with log levels for backend.
+
+- **Use a persistent session store:**  
+  For scalability and performance, use a persistent session store (e.g., Redis, MySQL) instead of in-memory sessions.
+
+- **Monitor server resources:**  
+  Regularly check CPU, RAM, and disk usage on your server. Set up alerts for high usage.
+
+- **Audit client-side JS:**  
+  Avoid unnecessary re-initialization and memory leaks. Use event delegation and clean up event listeners when removing DOM elements.
+
+---

@@ -33,6 +33,9 @@ async function testDatabaseConnection() {
     console.log('Successfully connected to MySQL server');
     
     // Check if database exists
+    // Profile query with EXPLAIN
+    await connection.query(`EXPLAIN SHOW DATABASES LIKE '${dbConfig.database}'`);
+    // No index suggestion for SHOW DATABASES, but for table queries, add indexes as needed.
     const [databases] = await connection.query(`SHOW DATABASES LIKE '${dbConfig.database}'`);
     const databaseExists = databases.length > 0;
     
