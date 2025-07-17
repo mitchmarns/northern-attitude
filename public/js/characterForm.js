@@ -186,15 +186,6 @@ function initializeMediaPreviews() {
 
 // This function renders character form fields for the edit page
 function renderCharacterFormFields(character = {}) {
-  // Add debug output for teams data
-  console.log("Rendering form with teams:", character.teams);
-  console.log("Character data:", character); // Add debugging to see full character data
-  
-  // Make sure teams array exists
-  if (!Array.isArray(character.teams)) {
-    console.warn("Teams is not an array, setting default empty array");
-    character.teams = [];
-  }
   
   return `
     <div class="row">
@@ -808,3 +799,16 @@ document.addEventListener('DOMContentLoaded', () => {
   `;
   document.head.appendChild(style);
 });
+
+// Initialize character edit page
+function initializeCharacterEditPage(character, teams) {
+  document.getElementById('form-fields').innerHTML = renderCharacterFormFields(character);
+
+  setTimeout(() => {
+    initializeCharacterForm();
+    toggleTeamFields();
+    if (typeof initializeTextToolbar === 'function') {
+      initializeTextToolbar({ useMarkdown: false });
+    }
+  }, 100);
+}

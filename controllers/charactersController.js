@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const Character = require('../models/Character'); // Import Character model
 
 // Helper to get all teams for a user
 async function getUserTeams(userId) {
@@ -105,8 +106,7 @@ const CharactersController = {
       // Check if the current user is the owner of this character
       const isOwner = req.session.user && req.session.user.id === rows[0].created_by;
 
-      // Parse JSON fields if they exist
-      const character = rows[0];
+      let character = rows[0];
       // Parse timeline, connections, gallery if they exist and are not null
       if (character.timeline && typeof character.timeline === 'string') {
         try { character.timeline = JSON.parse(character.timeline); } catch { character.timeline = []; }
@@ -117,6 +117,10 @@ const CharactersController = {
       if (character.gallery && typeof character.gallery === 'string') {
         try { character.gallery = JSON.parse(character.gallery); } catch { character.gallery = []; }
       }
+      // Map to camelCase using model's function
+      character = Character.mapCharacterForForm
+        ? Character.mapCharacterForForm(character)
+        : character;
 
       res.render('characters/profile', {
         title: character.name,
@@ -133,38 +137,14 @@ const CharactersController = {
   showEditForm: async (req, res) => {
     try {
       const characterId = req.params.id;
-      // Select team_id and jersey_number as jerseyNumber
       const [rows] = await db.query(
-        `SELECT *, 
-                team_id as teamId, 
-                jersey_number as jerseyNumber 
-         FROM characters 
-         WHERE id = ?`, 
+        `SELECT * FROM characters WHERE id = ?`, 
         [characterId]
       );
       if (!rows.length) return res.status(404).send('Character not found');
-      const character = rows[0];
-
-      // Map snake_case DB fields to camelCase for the form
-      character.avatarUrl = character.url;
-      character.bannerUrl = character.banner_url;
-      character.sidebarUrl = character.sidebar_url;
-      character.spotifyEmbed = character.spotify_embed;
-      character.fullBio = character.full_bio;
-      character.isPrivate = Boolean(character.is_private);
-      character.quote = character.quote || character.QUOTE;
-      character.birthday = character.birthday;
-      character.zodiac = character.zodiac;
-      character.hometown = character.hometown;
-      character.education = character.education;
-      character.occupation = character.occupation;
-      character.sexuality = character.sexuality;
-      character.pronouns = character.pronouns;
-      character.languages = character.languages;
-      character.religion = character.religion;
-      character.strengths = character.strengths;
-      character.weaknesses = character.weaknesses;
-
+      const character = Character.mapCharacterForForm
+        ? Character.mapCharacterForForm(rows[0])
+        : rows[0]; // fallback if not static
       const teams = await getUserTeams(req.session.user.id);
       res.render('characters/edit', {
         title: 'Edit Character',

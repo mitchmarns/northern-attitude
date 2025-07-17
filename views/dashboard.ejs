@@ -73,9 +73,9 @@
         <h3 class="dashboard-section-title accent3">Recent Threads</h3>
         <% if (recent.threads.length > 0) { %>
           <ul class="mb-2">
-            <% recent.threads.forEach(t => { %>
+            <% recent.threads.forEach(thread => { %>
               <li>
-                <a href="/writing/threads/<%= t.id %>" class="dashboard-link accent3"><%= t.title %></a>
+                <a href="/writing/threads/<%= thread.id %>" class="dashboard-link accent3"><%= thread.title %></a>
               </li>
             <% }) %>
           </ul>
@@ -90,9 +90,9 @@
         <h3 class="dashboard-section-title accent4">Recent Posts</h3>
         <% if (recent.posts.length > 0) { %>
           <ul class="mb-2">
-            <% recent.posts.forEach(p => { %>
+            <% recent.posts.forEach(post => { %>
               <li>
-                <a href="/social/feed" class="dashboard-link accent4"><%= p.title || 'Untitled Post' %></a>
+                <a href="/social/feed" class="dashboard-link accent4"><%= post.title || 'Untitled Post' %></a>
               </li>
             <% }) %>
           </ul>
